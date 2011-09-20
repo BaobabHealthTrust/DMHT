@@ -25,7 +25,7 @@
        User.current_user.activities.include?('Manage HIV Status Visits') %>
                  <span style="font-size: 55px;">TB-ART</span>
                <%else%>
-                 BART
+                  DM
                <%end%>
             </h1>
             <span id='patient_name'><%= @patient.name rescue "" %></span>

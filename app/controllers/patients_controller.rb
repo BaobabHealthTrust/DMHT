@@ -642,7 +642,156 @@ class PatientsController < ApplicationController
     @lab_order_labels = patient.get_recent_lab_orders_label
     @patient_id = params[:patient_id]
   end
-  
+
+  def generate_booking
+    @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil
+
+    @type = EncounterType.find_by_name("APPOINTMENT").id rescue nil
+    if(@type)
+      @enc = Encounter.find(:all, :conditions =>
+          ["voided = 0 AND encounter_type = ?", @type])
+
+      @counts = {}
+
+      @enc.each{|e|
+        obs = e.observations
+        if !obs.blank?
+          obs_date = obs.first.value_datetime
+          yr = obs_date.to_date.strftime("%Y")
+          mt = obs_date.to_date.strftime("%m").to_i-1
+          dy = obs_date.to_date.strftime("%d").to_i
+
+          if(!@counts[(yr.to_s + "-" + mt.to_s + "-" + dy.to_s)])
+            @counts[(yr.to_s + "-" + mt.to_s + "-" + dy.to_s)] = {}
+            @counts[(yr.to_s + "-" + mt.to_s + "-" + dy.to_s)]["count"] = 0
+          end
+
+          @counts[(yr.to_s + "-" + mt.to_s + "-" + dy.to_s)][e.patient_id] = true
+          @counts[(yr.to_s + "-" + mt.to_s + "-" + dy.to_s)]["count"] += 1
+        end
+      }
+      #raise @counts['2011-08-06'].to_yaml
+    end
+  end
+
+  def mastercard
+    @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil
+    void_encounter if (params[:void] && params[:void] == 'true')
+    @person = @patient.person
+    @encounters = @patient.encounters.find_all_by_encounter_type(EncounterType.find_by_name('DIABETES TEST').id)
+    @observations = @encounters.map(&:observations).flatten
+    @obs_datetimes = @observations.map { |each|each.obs_datetime.strftime("%d-%b-%Y")}.uniq
+    @address = @person.addresses.last
+
+    diabetes_test_id = EncounterType.find_by_name('Diabetes Test').id
+
+    #TODO: move this code to Patient model
+    # Creatinine
+    creatinine_id = Concept.find_by_name('CREATININE').id
+    @creatinine_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND concept_id = ?',
+        diabetes_test_id, creatinine_id],
+      :order => 'obs_datetime DESC')
+
+    # Urine Protein
+    urine_protein_id = Concept.find_by_name('URINE PROTEIN').id
+    @urine_protein_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND concept_id = ?',
+        diabetes_test_id, urine_protein_id],
+      :order => 'obs_datetime DESC')
+
+    # Foot Check
+    @foot_check_encounters = @patient.encounters.find(:all,
+      :joins => :observations,
+      :conditions => ['concept_id IN (?)',
+        ConceptName.find_all_by_name(['RIGHT FOOT/LEG',
+            'LEFT FOOT/LEG', 'LEFT HAND/ARM', 'RIGHT HAND/ARM']).map(&:concept_id)],
+      :order => 'obs_datetime DESC').uniq
+
+    if @foot_check_encounters.nil?
+      @foot_check_encounters = []
+    end
+
+    @foot_check_obs = {}
+
+    @foot_check_encounters.each{|e|
+      value = @patient.person.observations.find(:all,
+        :joins => :encounter,
+        :conditions => ['encounter_type = ? AND encounter.encounter_id IN (?)',
+          diabetes_test_id, e.encounter_id],
+        :order => 'obs_datetime DESC')
+
+      unless value.nil?
+        @foot_check_obs[e.encounter_id] = value
+      end
+    }
+
+    # Visual Acuity RIGHT EYE FUNDOSCOPY
+    @visual_acuity_encounters = @patient.encounters.find(:all,
+      :joins => :observations,
+      :conditions => ['concept_id IN (?)',
+        ConceptName.find_all_by_name(['LEFT EYE VISUAL ACUITY',
+            'RIGHT EYE VISUAL ACUITY']).map(&:concept_id)],
+      :order => 'obs_datetime DESC').uniq
+
+    if @visual_acuity_encounters.nil?
+      @visual_acuity_encounters = []
+    end
+
+    @visual_acuity_obs = {}
+
+    @visual_acuity_encounters.each{|e|
+      @visual_acuity_obs[e.encounter_id] = @patient.person.observations.find(:all,
+        :joins => :encounter,
+        :conditions => ['encounter_type = ? AND encounter.encounter_id = ?',
+          diabetes_test_id, e.encounter_id],
+        :order => 'obs_datetime DESC')
+    }
+
+
+    # Fundoscopy
+    @fundoscopy_encounters = @patient.encounters.find(:all,
+      :joins => :observations,
+      :conditions => ['concept_id IN (?)',
+        ConceptName.find_all_by_name(['LEFT EYE FUNDOSCOPY',
+            'RIGHT EYE FUNDOSCOPY']).map(&:concept_id)],
+      :order => 'obs_datetime DESC').uniq
+
+    if @fundoscopy_encounters.nil?
+      @fundoscopy_encounters = []
+    end
+
+    @fundoscopy_obs = {}
+
+    @fundoscopy_encounters.each{|e|
+      @fundoscopy_obs[e.encounter_id] = @patient.person.observations.find(:all,
+        :joins => :encounter,
+        :conditions => ['encounter_type = ? AND encounter.encounter_id IN (?)',
+          diabetes_test_id, e.encounter_id],
+        :order => 'obs_datetime DESC')
+    }
+
+    # Urea
+    urea_id = Concept.find_by_name('UREA').id
+    @urea_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND concept_id = ?',
+        diabetes_test_id, urea_id],
+      :order => 'obs_datetime DESC')
+
+
+    # Macrovascular
+    macrovascular_id = Concept.find_by_name('MACROVASCULAR').id
+    @macrovascular_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND concept_id = ?',
+        diabetes_test_id, macrovascular_id],
+      :order => 'obs_datetime DESC')
+    render :layout => 'menu'
+  end
+
   private
   
   
