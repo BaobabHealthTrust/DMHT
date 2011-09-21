@@ -35,29 +35,18 @@
             <span id='patient_gender'><%= @patient.gender rescue "" %></span>
 
             <div id="patient_card">
-              <% if (@patient.reason_for_art_eligibility rescue nil) != nil && (@patient.reason_for_art_eligibility) != "" %>
-                <span value="<%= @patient.reason_for_art_eligibility rescue "" %>">Reason for Starting</span>
-              <% end %>
-              <% if (@patient.hiv_status rescue nil) != nil && (@patient.hiv_status) != "" %>
-                <span value="<%= @patient.hiv_status rescue "" %>">HIV Status</span>
-              <% end %>
-              <% if (@patient.arv_number rescue nil) != nil && (@patient.arv_number) != " " %>
-                <span value="<%= @patient.arv_number rescue "" %>">ARV Number</span>
-              <% end %>
-              <% if (@patient.eid_number rescue nil) != nil && (@patient.eid_number) != " " %>
-                <span value="<%= @patient.eid_number rescue "" %>">EID Number</span>
-              <% end %>
-              <% if (@patient.pre_art_number rescue nil) != nil && (@patient.pre_art_number) != " " %>
-                <span value="<%= @patient.pre_art_number rescue "" %>">Pre-ART Number</span>
-              <% end 
-                 session_date = session[:datetime].to_date rescue Date.today
-              %>
-              <span value="<%= (Task.next_task(Location.current_location,@patient,session_date).encounter_type || 'None').humanize.gsub('hiv','HIV').gsub('art','ART').gsub('tb','TB').gsub('Tb','TB').gsub('Hiv','HIV').gsub('Art','ART') rescue 'None'%>">NEXT TASK</span>
+               <span value="<%= @patient.person.phone_numbers.collect {|k,v| v}.first rescue 'Unknown' %>">Phone Number</span>
+               <span value="<%= @patient.diabetes_number rescue 'Unknown' %>">DC Number</span>
+               <span value="<%= @current_updated_outcome %>">Outcome</span>
             </div>
             <select id="tabs">
               <option value='/patients/overview?patient_id=<%= @patient.id %>'>Overview</option>
               <option value='/patients/visit_history?patient_id=<%= @patient.id %>'>Current Visit</option>
               <option value='/patients/past_visits_summary?patient_id=<%= @patient.id %>'>Past Visits</option>
+              <option value="/patients/hiv?id=<%= @patient.id -%>">HIV Status</option>
+              <option value="/patients/recent_screen_complications?id=<%= @patient.id -%>">Recent Complications</option>
+              <option value="/patients/important_medical_history?id=<%= @patient.id -%>">Important Medical History</option>
+              <option value="/encounters/patient_medical_history?patient_id=<%= @patient.id -%>">Medical History</option>
               <option value='/patients/personal/<%= @patient.id -%>'>Printouts/Other</option>
             </select>
             <% if @patient.person.dead == 1%>
@@ -77,11 +66,11 @@
                   <!--%if User.current_user.activities.include?('Manage Patient Programs')%-->
                     <option value='/patients/programs_dashboard/<%= @patient.id -%>'>Outcomes</option>
                   <!--%end%-->
-                  <option value='/patients/show/<%= @patient.id -%>?source=opd'>OPD</option>
+                  <option value='/patients/print_visit?patient_id=<%= @patient.id -%>'>Print Visit</option>
                 </select>
                 <select id="navigation_links">
                     <option link="/encounter_types?patient_id=<%= @patient.id -%>" ttSize = "160px">Tasks</option>
-                  <option link="/patients/mastercard_menu?patient_id=<%= @patient.id -%>&source=<%= @source -%>">Mastercard</option>
+                    <option link="/patients/mastercard?patient_id=<%= @patient.id -%>&source=<%= @source -%>>Complications</option>
                   <% if show_lab_results %>
                     <option link="/lab/results/<%=@patient.id -%>">Lab results</option>
                   <%end%>

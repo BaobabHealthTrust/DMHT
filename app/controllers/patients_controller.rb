@@ -141,23 +141,13 @@ class PatientsController < ApplicationController
     @links = []
     patient = Patient.find(params[:id])
 
-    @links << ["Demographics (Print)","/patients/print_demographics/#{patient.id}"]
-    @links << ["Visit Summary (Print)","/patients/dashboard_print_visit/#{patient.id}"]
-    @links << ["National ID (Print)","/patients/dashboard_print_national_id/#{patient.id}"]
-
-    if use_filing_number and not patient.get_identifier('Filing Number').blank?
-      @links << ["Filing Number (Print)","/patients/print_filing_number/#{patient.id}"]
-    end 
-
-    if use_filing_number and patient.get_identifier('Filing Number').blank?
-      @links << ["Filing Number (Create)","/patients/set_filing_number/#{patient.id}"]
-    end 
-
     if GlobalProperty.use_user_selected_activities
       @links << ["Change User Activities","/user/activities/#{User.current_user.id}?patient_id=#{patient.id}"]
     end
 
-    @links << ["Recent Lab Orders Label","/patients/recent_lab_orders?patient_id=#{patient.id}"]
+    @links << ["Edit Demographics (Print)","/patients/demographics?patient_id=#{patient.id}"]
+    @links << ["National ID (Print)","/patients/dashboard_print_national_id/#{patient.id}"]
+    @links << ["Visit Summary (Print)","/patients/dashboard_print_visit/#{patient.id}"]
 
     render :template => 'dashboards/personal_tab', :layout => false
   end
@@ -300,6 +290,131 @@ class PatientsController < ApplicationController
 
     render :layout => false
     
+  end
+
+  def mastercard_old
+    @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil
+    void_encounter if (params[:void] && params[:void] == 'true')
+    @person = @patient.person
+    @encounters = @patient.encounters.find_all_by_encounter_type(EncounterType.find_by_name('DIABETES TEST').id)
+    @observations = @encounters.map(&:observations).flatten
+    @obs_datetimes = @observations.map { |each|each.obs_datetime.strftime("%d-%b-%Y")}.uniq
+    @address = @person.addresses.last
+
+    diabetes_test_id = EncounterType.find_by_name('Diabetes Test').id
+
+    #TODO: move this code to Patient model
+    # Creatinine
+    creatinine_id = Concept.find_by_name('CREATININE').id
+    @creatinine_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND concept_id = ?',
+        diabetes_test_id, creatinine_id],
+      :order => 'obs_datetime DESC')
+
+    # Urine Protein
+    urine_protein_id = Concept.find_by_name('URINE PROTEIN').id
+    @urine_protein_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND concept_id = ?',
+        diabetes_test_id, urine_protein_id],
+      :order => 'obs_datetime DESC')
+
+    # Foot Check
+    @foot_check_encounters = @patient.encounters.find(:all,
+      :joins => :observations,
+      :conditions => ['concept_id IN (?)',
+        ConceptName.find_all_by_name(['RIGHT FOOT/LEG',
+            'LEFT FOOT/LEG', 'LEFT HAND/ARM', 'RIGHT HAND/ARM']).map(&:concept_id)],
+      :order => 'obs_datetime DESC').uniq
+
+    if @foot_check_encounters.nil?
+      @foot_check_encounters = []
+    end
+
+    @foot_check_obs = {}
+
+    @foot_check_encounters.each{|e|
+      value = @patient.person.observations.find(:all,
+        :joins => :encounter,
+        :conditions => ['encounter_type = ? AND encounter.encounter_id IN (?)',
+          diabetes_test_id, e.encounter_id],
+        :order => 'obs_datetime DESC')
+
+      unless value.nil?
+        @foot_check_obs[e.encounter_id] = value
+      end
+    }
+
+    # Visual Acuity RIGHT EYE FUNDOSCOPY
+    @visual_acuity_encounters = @patient.encounters.find(:all,
+      :joins => :observations,
+      :conditions => ['concept_id IN (?)',
+        ConceptName.find_all_by_name(['LEFT EYE VISUAL ACUITY',
+            'RIGHT EYE VISUAL ACUITY']).map(&:concept_id)],
+      :order => 'obs_datetime DESC').uniq
+
+    if @visual_acuity_encounters.nil?
+      @visual_acuity_encounters = []
+    end
+
+    @visual_acuity_obs = {}
+
+    @visual_acuity_encounters.each{|e|
+      @visual_acuity_obs[e.encounter_id] = @patient.person.observations.find(:all,
+        :joins => :encounter,
+        :conditions => ['encounter_type = ? AND encounter.encounter_id = ?',
+          diabetes_test_id, e.encounter_id],
+        :order => 'obs_datetime DESC')
+    }
+
+
+    # Fundoscopy
+    @fundoscopy_encounters = @patient.encounters.find(:all,
+      :joins => :observations,
+      :conditions => ['concept_id IN (?)',
+        ConceptName.find_all_by_name(['LEFT EYE FUNDOSCOPY',
+            'RIGHT EYE FUNDOSCOPY']).map(&:concept_id)],
+      :order => 'obs_datetime DESC').uniq
+
+    if @fundoscopy_encounters.nil?
+      @fundoscopy_encounters = []
+    end
+
+    @fundoscopy_obs = {}
+
+    @fundoscopy_encounters.each{|e|
+      @fundoscopy_obs[e.encounter_id] = @patient.person.observations.find(:all,
+        :joins => :encounter,
+        :conditions => ['encounter_type = ? AND encounter.encounter_id IN (?)',
+          diabetes_test_id, e.encounter_id],
+        :order => 'obs_datetime DESC')
+    }
+
+    # Urea
+    urea_id = Concept.find_by_name('UREA').id
+    @urea_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND concept_id = ?',
+        diabetes_test_id, urea_id],
+      :order => 'obs_datetime DESC')
+
+
+    # Macrovascular
+    macrovascular_id = Concept.find_by_name('MACROVASCULAR').id
+    @macrovascular_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND concept_id = ?',
+        diabetes_test_id, macrovascular_id],
+      :order => 'obs_datetime DESC')
+
+    unless params.include?("source")
+      @source = params[:source] rescue nil
+    else
+      @source = nil
+    end
+
+    render :layout => 'menu'
   end
 
   def mastercard_printable
@@ -470,7 +585,10 @@ class PatientsController < ApplicationController
   end
   
   def demographics
-    render :layout => false
+    @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil
+    @person = @patient.person
+    @address = @person.addresses.last
+    render :layout => 'menu'
   end
    
   def index
@@ -819,6 +937,264 @@ class PatientsController < ApplicationController
                           AND concept_name_tag_id = 4
                         GROUP BY order_id, obs.value_coded
                         ORDER BY drug_name, start_date DESC")
+  end
+
+  def important_medical_history
+      recent_screen_complications
+  end
+
+  def simple_graph
+      recent_screen_complications
+  end
+
+  def hiv
+      recent_screen_complications
+  end
+  def recent_screen_complications
+    session_date = session[:datetime].to_date rescue Date.today
+    #find the user priviledges
+    @super_user = false
+    @nurse = false
+    @clinician  = false
+    @doctor     = false
+    @registration_clerk  = false
+
+    @user = User.find(session[:user_id])
+    @user_privilege = @user.user_roles.collect{|x|x.role}
+
+    if @user_privilege.first.downcase.include?("superuser")
+      @super_user = true
+    elsif @user_privilege.first.downcase.include?("clinician")
+      @clinician  = true
+    elsif @user_privilege.first.downcase.include?("nurse")
+      @nurse  = true
+    elsif @user_privilege.first.downcase.include?("doctor")
+      @doctor     = true
+    elsif @user_privilege.first.downcase.include?("registration clerk")
+      @registration_clerk  = true
+    end
+
+    @patient      = Patient.find(params[:id] || session[:patient_id]) rescue nil
+    void_encounter if (params[:void] && params[:void] == 'true')
+    #@encounters   = @patient.encounters.current.active.find(:all)
+    @encounters   = @patient.encounters.find(:all, :conditions => ['DATE(encounter_datetime) = ?',session_date.to_date])
+    excluded_encounters = ["Registration", "Diabetes history","Complications", #"Diabetes test",
+      "General health", "Diabetes treatments", "Diabetes admissions","Hospital admissions",
+      "Hypertension management", "Past diabetes medical history"]
+    @encounter_names = @patient.encounters.active.map{|encounter| encounter.name}.uniq.delete_if{ |encounter| excluded_encounters.include? encounter.humanize } rescue []
+    ignored_concept_id = Concept.find_by_name("NO").id;
+
+    @observations = Observation.find(:all, :order => 'obs_datetime DESC',
+      :limit => 50, :conditions => ["person_id= ? AND obs_datetime < ? AND value_coded != ?",
+        @patient.patient_id, Time.now.to_date, ignored_concept_id])
+
+    @observations.delete_if { |obs| obs.value_text.downcase == "no" rescue nil }
+
+    # delete encounters that are not required for display on patient's summary
+    @lab_results_ids = [Concept.find_by_name("Urea").id, Concept.find_by_name("Urine Protein").id, Concept.find_by_name("Creatinine").id]
+    @encounters.map{ |encounter| (encounter.name == "DIABETES TEST" && encounter.observations.delete_if{|obs| !(@lab_results_ids.include? obs.concept.id)})}
+    @encounters.delete_if{|encounter|(encounter.observations == [])}
+
+    @obs_datetimes = @observations.map { |each|each.obs_datetime.strftime("%d-%b-%Y")}.uniq
+
+    @vitals = Encounter.find(:all, :order => 'encounter_datetime DESC',
+      :limit => 50, :conditions => ["patient_id= ? AND encounter_datetime < ? ",
+        @patient.patient_id, Time.now.to_date])
+
+    @patient_treatements = treatment_orders(@patient.id)
+
+    diabetes_id       = Concept.find_by_name("DIABETES MEDICATION").id
+
+    @patient_diabetes_treatements     = []
+    @patient_hypertension_treatements = []
+
+    @patient_diabetes_treatements = aggregate_treatement_orders(@patient.id)
+
+    selected_medical_history = ['DIABETES DIAGNOSIS DATE','SERIOUS CARDIAC PROBLEM','STROKE','HYPERTENSION','TUBERCULOSIS']
+    @medical_history_ids = selected_medical_history.map { |medical_history| Concept.find_by_name(medical_history).id }
+    @significant_medical_history = []
+    @observations.each { |obs| @significant_medical_history << obs if @medical_history_ids.include? obs.concept_id}
+
+    @arv_number = @patient.arv_number rescue nil
+    @status     = @patient.hiv_status
+    #@status =Concept.find(Observation.find(:first,  :conditions => ["voided = 0 AND person_id= ? AND concept_id = ?",@patient.person.id, Concept.find_by_name('HIV STATUS').id], :order => 'obs_datetime DESC').value_coded).name.name rescue 'UNKNOWN'
+    @hiv_test_date    = @patient.hiv_test_date rescue "UNKNOWN"
+    @hiv_test_date = "Unkown" if @hiv_test_date.blank?
+    @remote_art_info  = Patient.remote_art_info(@patient.national_id) rescue nil
+
+    @recents = recent_screen_complications(@patient.id)
+
+    # set the patient's medication period
+    @patient_medication_period = patient_diabetes_medication_duration(@patient.id)
+
+    render :layout => false
+  end
+
+  def aggregate_treatement_orders(patient_id)
+
+    hypertensition_medication_id  = Concept.find_by_name("HYPERTENSION MEDICATION").id
+    treatment_encouter_id         = EncounterType.find_by_name("TREATMENT").id
+    drug_order_id                 = OrderType.find_by_name("DRUG ORDER").id
+    diabetes_id                   = Concept.find_by_name("DIABETES MEDICATION").id
+    hypertensition_id             = Concept.find_by_name("HYPERTENSION").id
+    #need to add the concept_name_tag for the line below
+    preffered_id                  = ConceptNameTag.find_by_tag("PREFERRED").id rescue 0
+
+    medication_query = "SELECT medication.drug_name AS drug_name,
+      medication.days                             AS days,
+      medication.units                            AS units,
+      medication.dose                             AS formulation,
+      SUM(medication.days_so_far)                 AS total_medication_days,
+      MIN(medication.start_date)                  AS start_date,
+      MAX(medication.end_date)                    AS end_date,
+      medication.diagnosis_id                     AS diagnosis_id,
+      DATEDIFF(NOW(), MIN(medication.start_date)) AS duration
+      FROM (
+        SELECT auto_expire_date AS end_date, concept_name.name AS drug_name,
+          DATEDIFF(auto_expire_date, MIN(start_date)) AS days,
+          DATEDIFF(NOW(), start_date) days_so_far,start_date AS start_date,
+          dose, drug.units, frequency, obs.value_coded AS diagnosis_id,
+          orders.concept_id AS concept_id, orders.order_id AS order_id
+          FROM obs, encounter, orders, concept_name,drug_order, drug, concept_name_tag_map
+          WHERE encounter_type        = #{treatment_encouter_id}
+            AND encounter.patient_id  = #{patient_id}
+            AND encounter.voided = 0
+            AND orders.voided    = 0
+            AND orders.order_type_id = #{drug_order_id}
+            AND obs.value_coded IN (#{diabetes_id}, #{hypertensition_id}, #{hypertensition_medication_id})
+            AND concept_name_tag_id = #{preffered_id}
+            AND orders.encounter_id = encounter.encounter_id
+            AND encounter.encounter_id  = obs.encounter_id
+            AND concept_name.concept_id = orders.concept_id
+            AND drug_order.order_id     = orders.order_id
+            AND drug.drug_id = drug_order.drug_inventory_id
+            AND concept_name_tag_map.concept_name_id = concept_name.concept_name_id
+          GROUP BY auto_expire_date, 	concept_name.name, dose, drug.units, frequency,
+                obs.value_coded, 	orders.concept_id, orders.order_id, start_date
+          ORDER BY drug_name, start_date DESC) AS medication
+      WHERE medication.end_date >= NOW()
+      GROUP BY drug_name
+      ORDER BY drug_name"
+
+    Order.find_by_sql(medication_query);
+  end
+
+   def recent_screen_complications(patient_id)
+
+    @patient = Patient.find(patient_id || session[:patient_id]) rescue nil
+
+    @person = @patient.person
+    @encounters = @patient.encounters.find_all_by_encounter_type(EncounterType.find_by_name('DIABETES TEST').id)
+    @observations = @encounters.map(&:observations).flatten
+    @obs_datetimes = @observations.map { |each|each.obs_datetime.strftime("%d-%b-%Y")}.uniq
+    @address = @person.addresses.last
+
+    diabetes_test_id = EncounterType.find_by_name('Diabetes Test').id
+
+    creatinine_id = Concept.find_by_name('CREATININE').id
+    @creatinine_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND concept_id = ?',
+        diabetes_test_id, creatinine_id],
+      :order => 'obs_datetime DESC').first rescue ""
+
+    # Urine Protein
+    urine_protein_id = Concept.find_by_name('URINE PROTEIN').id
+    @urine_protein_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND concept_id = ?',
+        diabetes_test_id, urine_protein_id],
+      :order => 'obs_datetime DESC').first rescue ""
+
+    # Foot Check
+    foot_check_encounters = @patient.encounters.find(:all,
+      :joins => :observations,
+      :conditions => ['concept_id IN (?)',
+        ConceptName.find_all_by_name(['RIGHT FOOT/LEG',
+            'LEFT FOOT/LEG']).map(&:concept_id)])
+    @foot_check_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND encounter.encounter_id IN (?)',
+        diabetes_test_id, foot_check_encounters.map(&:id)],
+      :order => 'obs_datetime DESC').first rescue ""
+
+    # Visual Acuity RIGHT EYE FUNDOSCOPY
+    visual_acuity_encounters = @patient.encounters.find(:all,
+      :joins => :observations,
+      :conditions => ['concept_id IN (?)',
+        ConceptName.find_all_by_name(['LEFT EYE VISUAL ACUITY',
+            'RIGHT EYE VISUAL ACUITY']).map(&:concept_id)])
+    @visual_acuity_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND encounter.encounter_id IN (?)',
+        diabetes_test_id, visual_acuity_encounters.map(&:id)],
+      :order => 'obs_datetime DESC').first rescue ""
+
+    # Fundoscopy
+    fundoscopy_encounters = @patient.encounters.find(:all,
+      :joins => :observations,
+      :conditions => ['concept_id IN (?)',
+        ConceptName.find_all_by_name(['LEFT EYE FUNDOSCOPY',
+            'RIGHT EYE FUNDOSCOPY']).map(&:concept_id)])
+    @fundoscopy_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND encounter.encounter_id IN (?)',
+        diabetes_test_id, fundoscopy_encounters.map(&:id)],
+      :order => 'obs_datetime DESC').first rescue ""
+
+    # Urea
+    urea_id = Concept.find_by_name('UREA').id
+    @urea_obs = @patient.person.observations.find(:all,
+      :joins => :encounter,
+      :conditions => ['encounter_type = ? AND concept_id = ?',
+        diabetes_test_id, urea_id],
+      :order => 'obs_datetime DESC').first rescue ""
+
+    recent_screen_complications = {"creatinine" => @creatinine_obs,
+      "urine_protein" => @urine_protein_obs,
+      "foot_check" => @foot_check_obs,
+      "visual_acuity" => @visual_acuity_obs,
+      "fundoscopy" => @fundoscopy_obs,
+      "urea" => @urea_obs
+    }
+
+  end
+
+  def patient_diabetes_medication_duration(patient_id)
+
+    @patient = Patient.find(patient_id || session[:patient_id]) rescue nil
+
+    @person = @patient.person
+    @encounters = @patient.encounters.find_all_by_encounter_type(EncounterType.find_by_name('TREATMENT').id)
+    @observations = @encounters.map(&:observations).flatten
+    @obs_datetimes = @observations.map { |each|each.obs_datetime.strftime("%d-%b-%Y")}.uniq
+
+    @mindate = @obs_datetimes.first
+
+    @maxdate = @obs_datetimes.last
+
+    return_string = ""
+
+    if(@maxdate && @mindate)
+      date_diff = (@maxdate.to_date - @mindate.to_date).to_i
+
+      if(date_diff > 365)
+        return_string = ((@maxdate.to_date - @mindate.to_date).to_i/365).to_s + " years"
+      else
+        if(date_diff > 30)
+          return_string = ((@maxdate.to_date - @mindate.to_date).to_i/30).to_s + " months"
+        else
+          return_string = ((@maxdate.to_date - @mindate.to_date).to_i/30).to_s + " months"
+        end
+      end
+
+    else
+      return_string = " an unknown period"
+    end
+
+    patient_diabetes_medication_duration = return_string
+
+    patient_diabetes_medication_duration
   end
   
   private
