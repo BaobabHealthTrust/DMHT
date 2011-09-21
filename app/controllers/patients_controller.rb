@@ -15,6 +15,8 @@ class PatientsController < ApplicationController
       @prescriptions = restriction.filter_orders(@prescriptions)
       @programs = restriction.filter_programs(@programs)
     end
+
+    @patient_treatements = treatment_orders(@patient.id)
     # render :template => 'dashboards/overview', :layout => 'dashboard'
 
     @date = (session[:datetime].to_date rescue Date.today).strftime("%Y-%m-%d")
@@ -792,6 +794,33 @@ class PatientsController < ApplicationController
     render :layout => 'menu'
   end
 
+  def treatment_orders(patient_id)
+
+    treatment_encouter_id   = EncounterType.find_by_name("TREATMENT").id
+    drug_order_id           = OrderType.find_by_name("DRUG ORDER").id
+    diabetes_id             = Concept.find_by_name("DIABETES MEDICATION").id
+    hypertensition_id       = Concept.find_by_name("HYPERTENSION").id
+
+    Order.find_by_sql("SELECT distinct orders.order_id, orders.concept_id,concept_name.name AS drug_name,obs.value_coded AS diagnosis_id,
+                         MAX(auto_expire_date) AS end_date, MIN(start_date) AS start_date,
+                         DATEDIFF(MAX(auto_expire_date), MIN(start_date))AS days,
+                         DATEDIFF(NOW(), MIN(start_date)) days_so_far,
+                        dose, drug.units, frequency
+                        FROM obs
+                        INNER JOIN encounter on encounter.encounter_id = obs.encounter_id
+                        INNER JOIN orders on orders.encounter_id = encounter.encounter_id
+                        INNER JOIN concept_name ON concept_name.concept_id = orders.concept_id
+                        INNER JOIN drug_order ON drug_order.order_id = orders.order_id
+                        INNER JOIN drug ON drug.drug_id = drug_order.drug_inventory_id
+                        INNER JOIN concept_name_tag_map on concept_name_tag_map.concept_name_id = concept_name.concept_name_id
+                        WHERE encounter_type = #{treatment_encouter_id} AND encounter.patient_id = #{patient_id}
+                          AND encounter.voided = 0 AND orders.voided = 0
+                          AND orders.order_type_id = #{drug_order_id} AND obs.value_coded IN (#{diabetes_id}, #{hypertensition_id})
+                          AND concept_name_tag_id = 4
+                        GROUP BY order_id, obs.value_coded
+                        ORDER BY drug_name, start_date DESC")
+  end
+  
   private
   
   
