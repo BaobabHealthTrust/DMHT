@@ -1,6 +1,35 @@
 <html>
     <head>
-        <%= stylesheet_link_tag "miscellaneous" %>
+      <style type="text/css">
+        .dottedTableBorder{
+        border:1px dotted;
+        }
+
+        .tableHeader{
+          text-align: left;
+          font-size:  1em;
+          color:      #FFFFFF;
+          background: #808080;
+        }
+        a.button.green {
+            width:220px;
+            -moz-user-select:none;
+            border:0 none;
+            color:white;
+            cursor:pointer;
+            display:block;
+            font-weight:bold;
+            padding:0 8px 0 0;
+            text-align:center;
+            text-decoration:none;
+            background:#008000 none repeat scroll 0 0;
+            font-size:1.4em;
+            height:50px;
+            line-height:50px;
+            min-width:48px;
+            margin-top:10px
+          }
+      </style>
     </head>
         <body>  
           <base target="_parent">
@@ -13,12 +42,12 @@
             </tr>
 
             <%
-            creatinine = @recents["creatinine"]
-            foot_check = @recents["foot_check"]
-            visual_acuity = @recents["visual_acuity"]
-            urine_protein = @recents["urine_protein"]
-            fundoscopy = @recents["fundoscopy"]
-            urea = @recents["urea"]
+            creatinine = @recents["creatinine"] rescue ""
+            foot_check = @recents["foot_check"] rescue ""
+            visual_acuity = @recents["visual_acuity"] rescue ""
+            urine_protein = @recents["urine_protein"] rescue ""
+            fundoscopy = @recents["fundoscopy"] rescue ""
+            urea = @recents["urea"] rescue ""
 
             def is_diabetes_test_expired(diabetes_test)
               ((((Date.today - diabetes_test.obs_datetime.to_date).to_f/365.0)>1.0) ? true: false) rescue false

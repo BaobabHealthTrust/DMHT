@@ -43,10 +43,11 @@
               <option value='/patients/overview?patient_id=<%= @patient.id %>'>Overview</option>
               <option value='/patients/visit_history?patient_id=<%= @patient.id %>'>Current Visit</option>
               <option value='/patients/past_visits_summary?patient_id=<%= @patient.id %>'>Past Visits</option>
-              <option value="/patients/hiv?id=<%= @patient.id -%>">HIV Status</option>
-              <option value="/patients/recent_screen_complications?id=<%= @patient.id -%>">Recent Complications</option>
-              <option value="/patients/important_medical_history?id=<%= @patient.id -%>">Important Medical History</option>
-              <option value="/encounters/patient_medical_history?patient_id=<%= @patient.id -%>">Medical History</option>
+              <option value="/patients/hiv_status?patient_id=<%= @patient.id -%>">HIV Status</option>
+              <option value="/patients/recent_screen_complications?patient_id=<%= @patient.id -%>">Recent Complications</option>
+              <option value="/patients/diabetes_treatments?patient_id=<%= @patient.id -%>">Current Medication</option>
+              <option value="/patients/important_medical_history?patient_id=<%= @patient.id -%>">Medical History</option>
+              <option value="/encounters/patient_medical_history?patient_id=<%= @patient.id -%>">Patient Medical History</option>
               <option value='/patients/personal/<%= @patient.id -%>'>Printouts/Other</option>
             </select>
             <% if @patient.person.dead == 1%>
@@ -70,7 +71,7 @@
                 </select>
                 <select id="navigation_links">
                     <option link="/encounter_types?patient_id=<%= @patient.id -%>" ttSize = "160px">Tasks</option>
-                    <option link="/patients/mastercard?patient_id=<%= @patient.id -%>&source=<%= @source -%>>Complications</option>
+                    <option link="/patients/mastercard?patient_id=<%= @patient.id -%>">Complications</option>
                   <% if show_lab_results %>
                     <option link="/lab/results/<%=@patient.id -%>">Lab results</option>
                   <%end%>

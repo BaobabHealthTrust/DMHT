@@ -98,6 +98,12 @@ class Observation < ActiveRecord::Base
     "#{formatted_name}:  #{self.answer_string(tags)}"
   end
 
+  def to_s_formatted
+    text = "#{self.concept.name.name rescue 'Unknown concept name'}"
+    text += ": #{self.answer_string}" if(self.answer_string.downcase != "yes" && self.answer_string.downcase != "unknown")
+    text
+  end
+  
   def name(tags=[])
     formatted_name = self.concept_name.tagged(tags).name rescue nil
     formatted_name ||= self.concept_name.name rescue nil

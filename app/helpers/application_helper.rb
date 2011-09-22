@@ -179,4 +179,10 @@ module ApplicationHelper
     set.map{|item|next if item.concept.blank? ; item.concept.fullname }
   end
 
+  def encounter_button(encounter_name, encounter_url, button_class)
+    if button_class != "gray"
+      "<option value=\"#{encounter_url}\">#{encounter_name}</option>"
+    end
+  end
+
 end
