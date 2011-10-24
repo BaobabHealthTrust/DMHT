@@ -101,11 +101,9 @@ class Order < ActiveRecord::Base
                         INNER JOIN concept_name ON concept_name.concept_id = orders.concept_id
                         INNER JOIN drug_order ON drug_order.order_id = orders.order_id
                         INNER JOIN drug ON drug.drug_id = drug_order.drug_inventory_id
-                        INNER JOIN concept_name_tag_map on concept_name_tag_map.concept_name_id = concept_name.concept_name_id
                         WHERE encounter_type = #{treatment_encouter_id} AND encounter.patient_id = #{patient_id}
                           AND encounter.voided = 0 AND orders.voided = 0
                           AND orders.order_type_id = #{drug_order_id} AND obs.value_coded IN (#{diabetes_id}, #{hypertensition_id})
-                          AND concept_name_tag_id = 4
                         GROUP BY order_id, obs.value_coded
                         ORDER BY drug_name, start_date DESC")
   end

@@ -1,5 +1,6 @@
 class PrescriptionsController < ApplicationController
   def index
+    #raise'index'
     @patient = Patient.find(params[:patient_id] || session[:patient_id]) rescue nil
     @orders = @patient.current_orders rescue []
 
@@ -10,14 +11,13 @@ class PrescriptionsController < ApplicationController
 
     @patient.treatments.map{|treatement|
 
-
       if (treatement.diagnosis_id.to_i == diabetes_id && @patient.treatments.first.start_date.to_date == treatement.start_date.to_date)
         @patient_diabetes_treatements << treatement
       elsif(@patient.treatments.first.start_date.to_date == treatement.start_date.to_date)
         @patient_hypertension_treatements << treatement
       end
     }
-    #raise @patient_diabetes_treatements.to_yaml
+    #raise @patient_hypertension_treatements.to_yaml
     redirect_to "/prescriptions/new?patient_id=#{params[:patient_id] || session[:patient_id]}" and return if @patient_diabetes_treatements.blank?   #@orders.blank?
     render :template => 'prescriptions/index', :layout => 'menu'
   end
@@ -40,10 +40,10 @@ class PrescriptionsController < ApplicationController
     }
 
   end
-  
+
   def void
     @order = Order.find(params[:order_id])
-    @order.void!
+    @order.void
     index and return
   end
   
@@ -103,10 +103,12 @@ class PrescriptionsController < ApplicationController
         @drug = Drug.find_by_name(@formulation) rescue nil
 
         unless @drug
+        raise'here'
           flash[:notice] = "No matching drugs found for formulation #{prescription[:formulation]}"
           render :new
           return
         end
+        
         start_date = Time.now
         auto_expire_date = Time.now + prescription[:duration].to_i.days
         prn = prescription[:prn]
@@ -121,15 +123,14 @@ class PrescriptionsController < ApplicationController
       end
 
     }
-
     if(@patient)
       redirect_to "/prescriptions?patient_id=#{@patient.id}"
     else
       redirect_to "/prescriptions?patient_id=#{params[:patient_id]}"
     end
-    
+
   end
-  
+
   # Look up the set of matching generic drugs based on the concepts. We 
   # limit the list to only the list of drugs that are actually in the 
   # drug list so we don't pick something we don't have.

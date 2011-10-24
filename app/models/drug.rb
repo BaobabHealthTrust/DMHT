@@ -64,5 +64,19 @@ class Drug < ActiveRecord::Base
   def self.frequencies
     ConceptName.drug_frequency
   end
-
+  
+  # Eventually this needs to be a lookup into a drug_packs table
+  def pack_sizes
+    ["10", "20", "30", "60"]
+  end
+  
+  def self.matching_drugs(diagnosis_id, name)
+    self.find(:all,:select => "concept.concept_id AS concept_id, concept_name.name AS name,
+        drug.dose_strength AS strength, drug.name AS formulation",
+      :joins => "INNER JOIN concept       ON drug.concept_id = concept.concept_id
+               INNER JOIN concept_set   ON concept.concept_id = concept_set.concept_id
+               INNER JOIN concept_name  ON concept_name.concept_id = concept.concept_id",
+      :conditions => ["concept_set.concept_set = ? AND drug.name LIKE ?", diagnosis_id, name],
+      :group => "concept.concept_id, drug.name, drug.dose_strength")
+  end
 end
