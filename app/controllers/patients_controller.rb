@@ -1133,10 +1133,10 @@ class PatientsController < ApplicationController
     #@status =Concept.find(Observation.find(:first,  :conditions => ["voided = 0 AND person_id= ? AND concept_id = ?",@patient.person.id, Concept.find_by_name('HIV STATUS').id], :order => 'obs_datetime DESC').value_coded).name.name rescue 'UNKNOWN'
     @hiv_test_date    = @patient.hiv_test_date rescue "UNKNOWN"
     @hiv_test_date = "Unknown" if @hiv_test_date.blank?
-    @date_of_hiv_test_advice = hiv_status_observation.obs_datetime.strftime("%d/%b/%Y") #rescue nil
+    @date_of_hiv_test_advice = hiv_status_observation.obs_datetime.strftime("%d/%b/%Y") rescue nil
 
-    @remote_art_info  = Patient.remote_art_info(@patient.national_id) #rescue nil
-    @art_start_date   = @patient.art_start_date.strftime("%d/%b/%Y") #rescue nil
+    @remote_art_info  = Patient.remote_art_info(@patient.national_id) rescue nil
+    @art_start_date   = @patient.art_start_date.strftime("%d/%b/%Y") rescue nil
 
     @hiv_status_encounters = [{:name => "Reactive",        :param => "REACTIVE",            :class => "green", :url => ""},
       {:name => "Non-Reactive",    :param => "NON-REACTIVE",        :class => "green", :url => ""},

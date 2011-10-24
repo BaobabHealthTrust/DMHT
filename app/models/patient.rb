@@ -33,6 +33,10 @@ class Patient < ActiveRecord::Base
     }.flatten.compact
   end
 
+  def treatments
+    Order.treatement_orders(self.patient_id)
+  end
+
   def current_treatment_encounter(date = Time.now())
     type = EncounterType.find_by_name("TREATMENT")
     encounter = encounters.find(:first,:conditions =>["DATE(encounter_datetime) = ? AND encounter_type = ?",date.to_date,type.id])

@@ -1,8 +1,16 @@
 class EncountersController < ApplicationController
+  
+  before_filter :set_patient_details
+  
+  def create(params=params, session=session)
+    if params['encounter']['encounter_type_name'] == 'TB_INITIAL'
+      (params[:observations] || []).each do |observation|
+        if observation['concept_name'].upcase == 'TRANSFER IN' and observation['value_coded_or_text'] == "YES"
+          params[:observations] << {"concept_name" => "TB STATUS","value_coded_or_text" => "Confirmed TB on treatment"}
+        end
+      end
+    end
 
-   before_filter :set_patient_details
-
-  def create
     if params['encounter']['encounter_type_name'] == 'ART_INITIAL'
       if params[:observations][0]['concept_name'].upcase == 'EVER RECEIVED ART' and params[:observations][0]['value_coded_or_text'].upcase == 'NO'
         observations = []
@@ -73,10 +81,33 @@ class EncountersController < ApplicationController
       params[:observations] = observations unless observations.blank?
     end
 
-    @patient = Patient.find(params[:encounter][:patient_id])
+   if params['encounter']['encounter_type_name'].upcase == 'REFER PATIENT OUT?'
+      observations = []
+      (params[:observations] || []).each do |observation|
+        if observation['concept_name'].upcase == 'REFERRAL CLINIC IF REFERRED'
+          observation['value_numeric'] = observation['value_coded_or_text'] rescue nil
+          observation['value_text'] = Location.find(observation['value_coded_or_text']).name.to_s rescue ""
+          observation['value_coded_or_text'] = ""
+        end
 
-    # set current location via params if given
-    Location.current_location = Location.find(params[:location]) if params[:location]
+        observations << observation
+      end
+
+      params[:observations] = observations unless observations.blank?
+    end
+
+    @patient = Patient.find(params[:encounter][:patient_id]) rescue nil
+    if params[:location]
+      if @patient.nil?
+        @patient = Patient.find_with_voided(params[:encounter][:patient_id])
+      end
+
+      Person.migrated_datetime = params['encounter']['date_created']
+      Person.migrated_creator  = params['encounter']['creator'] rescue nil
+
+      # set current location via params if given
+      Location.current_location = Location.find(params[:location])
+    end
 
     # Encounter handling
     encounter = Encounter.new(params[:encounter])
@@ -130,6 +161,7 @@ class EncountersController < ApplicationController
         Observation.create(observation)
       end
     end
+
 
     # Program handling
     date_enrolled = params[:programs][0]['date_enrolled'].to_time rescue nil
@@ -221,18 +253,46 @@ class EncountersController < ApplicationController
      end
     else
       render :text => encounter.encounter_id.to_s and return
+      #return encounter.id.to_s  # support non-RESTful creation of encounters
     end
+  end
+
+  def patient_medical_history
+    render :template => false, :layout => false
   end
 
 	def new
 		@patient = Patient.find(params[:patient_id] || session[:patient_id])
 		session_date = session[:datetime].to_date rescue Date.today
-        @current_encounters = @patient.encounters.find_by_date(session_date)
-        
+        @current_encounters = @patient.encounters.find_by_date(session_date)   
+        @previous_tb_visit = previous_tb_visit(@patient.id)
         @is_patient_pregnant_value = nil
         @is_patient_breast_feeding_value = nil
         @currently_using_family_planning_methods = nil
+        @transfer_in_TB_registration_number = get_todays_observation_answer_for_encounter(@patient.id, "TB_INITIAL", "TB registration number")
+        @referred_to_htc = nil
         @family_planning_methods = []
+        
+        if (params[:encounter_type].upcase rescue '') == 'UPDATE HIV STATUS'
+            @referred_to_htc = get_todays_observation_answer_for_encounter(@patient.id, "UPDATE HIV STATUS", "Refer to HTC")
+        end
+
+		@given_lab_results = Encounter.find(:last,
+			:order => "encounter_datetime DESC,date_created DESC",
+			:conditions =>["encounter_type = ? and patient_id = ?",
+				EncounterType.find_by_name("GIVE LAB RESULTS").id,@patient.id]).observations.map{|o|
+				o.answer_string if o.to_s.include?("Laboratory results given to patient")} rescue nil
+
+		@transfer_to = Encounter.find(:last,:conditions =>["encounter_type = ? and patient_id = ?",
+			EncounterType.find_by_name("TB VISIT").id,@patient.id]).observations.map{|o|
+				o.answer_string if o.to_s.include?("Transfer out to")} rescue nil
+
+		@recent_sputum_results = @patient.recent_sputum_results rescue nil
+
+		@continue_treatment_at_site = []
+		Encounter.find(:last,:conditions =>["encounter_type = ? and patient_id = ? AND DATE(encounter_datetime) = ?",
+		EncounterType.find_by_name("TB CLINIC VISIT").id,
+		@patient.id,session_date.to_date]).observations.map{|o| @continue_treatment_at_site << o.answer_string if o.to_s.include?("Continue treatment")} rescue nil
 
 		@patient_has_closed_TB_program_at_current_location = PatientProgram.find(:all,:conditions =>
 			["voided = 0 AND patient_id = ? AND location_id = ? AND (program_id = ? OR program_id = ?)", @patient.id, Location.current_health_center.id, Program.find_by_name('TB PROGRAM').id, Program.find_by_name('MDR-TB PROGRAM').id]).last.closed? rescue true
@@ -271,8 +331,8 @@ class EncountersController < ApplicationController
 		@art_first_visit = is_first_art_visit(@patient.id)
 		@tb_first_registration = is_first_tb_registration(@patient.id)
 		@tb_programs_state = uncompleted_tb_programs_status(@patient.id)
-    @had_tb_treatment_before = ever_received_tb_treatment(@patient.id)
-    @any_previous_tb_programs = any_previous_tb_programs(@patient.id)
+		@had_tb_treatment_before = ever_received_tb_treatment(@patient.id)
+		@any_previous_tb_programs = any_previous_tb_programs(@patient.id)
 
 		@patient.sputum_orders_without_submission.each{|order| @sputum_orders[order.accession_number] = Concept.find(order.value_coded).fullname rescue order.value_text}
 		@patient.sputum_submissons_with_no_results.each{|order| @sputum_submission_waiting_results[order.accession_number] = Concept.find(order.value_coded).fullname rescue order.value_text}
@@ -280,15 +340,43 @@ class EncountersController < ApplicationController
 
 		@tb_status = recent_lab_results(@patient.id, session_date)
 
-    @cell_number = @patient.person.person_attributes.find_by_person_attribute_type_id(PersonAttributeType.find_by_name("Cell Phone Number").id).value rescue ''
+    	@cell_number = @patient.person.person_attributes.find_by_person_attribute_type_id(PersonAttributeType.find_by_name("Cell Phone Number").id).value rescue ''
+
+    	@tb_symptoms = []
+
+		if (params[:encounter_type].upcase rescue '') == 'TB_INITIAL'
+			tb_program = Program.find_by_name('TB Program')
+			@tb_regimen_array = regimen_options(tb_program.regimens, @patient.person.age)
+			tb_program = Program.find_by_name('MDR-TB Program')
+			@tb_regimen_array += regimen_options(tb_program.regimens, @patient.person.age)
+			@tb_regimen_array += [['Other', 'Other'], ['Unknown', 'Unknown']]
+		end
+
+		if (params[:encounter_type].upcase rescue '') == 'TB_VISIT'
+		  @current_encounters.reverse.each do |enc|
+		     enc.observations.each do |o|
+		       @tb_symptoms << o.answer_string.strip if o.to_s.include?("TB symptoms") rescue nil
+		     end
+		   end
+		end
+
+		@location_transferred_to = []
+		if (params[:encounter_type].upcase rescue '') == 'APPOINTMENT'
+		  @current_encounters.reverse.each do |enc|
+		     enc.observations.each do |o|
+		       @location_transferred_to << o.to_s_location_name.strip if o.to_s.include?("Transfer out to") rescue nil
+		     end
+		   end
+		end
 
 		@tb_classification = nil
 		@eptb_classification = nil
 		@tb_type = nil
-    @people = Person.search(params) if params['encounter_type'].upcase rescue '' == "TB_SUSPECT_SOURCE_OF_REFERRAL"
+
+    	@people = Person.search(params) if params['encounter_type'].upcase rescue '' == "TB_SUSPECT_SOURCE_OF_REFERRAL"
 
 		if (params[:encounter_type].upcase rescue '') == 'TB_REGISTRATION'
-			
+
 			tb_clinic_visit_obs = Encounter.find(:first,:order => "encounter_datetime DESC",
 				:conditions => ["DATE(encounter_datetime) = ? AND patient_id = ? AND encounter_type = ?",
 				session_date, @patient.id, EncounterType.find_by_name('TB CLINIC VISIT').id]).observations rescue []
@@ -303,42 +391,36 @@ class EncountersController < ApplicationController
 			#raise @tb_classification.to_s
 
 		end
-		
+
         if  ['ART_VISIT', 'TB_VISIT', 'HIV_STAGING'].include?((params[:encounter_type].upcase rescue ''))
-            for encounter in @current_encounters.reverse do
+			@local_tb_dot_sites_tag = tb_dot_sites_tag 
+			for encounter in @current_encounters.reverse do
+				if encounter.name.humanize.include?('Hiv staging') || encounter.name.humanize.include?('Tb visit') || encounter.name.humanize.include?('Art visit') 
+					encounter = Encounter.find(encounter.id, :include => [:observations])
+					for obs in encounter.observations do
+						if obs.concept_id == ConceptName.find_by_name("IS PATIENT PREGNANT?").concept_id
+							@is_patient_pregnant_value = "#{obs.to_s(["short", "order"]).to_s.split(":")[1]}"
+						end
 
-                if encounter.name.humanize.include?('Hiv staging') || encounter.name.humanize.include?('Tb visit') || encounter.name.humanize.include?('Art visit') 
-                    
-                    encounter = Encounter.find(encounter.id, :include => [:observations])
+						if obs.concept_id == ConceptName.find_by_name("IS PATIENT BREAST FEEDING?").concept_id
+							@is_patient_breast_feeding_value = "#{obs.to_s(["short", "order"]).to_s.split(":")[1]}"
+						end
+					end
 
-                    for obs in encounter.observations do
-                        if obs.concept_id == ConceptName.find_by_name("IS PATIENT PREGNANT?").concept_id
-                            @is_patient_pregnant_value = "#{obs.to_s(["short", "order"]).to_s.split(":")[1]}"
-                        end
-                        
-                        if obs.concept_id == ConceptName.find_by_name("IS PATIENT BREAST FEEDING?").concept_id
-                            @is_patient_breast_feeding_value = "#{obs.to_s(["short", "order"]).to_s.split(":")[1]}"
-                        end
-                        
-                    end
+					if encounter.name.humanize.include?('Tb visit') || encounter.name.humanize.include?('Art visit')
+						encounter = Encounter.find(encounter.id, :include => [:observations])
+						for obs in encounter.observations do
+							if obs.concept_id == ConceptName.find_by_name("CURRENTLY USING FAMILY PLANNING METHOD").concept_id
+								@currently_using_family_planning_methods = "#{obs.to_s(["short", "order"]).to_s.split(":")[1]}".squish
+							end
 
-                    if encounter.name.humanize.include?('Tb visit') || encounter.name.humanize.include?('Art visit')
-
-                        encounter = Encounter.find(encounter.id, :include => [:observations])
-                        for obs in encounter.observations do
-                            if obs.concept_id == ConceptName.find_by_name("CURRENTLY USING FAMILY PLANNING METHOD").concept_id
-                                @currently_using_family_planning_methods = "#{obs.to_s(["short", "order"]).to_s.split(":")[1]}".squish
-                            end
-
-                            if obs.concept_id == ConceptName.find_by_name("FAMILY PLANNING METHOD").concept_id
-                                @family_planning_methods << "#{obs.to_s(["short", "order"]).to_s.split(":")[1]}".squish
-                            end
-                        end
-                        
-                    end
-                    
-                end
-            end
+							if obs.concept_id == ConceptName.find_by_name("FAMILY PLANNING METHOD").concept_id
+								@family_planning_methods << "#{obs.to_s(["short", "order"]).to_s.split(":")[1]}".squish
+							end
+						end
+					end
+				end
+			end
         end
 
 		redirect_to "/" and return unless @patient
@@ -411,7 +493,7 @@ class EncountersController < ApplicationController
 		render :layout => false
 	end
 
-	def void 
+	def void
 		@encounter = Encounter.find(params[:id])
 		@encounter.void
 		head :ok
@@ -486,21 +568,21 @@ class EncountersController < ApplicationController
 	end
 
 	def is_first_art_visit(patient_id)
-		art_encounter = Encounter.find(:first,:conditions =>["patient_id = ? AND encounter_type = ?",
-				patient_id, EncounterType.find_by_name('ART_INITIAL').id]) rescue ''
-		return false if art_encounter == ''
-		return true
+		session_date = session[:datetime].to_date rescue Date.today
+		art_encounter = Encounter.find(:first,:conditions =>["voided = 0 AND patient_id = ? AND encounter_type = ? AND DATE(encounter_datetime) < ?",
+				patient_id, EncounterType.find_by_name('ART_INITIAL').id, session_date ]) rescue nil
+		return true if art_encounter.nil?
+		return false
 	end
 
 	def is_first_tb_registration(patient_id)
 		session_date = session[:datetime].to_date rescue Date.today
 		tb_registration = Encounter.find(:first,
-			:conditions =>["patient_id = ? AND encounter_type = ? AND DATE(encounter_datetime) = ?",
-			patient_id,EncounterType.find_by_name('TB REGISTRATION').id, session_date],
-			:order =>'encounter_datetime DESC') rescue ''
+			:conditions =>["patient_id = ? AND encounter_type = ? AND DATE(encounter_datetime) < ?",
+			patient_id,EncounterType.find_by_name('TB REGISTRATION').id, session_date]) rescue nil
 
-		return false if tb_registration == ''
-		return true
+		return true if tb_registration.nil?
+		return false
 	end
 
 	def uncompleted_tb_programs_status(patient_id)
@@ -722,11 +804,13 @@ class EncountersController < ApplicationController
       ],
       'duration_of_current_cough' => [
         ['',''],
+        ["Less than 1 week", "Less than one week"],
         ["1 Week", "1 week"],
         ["2 Weeks", "2 weeks"],
         ["3 Weeks", "3 weeks"],
         ["4 Weeks", "4 weeks"],
-        ["More than 4 Weeks", "More than 4 weeks"]
+        ["More than 4 Weeks", "More than 4 weeks"],
+        ["Unknown", "Unknown"]
       ],
       'eptb_classification'=> [
         ['',''],
@@ -771,29 +855,58 @@ class EncountersController < ApplicationController
 		return false
 	end
 
-  def any_previous_tb_programs(patient_id)
-    @tb_programs = ''
-    patient_programs = PatientProgram.find_all_by_patient_id(patient_id)
+    def any_previous_tb_programs(patient_id)
+        @tb_programs = ''
+        patient_programs = PatientProgram.find_all_by_patient_id(patient_id)
 
-    unless patient_programs.blank?
-      patient_programs.each{ |patient_program|
-        if patient_program.program_id == Program.find_by_name("MDR-TB program").program_id ||
-           patient_program.program_id == Program.find_by_name("TB PROGRAM").program_id
-          @tb_programs = true
-          break
+        unless patient_programs.blank?
+          patient_programs.each{ |patient_program|
+            if patient_program.program_id == Program.find_by_name("MDR-TB program").program_id ||
+               patient_program.program_id == Program.find_by_name("TB PROGRAM").program_id
+              @tb_programs = true
+              break
+            end
+          }
         end
-      }
+	    
+	    return false if @tb_programs.blank?
+        return true
     end
-		return false if @tb_programs.blank?
-    return true
+	
+	def previous_tb_visit(patient_id)
+		session_date = session[:datetime].to_date rescue Date.today
+        encounter = Encounter.find(:all, :conditions=>["patient_id = ? \
+                    AND encounter_type = ? AND DATE(encounter_datetime) < ? ", patient_id, \
+                    EncounterType.find_by_name("TB VISIT").id, session_date]).last rescue nil
+        @date = encounter.encounter_datetime.to_date rescue nil
+        previous_visit_obs = []
+
+        if !encounter.nil?
+            for obs in encounter.observations do
+                    previous_visit_obs << "#{(obs.to_s(["short", "order"])).gsub('hiv','HIV').gsub('Hiv','HIV')}".squish
+            end
+        end
+        previous_visit_obs
 	end
-
-  def patient_medical_history
-
-    render :template => false, :layout => false
-  end
-
-  def set_patient_details
+	
+	def get_todays_observation_answer_for_encounter(patient_id, encountertype_name, observation_name)
+		session_date = session[:datetime].to_date rescue Date.today
+        encounter = Encounter.find(:all, :conditions=>["patient_id = ? \
+                    AND encounter_type = ? AND DATE(encounter_datetime) = ? ", patient_id, \
+                    EncounterType.find_by_name("#{encountertype_name}").id, session_date]).last rescue nil
+        @date = encounter.encounter_datetime.to_date rescue nil
+        observation = nil
+        if !encounter.nil?
+            for obs in encounter.observations do
+                if obs.concept_id == ConceptName.find_by_name("#{observation_name}").concept_id
+                    observation = "#{obs.to_s(["short", "order"]).to_s.split(":")[1]}".squish
+                end
+            end
+        end
+        observation
+	end
+	
+	def set_patient_details
     if (params[:patient_id] || session[:patient_id])
       @patient = Patient.find(params[:patient_id] || session[:patient_id]) if (!@patient)
       void_encounter if (params[:void] && params[:void] == 'true')

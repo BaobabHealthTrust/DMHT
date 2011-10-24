@@ -170,8 +170,11 @@ class UserController < ApplicationController
   def update
     #find_by_person_id(params[:id])
     @user = User.find(params[:id])
-    if params[:user]['username']
-      @user.update_attributes(:username => params[:user]['username'])
+
+    username = params[:user]['username'] rescue User.current_user.username
+
+    if username
+      @user.update_attributes(:username => username)
     end
 
     PersonName.find(:all,:conditions =>["voided = 0 AND person_id = ?",@user.person_id]).each do | person_name |
@@ -277,6 +280,8 @@ class UserController < ApplicationController
     role_privileges = RolePrivilege.find(:all,:conditions => ["role IN (?)", user_roles])
     @privileges = Privilege.find(:all,:conditions => ["privilege IN (?)", role_privileges.collect{|r|r.privilege}])
 
+    #raise @privileges.to_yaml
+
     @activities = User.current_user.activities.reject{|activity| 
       GlobalProperty.find_by_property("disable_tasks").property_value.split(",").include?(activity)
     } rescue User.current_user.activities
@@ -285,12 +290,27 @@ class UserController < ApplicationController
     encounter_privilege_hash = generate_encounter_privilege_map   
     @privileges = @privileges.collect do |privilege|
       if !encounter_privilege_hash[privilege.privilege.squish].nil?
-          encounter_privilege_hash[privilege.privilege.squish].gsub('Hiv','HIV').gsub('Tb','TB').gsub('Art','ART').gsub('hiv','HIV')
+          encounter_privilege_hash[privilege.privilege.squish].humanize
       else
-          privilege.privilege.gsub('Hiv','HIV').gsub('Tb','TB').gsub('Art','ART').gsub('hiv','HIV')
+          privilege.privilege
       end
     end
     
+   #.gsub('Hiv','HIV') .gsub('Tb','TB').gsub('Art','ART').gsub('hiv','HIV')
+   # .gsub('Hiv','HIV').gsub('Tb','TB').gsub('Art','ART').gsub('hiv','HIV')
+    
+    @encounter_types = EncounterType.find(:all).map{|enc|enc.name.gsub(/.*\//,"").gsub(/\..*/,"").humanize}
+    @available_encounter_types = Dir.glob(RAILS_ROOT+"/app/views/encounters/*.rhtml").map{|file|file.gsub(/.*\//,"").gsub(/\..*/,"").humanize}
+    @available_encounter_types -= @available_encounter_types - @encounter_types
+
+    available_privileges_not_from_encounters_folder = []
+    
+    privileges_not_from_encounters_folder = ['Manage Prescriptions','Manage Appointments', 'Manage Drug Dispensations']
+    
+    available_privileges_not_from_encounters_folder += privileges_not_from_encounters_folder.select{|pri| @privileges.include?(pri)}
+
+    @privileges =   @privileges - (@privileges - @available_encounter_types) + available_privileges_not_from_encounters_folder
+
     @activities = @activities.collect do |activity| 
       if !encounter_privilege_hash[activity].nil?
           encounter_privilege_hash[activity.squish].gsub('Hiv','HIV').gsub('Tb','TB').gsub('Art','ART').gsub('hiv','HIV')
@@ -298,7 +318,11 @@ class UserController < ApplicationController
           activity.gsub('Hiv','HIV').gsub('Tb','TB').gsub('Art','ART').gsub('hiv','HIV')
       end
     end                            
-    
+
+    @privileges = @privileges.collect do |privilege|
+        privilege.gsub('Hiv','HIV').gsub('Tb','TB').gsub('Art','ART').gsub('hiv','HIV')
+    end
+    #@privileges += ['Manage prescriptions','Manage appointments', 'Dispensation']  
     @privileges.sort!
     @patient_id = params[:patient_id]
   end
