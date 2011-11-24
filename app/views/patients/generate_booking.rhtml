@@ -1,0 +1,50 @@
+<%= javascript_include_tag "load_balancer" %>
+<script type="text/javascript">
+  <!--
+  tt_cancel_destination = "/patients/show/<%= @patient.patient_id%>";
+  tt_cancel_show = '/patients/show/<%= @patient.id %>?auto_load_forms=false';
+  var patient_id = <%= @patient.id %>;
+
+  counts = <%= @counts.to_json() %>;
+
+  function summary() {
+    //updateWhoStage();
+    //updateReasonForArtEligibility();
+    //var conditions = selectedConditions();
+    var display = "<div><span class='title'>WHO Stage: Test</span></div>";
+
+    //$('inputFrame'+tstCurrentPage).innerHTML = '<div id="summary">' + display + '</div>' ;
+    $("clearButton").style.display = 'none';
+    $("cancelButton").style.display = 'none';
+
+    generateBalancer();
+    $("observations__value_datetime").value = "";
+  }
+
+  //-->
+</script>
+
+<form id="frmMain" action="/encounters/create/" method="post">
+
+	<%= hidden_field_tag "encounter[encounter_type_name]", "APPOINTMENT" %>
+	<%= hidden_field_tag "encounter[patient_id]", @patient.id %>
+	<%= hidden_field_tag "encounter[encounter_datetime]", DateTime.now() %>
+	<%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
+
+	<%= hidden_field_tag("observations[][concept_name]", "RETURN VISIT DATE") %>
+	<%= hidden_field_tag("observations[][value_datetime]", DateTime.now()) %>
+	<%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+	<%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+
+	<%#= hidden_field_tag("next_url", "/patients/generate_booking?patient_id=#{@patient.id}") %>
+	<%= text_field_tag :summary, nil, { :tt_onLoad => "summary();", :optional => "true", :tt_pageStyleClass => "NoControls" } %>
+
+	<% session_date = session[:datetime].to_date rescue nil                       
+	if session_date %>
+	<p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
+		<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
+	<% else %>
+		<%= hidden_field_tag "filter[provider]", nil %>
+	<%end%>
+
+</form>
