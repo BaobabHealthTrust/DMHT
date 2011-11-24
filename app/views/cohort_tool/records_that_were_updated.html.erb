@@ -121,8 +121,8 @@ td {
 </table>
 
 <% unless patient_ids.blank? %>
-  <% form_tag :controller => 'patient' ,:action => 'mastercard',:method => "post"  do %>
-    <%= hidden_field 'id',patient_ids[0..-2].split(",").uniq.join(",") %>
+  <% form_tag :controller => 'patients' ,:action => 'mastercard',:method => "post"  do %>
+    <%= hidden_field 'patient_id',patient_ids[0..-2].split(",").uniq.join(",") %>
 <input id="mastercard" type="submit" value="Mastercards" name="commit"/>
   <% end %>
 <% end %>

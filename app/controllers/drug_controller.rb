@@ -41,8 +41,8 @@ class DrugController < ApplicationController
     @start_date = params[:start_date].to_date
     @end_date = params[:end_date].to_date
 
-#TODO
-#need to redo the SQL query
+    #TODO
+    #need to redo the SQL query
     @stock = {}
     ids = Pharmacy.active.find(:all).collect{|p|p.drug_id} rescue []
     Drug.find(:all,:conditions =>["drug_id IN (?)",ids]).each do | drug |
@@ -50,7 +50,15 @@ class DrugController < ApplicationController
       @stock[drug.name]["prescribed"] = Pharmacy.prescribed_drugs_since(drug.id, @start_date , @end_date)
       @stock[drug.name]["current_stock"] = Pharmacy.current_stock_as_from(drug.id, Pharmacy.first_delivery_date(drug.id) , @end_date)
       @stock[drug.name]["dispensed"] = Pharmacy.dispensed_drugs_since(drug.id, @start_date , @end_date)
-      @stock[drug.name]["consumption_per"] = sprintf('%.2f',((@stock[drug.name]["dispensed"].to_f / @stock[drug.name]["current_stock"].to_f) * 100.to_f)).to_s + " %" rescue "0 %"
+      
+      if ((@stock[drug.name]["current_stock"].to_f + 
+              @stock[drug.name]["dispensed"].to_f) * 100.to_f) > 0
+        @stock[drug.name]["consumption_per"] = sprintf('%.2f',
+          ((@stock[drug.name]["dispensed"].to_f / (@stock[drug.name]["current_stock"].to_f + 
+                  @stock[drug.name]["dispensed"].to_f)) * 100.to_f)).to_s + " %" rescue "0.00 %"
+      else
+        @stock[drug.name]["consumption_per"] = "0.00 %"
+      end
     end rescue []
     render :layout => "menu" 
   end
@@ -110,6 +118,13 @@ class DrugController < ApplicationController
     @end_date = params[:end_date].to_date
     @drugs_removed = Pharmacy.removed_from_shelves(@start_date,@end_date)
     render :layout => "menu"
+  end
+
+  def available_name    
+    ids = Pharmacy.active.find(:all).collect{|p|p.drug_id} rescue []
+    @names = Drug.find(:all,:conditions =>["name LIKE ? AND drug_id IN (?)","%" + 
+          params[:search_string] + "%", ids]).collect{|drug| drug.name}
+    render :text => "<li>" + @names.map{|n| n } .join("</li><li>") + "</li>"
   end
 
 end

@@ -6,7 +6,7 @@ class EncounterTypesController < ApplicationController
 
         privileges = role_privileges.each.map{ |role_privilege_pair| role_privilege_pair["privilege"].humanize }
 
-        @encounter_privilege_map = GlobalProperty.find_by_property("encounter_privilege_map").property_value.to_s rescue ''
+        @encounter_privilege_map = PatientService.get_global_property_value("encounter_privilege_map").to_s rescue ''
 
         @encounter_privilege_map = @encounter_privilege_map.split(",")
 
@@ -34,6 +34,7 @@ class EncounterTypesController < ApplicationController
 				
 
         @available_encounter_types = ((@available_encounter_types) - ((@available_encounter_types - roles_for_the_user) + (roles_for_the_user - @available_encounter_types)))
+        @available_encounter_types
         @available_encounter_types = @available_encounter_types.sort
         
         #@available_encounter_types = @available_encounter_types.sort << "IPT contact person"

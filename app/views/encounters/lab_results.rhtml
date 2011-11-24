@@ -46,7 +46,7 @@
 
     var dateCheck = "";
 
-    <% @sputum_date = "#{@patient.recent_sputum_submissions.map{|obs_datetime| obs_datetime.obs_datetime}.uniq} rescue #{Date.today}" %>
+    <% @sputum_date = "#{@recent_sputum_submissions.map{|obs_datetime| obs_datetime.obs_datetime}.uniq} rescue #{Date.today}" %>
     var sputumDate = "<%="#{@sputum_date.to_date.year},#{@sputum_date.to_date.month},#{@sputum_date.to_date.day}"%>";
     var sputum = new Date(sputumDate);
 
@@ -108,7 +108,7 @@
   }
   
   function setAttributes() {
-    saved_tb_status = "<%=@patient.tb_status %>"
+    saved_tb_status = "<%=@patient_tb_status %>"
     if (saved_tb_status.match(/treatment/i))
       return
 
@@ -164,7 +164,7 @@
   <%= hidden_field_tag "encounter[encounter_datetime]", DateTime.now() %>
   <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
 
-  <% @sputum_date = "#{@patient.recent_sputum_submissions.map{|obs_datetime| obs_datetime.obs_datetime}.uniq} rescue #{Date.today}" %>
+  <% @sputum_date = "#{@recent_sputum_submissions.map{|obs_datetime| obs_datetime.obs_datetime}.uniq} rescue #{Date.today}" %>
 
   <!--TODO
   -->
@@ -172,7 +172,7 @@
     {:id => "lab_serial_number",
      :field_type => 'number',
      :helpText => "Laboratory serial number" } %>
-  
+
   <label for='sputum_microscopy_year'>HIV test year</label>
   <%= text_field_tag "sputum_microscopy_year", nil, {:helpText => 'Sputum microscopy year', :field_type => 'number', :absoluteMin => "1982", :min => "1982", :absoluteMax => Date.today.year, :tt_pageStyleClass => "Numeric NumbersOnly"}  %>
 
@@ -239,6 +239,14 @@ s[i]})" } %>
         :tt_pageStyleClass => "NoControls" 
     } %>
 
+  <% session_date = session[:datetime].to_date rescue nil                       
+    if session_date %>
+
+    <p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
+<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
+    <% else %>
+      <%= hidden_field_tag "filter[provider]", nil %>
+    <%end%> 
   <%= submit_tag "Finish" %>    
 </form>
 <% end %>

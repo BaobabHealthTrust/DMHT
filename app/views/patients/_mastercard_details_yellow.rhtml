@@ -305,7 +305,7 @@
           &nbsp;
         </td>
         <td style="width: 41px;">
-          <% diff = ((day.to_date rescue Date.today) - @patient.art_start_date).to_i rescue 0 %>
+          <% diff = ((day.to_date rescue Date.today) - @patient_art_start_date).to_i rescue 0 %>
           <%= "#{'<span  style=\'font-size: 1.8em;\'>' + (diff / 30).to_s +
           '</span>' if (diff / 30) != 0} #{('<sup style=\'font-size: 0.9em;\'>' + (diff % 30).to_s +
           '</sup>') if (diff % 30) > 0}#{'&frasl;<sub style=\'font-size: 0.9em;\'>30</sub>' if (diff % 30) > 0}" %>&nbsp;

@@ -3,18 +3,19 @@
 </script>
 <form method='post' action="create_stock">
 
-<%= text_field_tag "drug_name", nil, {:id => 'drug_name', :field_type => 'alpha', :helpText => 'DRUG NAME', :ajaxURL =>  '/drug/name?search_string=', :condition => '', :tt_onLoad  => '' } %>
+<%= text_field_tag "drug_name", nil, {:id => 'drug_name', :field_type => 'alpha', :helpText => 'Drug name', :ajaxURL =>  '/drug/name?search_string=', :condition => '', :tt_onLoad  => '' } %>
 
-<%= touch_date_tag "delivery_date", 'delivery_date', nil,
+  <%= touch_date_tag "delivery_date", 'delivery_date', nil,
     {:id => "delivery_date",
-     :helpText => "DELIVERY DATE",
-     :absoluteMax => Date.today} %>
+    :helpText => "Delivery date",
+    :absoluteMax => Date.today} %>
 
-<%= text_field_tag "number_of_tins", nil, {:helpText => 'NUMBER OF TINS', :field_type => 'number', :absoluteMin => "1", :min => "1", :tt_pageStyleClass => "Numeric NumbersOnly"}  %>
+  <%= text_field_tag "number_of_tins", nil, {:helpText => 'Number of units', :field_type => 'number', :absoluteMin => "1", :min => "1", :tt_pageStyleClass => "Numeric NumbersOnly"}  %>
 
-<%= text_field_tag "number_of_pills_per_tin", nil, {:helpText => 'NUMBER OF PILLS PER TIN', :field_type => 'number', :absoluteMin => "1", :min => "1", :tt_pageStyleClass => "Numeric NumbersOnly"}  %>
+  <%= text_field_tag "number_of_pills_per_tin", nil, {:helpText => 'Quantity per unit', :field_type => 'number', :absoluteMin => "1", :min => "1", :tt_pageStyleClass => "Numeric NumbersOnly"}  %>
 
-<%= touch_date_tag "expiry_date", 'expiry_date', nil,
+  <%= touch_date_tag "expiry_date", 'expiry_date', nil,
     {:id => "expiry_date",
-     :helpText => "EXPIRY DATE"} %>
+    :helpText => "Expiry date",
+    :maxDate => (Date.today + 30.years)} %>
 </form>

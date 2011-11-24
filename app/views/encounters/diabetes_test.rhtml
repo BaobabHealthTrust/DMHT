@@ -4,7 +4,7 @@
 
 </style>
 
-<%= @destination_page =  "/patients/mastercard/" + @patient.id.to_s %>
+<%= @destination_page =  "/patients/complications/" + @patient.id.to_s %>
 <script src="/javascripts/cascade.js" type="text/javascript" language="javascript"></script>
 <script src="/javascripts/utils.js" type="text/javascript" language="javascript"></script>
 <script type="text/javascript" language="javascript">
@@ -750,6 +750,14 @@ $('infoBar'+tstCurrentPage).innerHTML = 'Urea (' + $('urea_unit').value + ')';
     }%>
 
   <% end %>
+  
+	<% session_date = session[:datetime].to_date rescue nil                       
+	if session_date %>
+	<p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
+		<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
+	<% else %>
+		<%= hidden_field_tag "filter[provider]", nil %>
+	<%end%>
 
   <%= hidden_field_tag("next_url",@destination_page) %>
   <%= submit_tag "Finish" %>

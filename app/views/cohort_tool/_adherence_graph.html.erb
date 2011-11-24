@@ -139,11 +139,11 @@
   }
   
   function patientList(){
-    var quater = "<%=@quater%>"
+    var quarter = "<%=@quarter%>"
     var min_range = document.getElementById("placeholder_details").innerHTML.split('<br>')[1].split("adherence")[0].split("-")[0];
     var max_range = document.getElementById("placeholder_details").innerHTML.split('<br>')[1].split("adherence")[0].split("-")[1];
-    document.location="/cohort_tool/patients_with_adherence_greater_than_hundred/?quater="
-    + quater +"&min_range=" +  parseFloat(min_range) + "&max_range=" + parseFloat(max_range);
+    document.location="/cohort_tool/patients_with_adherence_greater_than_hundred/?quarter="
+    + quarter +"&min_range=" +  parseFloat(min_range) + "&max_range=" + parseFloat(max_range);
   }
 </script>    
 <div>

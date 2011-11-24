@@ -21,35 +21,40 @@
             <tr>
               <td>
                 <h1 id='project_name'>
-                  DM
+                  BART
                 </h1>
-                <span id='patient_name'><%= @patient.name rescue "" %></span>
-                <span id='patient_id'><%= @patient.national_id_with_dashes rescue "" %></span>
-                <span id='patient_residence'><%= @patient.person.addresses.last.city_village rescue "" %></span>
-                <span id='patient_age'><%= @patient.person.age rescue "" %></span>
-                <span id='patient_gender'><%= @patient.gender rescue "" %></span>
+            <span id='patient_name'><%= @patient_bean.name rescue "" %></span>
+            <span id='patient_id'><%= @patient_bean.national_id_with_dashes rescue "" %></span>
+            <span id='patient_residence'><%= @patient_bean.current_residence rescue "" %></span>
+            <span id='patient_age'><%= @patient_bean.age rescue "" %></span>
+            <span id='patient_gender'><%= @patient_bean.sex rescue "" %></span>
 
-                <div id="patient_card">
-                  <% if (@patient.reason_for_art_eligibility rescue nil) != nil && (@patient.reason_for_art_eligibility) != "" %>
+            <div id="patient_card">
+              <% if (@reason_for_art_eligibility rescue nil) != nil && (@reason_for_art_eligibility) != "" %>
 
-                    <span value="<%= @patient.reason_for_art_eligibility rescue "" %>">Reason for Starting</span>
-                  <% end %>
+                 <span value="<%= @reason_for_art_eligibility rescue "" %>">Reason for Starting</span>
+               <% end %>
 
-                  <% if (@patient.arv_number rescue nil) != nil && (@patient.arv_number) != " " %>
+               <% if (@arv_number rescue nil) != nil && (@arv_number) != " " %>
 
-                    <span value="<%= @patient.arv_number rescue "" %>">ARV Number</span>
+                  <span value="<%= @arv_number rescue "" %>">ARV Number</span>
 
-                  <% end %>
-                  <% if (@patient.eid_number rescue nil) != nil && (@patient.eid_number) != " " %>
+               <% end %>
+               <% if (@patient_bean.filing_number rescue nil) != nil && (@patient_bean.filing_number) != " " %>
 
-                    <span value="<%= @patient.eid_number rescue "" %>">EID Number</span>
+                <span value="<%= @patient_bean.filing_number rescue "" %>">Filing Number</span>
 
-                  <% end %>
-                  <% if (@patient.pre_art_number rescue nil) != nil && (@patient.pre_art_number) != " " %>
+               <% end %>
+               <% if (@patient_bean.eid_number rescue nil) != nil && (@patient_bean.eid_number) != " " %>
 
-                    <span value="<%= @patient.pre_art_number rescue "" %>">Pre-ART Number</span>
+                 <span value="<%= @patient_bean.eid_number rescue "" %>">EID Number</span>
 
-                  <% end %>
+               <% end %>
+               <% if (@patient_bean.pre_art_number rescue nil) != nil && (@patient_bean.pre_art_number) != " " %>
+
+                <span value="<%= @patient_bean.pre_art_number rescue "" %>">Pre-ART Number</span>
+
+               <% end %>
                 </div>
                 <select id="tabs">
                   <option value='/patients/guardians?patient_id=<%= @patient.id %>'>Guardians</option>

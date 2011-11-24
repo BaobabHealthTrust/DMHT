@@ -1,5 +1,5 @@
-
-
+<script language="javascript" type="text/javascript" src="/javascripts/jquery.js"></script>
+<script language="javascript" type="text/javascript" src="/javascripts/jquery.flot.js"></script>
 <script type="text/javascript">
   var tt_cancel_destination = "/patients/show/<%= @patient.patient_id %>"
 
@@ -83,8 +83,8 @@
       <%= text_field_tag "observations[][value_numeric]", nil,
         {:id => "weight",
          :field_type => 'number',
-         :min => number_with_precision(@patient.min_weight, :precision => 1),
-         :max => number_with_precision(@patient.max_weight, :precision => 1),
+         :min => number_with_precision(@min_weight, :precision => 1),
+         :max => number_with_precision(@max_weight, :precision => 1),
          :absoluteMin => 0,
          #:absoluteMax => 250,
          :units => 'kg',
@@ -95,13 +95,13 @@
       <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
       <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
-    <% if ((@patient_height.blank?) || (@patient.person.age < 14))%>
+    <% if ((@current_height.blank?) || (@patient_bean.age < 14))%>
     <label for='height'>Height (CM)</label>
       <%= text_field_tag "observations[][value_numeric]", nil,
         {:id => "height",
          :field_type => 'number',
-         :min => number_with_precision(@patient.min_height, :precision => 1),
-         :max => number_with_precision(@patient.max_height, :precision => 1),
+         :min => number_with_precision(@min_height, :precision => 1),
+         :max => number_with_precision(@max_height, :precision => 1),
          :absoluteMin => 10,
          :absoluteMax => 228,
          :units => 'cm',
@@ -112,9 +112,17 @@
       <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
       <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
       <%else%>
-        <%= hidden_field_tag('height', @patient_height.last.value_numeric)%>
+        <%= hidden_field_tag('height', @current_height)%>
      <%end%>
      <%= text_field_tag :showSummary, nil, { :tt_onLoad => "growthIndicators()", :helpText => "Summary", :optional => "true", :tt_pageStyleClass => "NoControls" } %>
-       
+
+    <% session_date = session[:datetime].to_date rescue nil                       
+    if session_date %>
+
+    <p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
+			<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
+    <% else %>
+      <%= hidden_field_tag "filter[provider]", nil %>
+    <%end%>      
   <%= submit_tag "Finish" %>    
 </form>

@@ -4,27 +4,8 @@ class Drug < ActiveRecord::Base
   include Openmrs
   belongs_to :concept, :conditions => {:retired => 0}
   belongs_to :form, :foreign_key => 'dosage_form', :class_name => 'Concept', :conditions => {:retired => 0}
-  
-  def arv?
-    Drug.arv_drugs.map(&:concept_id).include?(self.concept_id)
-  end
 
-  def self.arv_drugs
-    arv_concept       = ConceptName.find_by_name("ANTIRETROVIRAL DRUGS").concept_id
-    arv_drug_concepts = ConceptSet.all(:conditions => ['concept_set = ?', arv_concept])
-    arv_drug_concepts
-  end
-  
-  def tb_medication?
-    Drug.tb_drugs.map(&:concept_id).include?(self.concept_id)
-  end
-  
-  def self.tb_drugs
-    tb_medication_concept       = ConceptName.find_by_name("Tuberculosis treatment drugs").concept_id
-    tb_medication_drug_concepts = ConceptSet.all(:conditions => ['concept_set = ?', tb_medication_concept])
-    tb_medication_drug_concepts
-  end
-
+=begin
   # Need to make this a lot more generic	
   # This method gets all generic drugs in the database
   def self.generic
@@ -64,19 +45,6 @@ class Drug < ActiveRecord::Base
   def self.frequencies
     ConceptName.drug_frequency
   end
-  
-  # Eventually this needs to be a lookup into a drug_packs table
-  def pack_sizes
-    ["10", "20", "30", "60"]
-  end
-  
-  def self.matching_drugs(diagnosis_id, name)
-    self.find(:all,:select => "concept.concept_id AS concept_id, concept_name.name AS name,
-        drug.dose_strength AS strength, drug.name AS formulation",
-      :joins => "INNER JOIN concept       ON drug.concept_id = concept.concept_id
-               INNER JOIN concept_set   ON concept.concept_id = concept_set.concept_id
-               INNER JOIN concept_name  ON concept_name.concept_id = concept.concept_id",
-      :conditions => ["concept_set.concept_set = ? AND drug.name LIKE ?", diagnosis_id, name],
-      :group => "concept.concept_id, drug.name, drug.dose_strength")
-  end
+=end
+
 end

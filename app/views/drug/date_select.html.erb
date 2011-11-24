@@ -15,7 +15,8 @@
 
    <input type="text" field_type="date" id="start_date" name="start_date" value="" helpText="Select start date" />
 
-   <input type="text" field_type="date" id="end_date" name="end_date" value="" helpText="Select end date" />
+   <input type="text" field_type="date" id="end_date" name="end_date" value="" 
+          helpText="Select end date" maxDate="<%= (Date.today + 30.years) %>" />
 
 </form>
 

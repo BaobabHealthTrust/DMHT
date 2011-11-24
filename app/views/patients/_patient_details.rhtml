@@ -24,7 +24,7 @@ when "pink"
       </td>
       <td colspan="6" style="border-top: 1px solid #000; border-left: 1px solid #000;
           border-right: 1px solid #000; font-style: italic;">
-        <%= @patient.name rescue "&nbsp;" %>&nbsp;
+        <%= @patient_bean.name rescue "&nbsp;" %>&nbsp;
       </td>
     </tr>
     <tr>
@@ -33,10 +33,10 @@ when "pink"
       </td>
       <td style="border-top: 1px solid #000; border-left: 1px solid #000; font-weight: bold; width: 5%;" 
           align="center" colspan="2">
-        <%= (@patient.gender.upcase == "MALE" ? "M" : (@patient.gender.upcase == "FEMALE" ? "F" : "&nbsp;")) rescue "&nbsp;" %>
+        <%= (@patient_bean.sex.upcase == "MALE" ? "M" : (@patient_bean.sex.upcase == "FEMALE" ? "F" : "&nbsp;")) rescue "&nbsp;" %>
       </td>
       <td colspan="2" style="border-top: 1px solid #000; border-left: 1px solid #000; font-style: italic;">
-        <sup>Birth Date</sup>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<%= @patient.person.birthdate.strftime("%d-%b-%Y") rescue "&nbsp;" %>
+        <sup>Birth Date</sup>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<%= @patient_bean.birth_date rescue "&nbsp;" %>
       </td>
       <td colspan="2" style="border-top: 1px solid #000; border-left: 1px solid #000; 
           border-right: 1px solid #000; font-style: italic;">
@@ -64,7 +64,7 @@ when "pink"
     <tr>
       <td colspan="6" style="border-top: 1px solid #000; border-left: 1px solid #000; 
           border-right: 1px solid #000; font-style: italic;">
-        <%= @patient.person.address rescue "&nbsp;" %>&nbsp;
+        <%= @patient_bean.address rescue "&nbsp;" %>&nbsp;
       </td>
     </tr>
     <tr>
@@ -82,7 +82,7 @@ when "pink"
       <td colspan="2" style="border-top: 1px solid #000; border-left: 1px solid #000;
           border-right: 1px solid #000; border-bottom: 1px solid #000;">
         <sup>Guardian Phone</sup>&nbsp;
-        <%= Person.find(@patient.person.relationships.first.person_b).phone_numbers["Cell phone number"] rescue "&nbsp;" %>
+        <%= @guardian_phone_number rescue "&nbsp;" %>
       </td>
     </tr>
   </table>
@@ -208,7 +208,7 @@ when "pink"
         Patient Name
       </td>
       <td colspan="5" style="border-top: 1px solid #000; border-left: 1px solid #000; font-style: italic">
-        <%= @patient.name rescue "&nbsp;" %>
+        <%= @patient_bean.name rescue "&nbsp;" %>
       </td>
     </tr>
     <tr>
@@ -216,10 +216,10 @@ when "pink"
         Sex, Birth Date
       </td>
       <td style="border-top: 1px solid #000; border-left: 1px solid #000; font-weight: bold; width: 5%;" align="center" colspan="2">
-        <%= (@patient.gender.upcase == "MALE" ? "M" : (@patient.gender.upcase == "FEMALE" ? "F" : "&nbsp;")) rescue "&nbsp;" %>
+        <%= (@patient_bean.sex.upcase == "MALE" ? "M" : (@patient_bean.sex.upcase == "FEMALE" ? "F" : "&nbsp;")) rescue "&nbsp;" %>
       </td>
       <td colspan="3" style="border-top: 1px solid #000; border-left: 1px solid #000; font-style: italic">
-        <sup>DOB</sup>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<%= @patient.person.birthdate.strftime("%d-%b-%Y") rescue "&nbsp;" %>
+        <sup>DOB</sup>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<%= @patient_bean.birth_date rescue "&nbsp;" %>
       </td>
     </tr>
     <tr>
@@ -232,7 +232,7 @@ when "pink"
     </tr>
     <tr>
       <td colspan="5" style="border-top: 1px solid #000; border-left: 1px solid #000; font-style: italic">
-        <%= @patient.person.address rescue "&nbsp;" %>&nbsp;
+        <%= @patient_bean.address rescue "&nbsp;" %>&nbsp;
       </td>
     </tr>
     <tr>
@@ -248,11 +248,11 @@ when "pink"
         Phone
       </td>
       <td colspan="3" style="border-top: 1px solid #000; border-left: 1px solid #000; width: 35%; font-style: italic">
-        <sup>Patient</sup>&nbsp;&nbsp;<%= @patient.person.phone_numbers["Cell phone number"] rescue "&nbsp;" %>
+        <sup>Patient</sup>&nbsp;&nbsp;<%= @patient_phone_number rescue "&nbsp;" %>
       </td>
       <td colspan="2" style="border-top: 1px solid #000; border-left: 1px solid #000;">
         <sup>Guardian</sup>&nbsp;
-          <%= Person.find(@patient.person.relationships.first.person_b).phone_numbers["Cell phone number"] rescue "&nbsp;" %>
+          <%= @guardian_phone_number rescue "&nbsp;" %>
       </td>
     </tr>
     <tr>

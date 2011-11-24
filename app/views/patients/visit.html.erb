@@ -65,9 +65,9 @@ caption
 <div id = 'head'>
 <h3>Patient's visit summary:&nbsp;<%=@date.to_date.strftime('%A, %d %B %Y')%></h3>
 Name:&nbsp;<%person = @patient.person %>
-<%=person.name %><br/>
-Age:&nbsp;<%=person.age %><br/>
-Guardian(s):&nbsp;<%=person.relationships.map{|r|Person.find(r.person_b).name}.join(' : ') rescue 'NONE' %>
+<%= @patient_bean.name %><br/>
+Age:&nbsp;<%= @patient_bean.age %><br/>
+Guardian(s):&nbsp;<%= @patient_gaurdians rescue 'NONE' %>
 </div>
 
 <div id = 'visit-left' class = 'data-visit'>

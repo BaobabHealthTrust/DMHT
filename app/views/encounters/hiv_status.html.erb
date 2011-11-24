@@ -87,11 +87,11 @@
       :validationCode => "checkTestDate() == 'true'",
       :validationMessage => "HIV test date greater than #{session[:datetime].to_date rescue Date.today.to_date}",
       :condition => '($("hiv_test_year").value != "Unknown") && ($("hiv_test_month").value != "Unknown") && ($("hiv_status").value != "UNKNOWN")', 
-      :tt_onLoad => "getDayOfMonthPicker($('hiv_test_year').value;$('hiv_test_month').value);", 
+      :tt_onLoad => "getDayOfMonthPicker($('hiv_test_year').value,$('hiv_test_month').value);", 
       :tt_onUnload=> "updateTestDate();"
     } %>
 
-  <%= text_field_tag :summary, nil, 
+  <%#= text_field_tag :summary, nil, 
     {:tt_onLoad => '$("hivTestReminder").style.display = "block";$("nextButton").innerHTML = "<span>Finish</span>";', 
      :optional => "true", 
      :tt_pageStyleClass => "NoControls", 
@@ -120,7 +120,23 @@
 
  <%= touch_hidden_tag "HIV TEST DATE", @patient, nil, {:id => "hiv_test_date", :value_datetime => true}%>
 
-     <%= submit_tag "Finish" %>    
+
+   <%= touch_yes_no_unknown_tag "Refer to HTC", @patient, nil,                     
+   {:id => "refer_to_htc",                                                      
+    :condition => '$("hiv_status").value != "POSITIVE" && updateTestDate() == true',
+    :tt_pageStyleClass => "NoKeyboard",                                         
+    :helpText => "Patient has been -ve for more than 3 months. Refer patient to HTC?" } %>
+
+   <% session_date = session[:datetime].to_date rescue nil                       
+    if session_date %>
+
+    <p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
+<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
+    <% else %>
+      <%= hidden_field_tag "filter[provider]", nil %>
+    <%end%>
+
+   <%= submit_tag "Finish" %>    
 
    </form>
 

@@ -47,16 +47,16 @@
     <div id="container">      
       <div id="content">
         <div id="header">
-          <h1><%= patient_image(@patient) -%><%= @patient.person.name %></h1>
+          <h1><%= patient_image(@patient) -%><%= @patient_bean.name %></h1>
           <div id="identifiers">
             <% if Location.current_location.name.match(/HIV|ART/i) %>
-              <%= @patient.arv_number || @patient.national_id_with_dashes rescue '' %>
+              <%= @patient_arv_number || @patient_bean.national_id_with_dashes rescue '' %>
             <%else%>
-              <%= @patient.national_id_with_dashes rescue '' %>
+              <%= @patient_bean.national_id_with_dashes rescue '' %>
             <%end%>
           </div>
           <div id="demographics">
-            <span class='title'>Birthdate:</span> <%= @patient.person.birthdate_formatted rescue '' %>
+            <span class='title'>Birthdate:</span> <%= @patient_bean.birth_date rescue '' %>
           </div>
         </div>
         <div id="flash" class="flash centered" style="display:none;"><%= [flash[:notice], flash[:error], flash[:failure], flash[:success]].compact.join(" ").chomp unless flash.blank? -%></div>

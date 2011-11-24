@@ -2,7 +2,7 @@
 
   .tt_controls_year_of_birth #Unknown { display:block; }
   .tt_controls_age_estimate #Unknown { display:none; }
-  
+
   .tt_controls_middle_name  #na { display: block; }
   .tt_controls_ground_phone_number #Unknown { display:block; }
 
@@ -14,6 +14,7 @@
   #tt_page_month_of_birth .options li{font-size:30px;}
 
   .tt_controls_home_village #space , #apostrophe { display:inline; }
+  .tt_controls_home_district #num  { display:none; }
 
   .tt_controls_current_traditional_authority_ta #space { display:inline; }
 
@@ -29,18 +30,21 @@
     #tt_page_occupation .options{height:500px;}
     #tt_page_occupation .options li{font-size:30px;}
     #space {display:inline;}
-    
+
     .nota #na {
         display: block;
     }
-    
-     #num{ display:none; }
+
+     #num{ display:block; }
      #char{ display:none; }
      #apostrophe { display:inline; }
-     
+
+    .tt_controls_home_district #num{ display:none; }
+    .tt_controls_current_district #num{ display:none; }
+
     .tt_controls_current_city_place_or_area_of_residence #num{ display:block; }
     .tt_controls_current_city_place_or_area_of_residence #char{ display:block; }
-    
+
     .tt_controls_closest_landmark_or_plot_number #num{ display:block; }
     .tt_controls_closest_landmark_or_plot_number #char{ display:block; }
 
@@ -57,7 +61,7 @@
   var set_dob = null;
 
   var skipped = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-  
+
   function seen(page) {
     for (var i = page; i >= 0; i--) {
       skipped[i] = 1;
@@ -136,6 +140,33 @@
     listSuggestions(tstCurrentPage);
   }
 
+  function setAttributes () {
+    nextButton = $('nextButton');
+    backButton = $('backButton');
+    nextButton.setAttribute("onmousedown","gotoNextPage();showMsg();")
+    backButton.setAttribute("onmousedown","gotoPage(" + (tstCurrentPage - 1) + ");resetAttributes();")
+  }
+
+  function resetAttributes() {
+    nextButton = $('nextButton');
+    backButton = $('backButton');
+    nextButton.setAttribute("onmousedown","gotoNextPage();")
+    backButton.setAttribute("onmousedown","gotoPage(" + (tstCurrentPage - 1) + ");")
+  }
+
+  function showMsg() {
+    inputBox = $("touchscreenInput" + tstCurrentPage);
+    if (inputBox.value.length == 0)
+      return
+
+    $('nextButton').disabled = true;
+    msg = $('messageBar');
+    msg.innerHTML = "Creating a person<br />Please wait <blink>.....</blink>";
+    msg.style.background = "lightgreen" //yellow";
+    msg.style.borderColor = "lightgreen" //yellow";
+    msg.style.display = "inline";
+  }
+
 </script>
 
 <% form_for :person, @person, :url => { :action => "create" } do |f| %>
@@ -179,7 +210,7 @@
 <%= text_field "filter" , 't_a', :xhelpText => 'Current Traditional Authority (T/A)', :tt_requireNextClick => false, :ajaxURL => '', :tt_onLoad => "set_ajaxURL_for_suggestions('/people/traditional_authority/TraditionalAuthority?filter_value=' ,document.getElementById('filter_district').value);$('nextButton').style.display = 'none';" %></p>
 
 
-  <%= text_field_tag "person[addresses][city_village]",  params[:city_village], {:field_type => 'alpha', :helpText => 'Current city, place or area of residence', :tt_requireNextClick => false, :ajaxURL => '/people/village?search_string=', :allowFreeText => true , :tt_onLoad => "set_ajaxURL_for_suggestions('/people/village/Village?filter_value=' ,document.getElementById('filter_t_a').value);$('nextButton').style.display = 'none';"}%>
+  <%= text_field_tag "person[addresses][city_village]",  params[:city_village], {:field_type => 'alpha', :helpText => 'Location/Village', :tt_requireNextClick => false, :ajaxURL => '/people/village?search_string=', :allowFreeText => true , :tt_onLoad => "set_ajaxURL_for_suggestions('/people/village/Village?filter_value=' ,document.getElementById('filter_t_a').value);$('nextButton').style.display = 'none';"}%>
 
 <%= text_field_tag "person[addresses][address1]",  params[:address1], {:id => 'address1', :helpText => 'Closest Landmark or Plot Number<br /><span style="font-size:0.7em;font-style:italic">(Please do not include these words: Next to, close, in front of, behind)</span>', :allowFreeText => true, :ajaxURL => '', :tt_onLoad => "set_ajaxURL_for_suggestions('/people/landmark?filter_value=' ,document.getElementById('person_addresses_city_village').value);$('nextButton').style.display = 'block';" }%>
 
@@ -194,7 +225,7 @@
       }
   %>
 
-  <% ask_multiple_phone_numbers = GlobalProperty.find_by_property("ask.multiple.phone.numbers").property_value rescue 'false'
+  <% ask_multiple_phone_numbers = get_global_property_value("ask.multiple.phone.numbers") rescue 'false'
      if ask_multiple_phone_numbers == 'true' 
   %>
   <%= text_field_tag "person[office_phone_number]",  params[:office_phone_number], 
@@ -225,7 +256,13 @@
   
   <%#= select_tag("person[occupation]", options_for_select([" ", "Housewife", "Farmer", "Police", "Soldier", "Business", "Teacher", "Student", "Healthcare Worker"].sort.concat(["Other"]) ,params[:occupation]),:helpText =>"Occupation",:allowFreeText => true, :tt_onLoad => 'seen(tstCurrentPage);')%>
 
-  <%= select_tag("person[occupation]", options_for_select(@occupations ,params[:occupation]),:helpText =>"Occupation",:allowFreeText => false, :tt_onLoad => 'seen(tstCurrentPage);', :ttMatchFromBeginning => "true")%>
+  <%= select_tag("person[occupation]", options_for_select(@occupations ,params[:occupation]),
+      :helpText =>"Occupation",
+      :id => "occupation",
+      :allowFreeText => false, 
+      :tt_onLoad => 'seen(tstCurrentPage);setAttributes();', 
+      :tt_onUnLoad => 'resetAttributes();', 
+      :ttMatchFromBeginning => "true")%>
 
   <!-- Make sure patient is created -->
 

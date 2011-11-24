@@ -48,7 +48,7 @@
 </script>
 
 <div id="header">
-  <%= @report_type + "</p>" + @quater + @adherence_summary rescue  @report_type + "</p>" + @quater %>  
+  <%= @report_type + "</p>" + @quarter + @adherence_summary rescue  @report_type + "</p>" + @quarter %>  
 </div>
 <table>
 <tr>
@@ -88,7 +88,7 @@
     <tr><td class='summary_title'>0 - 94%</td><td class='summary_results'><%= @adherence_summary_hash["0 - 94"] %></td></tr>
     <tr><td class='summary_title'>95 - 100%</td><td class='summary_results'><%= @adherence_summary_hash["95 - 100"] %></td></tr>
     <tr><td class='summary_title'>Over 100%</td><td class='summary_results'><%= @adherence_summary_hash["> 100"] %></td></tr>
-    <tr><td class='summary_title'><a href="/cohort_tool/patients_with_adherence_greater_than_hundred/?quater=<%=@quater%>&show_missing_adherence=yes">Missing</a></td><td class='summary_results'><%= @adherence_summary_hash["missing"] %></td></tr>
+    <tr><td class='summary_title'><a href="/cohort_tool/patients_with_adherence_greater_than_hundred/?quarter=<%=@quarter%>&show_missing_adherence=yes">Missing</a></td><td class='summary_results'><%= @adherence_summary_hash["missing"] %></td></tr>
     <tr><td class='summary_title'>Total</td><td class='summary_results'><b><%= @adherence_summary_hash["total"] %></b></td></tr>
   </table></br><button onClick="closeSummary()">Close</button>
 </div>

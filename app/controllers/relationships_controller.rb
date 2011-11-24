@@ -20,7 +20,7 @@ class RelationshipsController < ApplicationController
     if relationship_id == RelationshipType.find_by_b_is_to_a('TB Index Person').id
       person_id = params[:person].to_i
       if person_id == 0 #if the person does not exist in db
-        person = Person.create_from_form({'names' => 
+        person = PatientService.create_from_form({'names' => 
                                            {'family_name' => params[:family_name],
                                             'given_name' => params[:given_name]
                                          },'gender' => params[:gender]

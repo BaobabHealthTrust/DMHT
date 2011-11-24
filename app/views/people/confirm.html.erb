@@ -1,18 +1,26 @@
 <style>
+  body {
+    -moz-user-select:none;
+  }
+
   .charts {
     padding-left:20px;
+    -moz-user-select:none;
   }
 
   #header {
     padding-left:10px;
+    -moz-user-select:none;
   }
 
   th {
     text-align:left;
+    -moz-user-select:none;
   }
 
   #cancelhButton {
     float:left;
+    -moz-user-select:none;
   }
 
   .messageBar {
@@ -26,8 +34,38 @@
     z-index: 999;
     display:none;
     height:210px;
-}
+    -moz-user-select:none;
+  }
+
+  a {
+    background-color: grey;
+    border-bottom: 1px outset black;
+    border-style: outset;
+    border-top: 1px outset black;
+    color: white;
+    display: block;
+    padding: 0px 0px 0px 0px;
+    text-align: center;
+    text-decoration: none;
+    width: 300px;
+    -moz-user-select:none;
+  }
 </style>
+
+<%
+  task = @task
+  next_task = task.encounter_type.gsub('_',' ') rescue nil
+
+  xray = Observation.find(Observation.find(:last,                       
+            :conditions => ["person_id = ? AND concept_id = ?",                      
+            @person.id, ConceptName.find_by_name("Refer to x-ray?").concept_id,  
+            ])).to_s.strip.squish.upcase rescue '' 
+
+  refered_to_htc = Observation.find(Observation.find(:last,                       
+            :conditions => ["person_id = ? AND concept_id = ?",                      
+            @person.id, ConceptName.find_by_name("Refer to HTC").concept_id,  
+            ])).to_s.strip.squish.upcase rescue '' 
+%>
 
 <%= javascript_include_tag "jquery" %>
 <%= javascript_include_tag "jquery.flot" %>
@@ -43,10 +81,17 @@
     conntinue.innerHTML = '<span>Continue</span>'
     conntinue.setAttribute('onmousedown','continueToNext();')
 
+    <% if refered_to_htc.match(/: Yes/i) %>
+      conntinue.setAttribute("onmousedown","gotoUpdateHIVstatus();")
+    <% end %>
+
+    <%if Location.current_location.name.match(/HIV|ART/i) and not Location.current_location.name.match(/Reception/i)%>
+      weightGraph();
+    <%end%>
   }
 
   function continueToNext(){
-    <%if @person.patient.get_identifier('Archived Filing Number').blank? %>
+    <%if @patient_bean.archived_filing_number.blank? %>
       go();
     <%else%>
       messageBar = document.getElementById("messageBar");
@@ -64,7 +109,9 @@
   }
 
   function go() {
-    document.forms[0].submit();
+    submit_form = $('confirm');
+    submit_form.action = "<%= task.url %>"
+    submit_form.submit();
   }
 
   function weightGraph(){
@@ -115,49 +162,97 @@
 
     jQuery.plot(jQuery("#charts"), get_data(null, null), plot_options);
   }
+
+  function submitPage(patient_id,concept_name) {
+     submitForm = document.getElementById("confirm");
+    
+     newElement = document.createElement("input");                             
+     newElement.setAttribute("name","encounter[encounter_type_name]");                 
+     newElement.setAttribute("type","hidden");                                 
+     newElement.value = "EXAMINATION";      
+     submitForm.appendChild(newElement);
+
+     newElement = document.createElement("input");                             
+     newElement.setAttribute("name","encounter[patient_id]");                 
+     newElement.setAttribute("type","hidden");                                 
+     newElement.value = "<%=@person.id%>";      
+     submitForm.appendChild(newElement);
+
+     newElement = document.createElement("input");                             
+     newElement.setAttribute("name","encounter[provider_id]");                 
+     newElement.setAttribute("type","hidden");                                 
+     newElement.value = "<%=User.current_user.id%>";      
+     submitForm.appendChild(newElement);
+
+     newElement = document.createElement("input");                             
+     newElement.setAttribute("name","observations[][concept_name]");                 
+     newElement.setAttribute("type","hidden");                                 
+     newElement.value = concept_name;      
+     submitForm.appendChild(newElement);
+
+     newElement = document.createElement("input");                             
+     newElement.setAttribute("name","observations[][patient_id]");                 
+     newElement.setAttribute("type","hidden");                                 
+     newElement.value = "<%=@person.id%>";      
+     submitForm.appendChild(newElement);
+
+     newElement = document.createElement("input");                             
+     newElement.setAttribute("name","observations[][value_coded_or_text]");                 
+     newElement.setAttribute("type","hidden");                                 
+     newElement.value = "NO";      
+     submitForm.appendChild(newElement);
+
+     submitForm.action = "/encounters/create"
+     submitForm.submit(); 
+  }
+
+  function gotoUpdateHIVstatus() {
+    window.location = "/encounters/new/update_hiv_status?patient_id=<%=@person.id%>"
+  }
 </script>
 
-<body onload = "changeAttributes();weightGraph();">
+<body onload = "setTimeout('changeAttributes()',500);">
 
-<form method='post' action="/people/confirm">
+<form method='post' action="/people/confirm" id = "confirm">
   <%= hidden_field_tag(:found_person_id, @found_person_id) %>
   <%= hidden_field_tag(:relation, @relation) %>
 </form>
 
 <div id ='header'>
-  <h1><%=@person.name %>&nbsp;(<%=@person.gender%>)</h1>
+  <h1><%= @patient_bean.name %>&nbsp;(<%= @patient_bean.sex %>)</h1>
   <table>
   <tr>
-    <th>Age:</th><td><%=@person.age%></td>
+    <th>Age:</th><td><%= @patient_bean.age %></td>
   </tr>
   <tr>
-    <th>National ID:</th><td><%=@person.patient.national_id_with_dashes%></td>
+    <th>National ID:</th><td><%= @patient_bean.national_id_with_dashes %></td>
   </tr>
   <%
-  use_filing_number = GlobalProperty.find_by_property('use.filing.number').property_value rescue 'false'
+  use_filing_number = get_global_property_value('use.filing.number') rescue 'false'
   if Location.current_location.name.match(/HIV|ART/) and use_filing_number == 'true'%>
     <tr>
-      <th>Filing number:</th><td><%=@person.patient.get_identifier('Filing number') || @person.patient.get_identifier('Archived filing number')%></td>
+      <th>Filing number:</th><td><%= @patient_bean.filing_number || @patient_bean.archived_filing_number %></td>
     </tr>
   <%end%>
   <%if Location.current_location.name.match(/HIV|ART/) %>
     <tr>
-      <th>ARV number:</th><td><%=@person.patient.arv_number || 'N/A' %></td>
+      <th>ARV number:</th><td><%= @patient_bean.arv_number || 'N/A' %></td>
     </tr>
   <%end%>
   <tr>
-    <th>Guardian(s):</th><td><%=@person.relationships.map{|r|Person.find(r.person_b).name}.join(' : ') || 'NONE'%></td>
+    <th> Guardian: </th><td><%= @patient_bean.guardian || 'NONE'%></td>
   </tr>
   </table>
   <div>
     <table>
       <tr style = "font-size:20px;">
-        <%
-          session_date = session[:datetime] || Date.today  
-          task = Task.next_task(Location.current_location,@person.patient,session_date.to_date).encounter_type rescue nil
-          next_task = task.gsub('_',' ') rescue nil
-        %>
         <th>Next task</th><td><%= next_task %></td>
+        <% if xray.match(/: Yes/i) %>
+        <th style="float:right;"><%='&nbsp;'*45%>Xray details available?</th>
+        <td><span style="float:right;">
+          <a href="javascript:submitPage('<%=@person.id%>','Refer to x-ray?')">YES</a></span>
+        </td>
+        <% end %>
       </tr>
     </table>
   </div>

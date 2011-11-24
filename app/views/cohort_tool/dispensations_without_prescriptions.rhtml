@@ -5,7 +5,7 @@
 <%= stylesheet_link_tag 'extra_buttons' %>
 
 </script>
-<h1 align='center'><u>Dispensation Without Prescrition Report</u></h1>
+<h1 align='center'><u>Dispensations Without Prescriptions Report</u></h1>
 <table id='summary'>
   <thead>
   <tr>
@@ -13,7 +13,7 @@
   <th>ARV Number</th>
   <th>National ID</th>
   <th>Visit Date</th>
-  <th>Dispensed Drug</th>
+  <th>Drug Name</th>
   </tr>
   </thead>
   <tbody>
@@ -23,17 +23,17 @@
 
   <%@report.each do |data_row|%>
 
-  <% session[:mastercard_ids] << data_row[0].to_i %>
+  <% session[:mastercard_ids] << data_row['person_id']%>
 
   <tr>
-    <td align='center'><%= link_to_onmousedown "#{data_row[0]}",{:controller =>"patients", :action => 'mastercard', 
-                           :patient_id => "#{data_row[0]}" ,:source =>"dispensations_without_prescriptions", :quarter => "#{@report_quarter}"}%></td>
-    <td align='center'><%= data_row[1] %></td>
-    <td align='center'><%= data_row[2]%></td>
-    <td align='center'><%= data_row[3] %></td>
-    <td><%= data_row[4] %></td>
+    <td align='center'><%= link_to_onmousedown "#{data_row['person_id']}",{:controller =>"patients", :action => 'mastercard', 
+                           :patient_id => "#{data_row['person_id']}" ,:source =>"dispensations_without_prescriptions", :quarter => "#{@report_quarter}"}%></td>
+    <td align='center'><%= data_row['arv_number'] %></td>
+    <td align='center'><%= data_row['national_id']%></td>
+    <td align='center'><%= data_row['date_created'] %></td>
+    <td><%= data_row['drug_name'] %></td>
   </tr>
-  <%end rescue nill%>
+  <%end rescue nil%>
   <script>
     insertBlankRow ();
   </script>

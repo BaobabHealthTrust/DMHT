@@ -7,7 +7,7 @@
   var assigned_arv_number = []
   
   function arv_number(){
-    suggest_arv_number = "<%=GlobalProperty.find_by_property('suggest_arv_number').property_value rescue 'true' %>"
+    suggest_arv_number = "<%= get_global_property_value('suggest_arv_number') rescue 'true' %>"
     inputElement = $('tt_page_art_number').getElementsByTagName("input")[0]
     prefix = document.createElement("span")
     style = document.createAttribute("style")

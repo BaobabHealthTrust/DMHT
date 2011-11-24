@@ -36,10 +36,10 @@
 
 <script>
   var tt_cancel_destination = "/patients/treatment_dashboard/<%= @patient.patient_id %>";
-  var number_of_days_to_add = <%= @patient.number_of_days_to_add_to_next_appointment_date(session[:datetime] || Date.today) %>;
-  var clinic_days = "<%= GlobalProperty.find_by_property('clinic.days').property_value rescue 'Monday,Tuesday,Wednesday,Thursday,Friday' %>";
-  var peads_clinic_days = "<%= GlobalProperty.find_by_property('peads.clinic.days').property_value rescue '' %>";
-  var patient_age = <%= @patient.person.age %>;
+  var number_of_days_to_add = <%= @number_of_days_to_add_to_next_appointment_date %>;
+  var clinic_days = "<%= get_global_property_value('clinic.days') rescue 'Monday,Tuesday,Wednesday,Thursday,Friday' %>";
+  var peads_clinic_days = "<%= get_global_property_value('peads.clinic.days') rescue '' %>";
+  var patient_age = <%= @patient_bean.age %>;
   var booked_dates = null
 
   <% 
@@ -47,7 +47,7 @@
     limit = 0 ; booked_dates = ''
 
     unless params[:end_date].blank?
-      limit = GlobalProperty.find_by_property('clinic.appointment.limit').property_value rescue 0
+      limit = get_global_property_value('clinic.appointment.limit') rescue 0
       dates = Property.clinic_appointment_limit(params[:end_date].to_date)
       (dates || {}).map do | date , number |
         booked_dates+= ",#{date}:#{number}" unless booked_dates.blank?
@@ -73,7 +73,7 @@
     clinic_days = peads_clinic_days.split(',');
 
   <%
-    clinic_holidays = GlobalProperty.find_by_property('clinic.holidays').property_value rescue '1900-12-25,1900-03-03' 
+    clinic_holidays = get_global_property_value('clinic.holidays') rescue '1900-12-25,1900-03-03' 
     clinic_holidays = clinic_holidays.split(',').map{|day|day.to_date}.join(',')
   %>
 
@@ -259,44 +259,72 @@
     $('information').style.display = 'none';
   }
 </script>
-<form id='appointment' action="/encounters/create" method='post'>
-  <%= hidden_field_tag "encounter[encounter_type_name]", "APPOINTMENT" %>
-  <%= hidden_field_tag "encounter[patient_id]", @patient.id %>
-  <%= hidden_field_tag "encounter[encounter_datetime]", DateTime.now() %>
-  <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
 
-  <label for='time_until_next_visit'>Time Until Next Appointment</label>
-  <%= select_tag("time_until_next_visit", options_for_select([["2 weeks", 2],
-                                                              ["1 month", 4],
-                                                              ["2 months", 8],
-                                                              ["4 months", 16],
-                                                              ["5 months", 20],
-                                                              ["6 months", 24]]),
-                                                              {:helpText => 'Time Until Next Appointment',
-                                                               :tt_onLoad => "calculateGivenRange('#{params[:start_date]}','#{params[:end_date]}')"}) %>
+<% if @location_transferred_to.empty? %>
+  <form id='appointment' action="/encounters/create" method='post'>
 
-  <%
-  absolute_min = params[:start_date].to_date.year rescue Date.today.year 
-  absolute_max = params[:end_date].to_date.year + 1 rescue Date.today.year + 1%>
-  <label for='next_appointment_date'>Next Appointment Date</label>
-  <%= hidden_field_tag("observations[][concept_name]", "RETURN VISIT DATE") %>
-  <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
-  <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
-  <%= text_field_tag("observations[][value_datetime]", (Time.now + 1.month).year, {:helpText => 'Next Appointment Date', 
-                                                                                   :field_type => 'date', 
-                                                                                   :absoluteMin => absolute_min, 
-                                                                                   :absoluteMax => absolute_max, 
-                                                                                   :tt_pageStyleClass => "Date DatesOnly", 
-                                                                                   :tt_onLoad => "calculate_dates('#{params[:start_date]}','#{params[:end_date]}');", 
-                                                                                   :tt_onUnLoad => "hideInfo();", 
-                                                                                   :id => 'next_appointment_date'}) %>
+    <%= hidden_field_tag "old_appointment", @old_appointment %>  
+    <%= hidden_field_tag "report_url", @report_url %>
+    <%= hidden_field_tag "encounter[encounter_type_name]", "APPOINTMENT" %>
+    <%= hidden_field_tag "encounter[patient_id]", @patient.id %>
+    <%= hidden_field_tag "encounter[encounter_datetime]", DateTime.now() %>
+    <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
 
+    <label for='time_until_next_visit'>Time Until Next Appointment</label>
+    <%= select_tag("time_until_next_visit",
+              options_for_select([["2 weeks", 2],
+                                   ["1 month", 4],
+                                   ["2 months", 8],
+                                   ["4 months", 16],
+                                   ["5 months", 20],
+                                   ["6 months", 24]]),
+             {:helpText => 'Time Until Next Appointment',
+             :tt_onLoad => "calculateGivenRange('#{params[:start_date]}','#{params[:end_date]}')"}) %>
 
-  <%= submit_tag "Finish" %>    
-</form>
+    <%
+    absolute_min = params[:start_date].to_date.year rescue Date.today.year
+    absolute_max = params[:end_date].to_date.year + 1 rescue Date.today.year + 1%>
+    <label for='next_appointment_date'>Next Appointment Date</label>
+    <%= hidden_field_tag("observations[][concept_name]", "RETURN VISIT DATE") %>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+    <%= text_field_tag("observations[][value_datetime]", (Time.now + 1.month).year,
+          {:helpText => 'Next Appointment Date',
+           :field_type => 'date',
+           :absoluteMin => absolute_min,
+           :absoluteMax => absolute_max,
+           :tt_pageStyleClass => "Date DatesOnly",
+           :tt_onLoad => "calculate_dates('#{params[:start_date]}','#{params[:end_date]}');",
+           :tt_onUnLoad => "hideInfo();",
+           :id => 'next_appointment_date'}) %>
 
-<div id = 'information'>
-Total number of booked patients on this day:<br /> 0
-</div>
+    <% session_date = session[:datetime].to_date rescue nil                       
+    if session_date %>
 
+    <p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
+<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
+    <% else %>
+      <%= hidden_field_tag "filter[provider]", nil %>
+    <%end%>
+    <%= submit_tag "Finish" %>
+  </form>
 
+  <div id = 'information'>
+  Total number of booked patients on this day:<br /> 0
+  </div>
+<% else %>
+  <div class="inputPage NoKeyboard" id="page" style="display: block;">
+    <div id="trigger"></div>
+    <div id="infoBar" class="infoBarClass"></div>
+    <label id="helpText" class="helpTextClass" for="">This patient has
+    transferred out to <%= "#{@location_transferred_to}" %></label>
+  </div>
+  <div id="buttons" class="buttonsDiv" style="top:456;">
+    <div id="tt_extraButtons"></div>
+    <button onmousedown="window.location=tt_show_destination;" id="finishButton"
+      class="button navButton green"><span>Finish</span></button>
+  </div>
+  <script>
+		setTimeout("window.location=tt_cancel_destination;", 5000);
+  </script>
+<% end %>

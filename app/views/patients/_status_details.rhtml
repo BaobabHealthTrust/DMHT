@@ -106,7 +106,7 @@ when "yellow", "blue"
               Age at Init.
             </td>
             <td colspan="6" style="border-left: 1px solid #000; border-top: 1px solid #000; height: 37px;" align="center">
-              <%= @patient.age_at_initiation(@patient.art_start_date) rescue "" %>&nbsp;
+              <%= @patient_age_at_initiation rescue "" %>&nbsp;
             </td>
             <td style="border-left: 1px solid #000; ">
               Last ARVs<br/>(drug,date)
@@ -371,7 +371,7 @@ when "yellow", "blue"
         Age
       </td>
       <td style="border-top: 1px solid #000; border-bottom: 1px solid #000;" align="center">
-        <%= @patient.person.age rescue "&nbsp;" %>&nbsp;
+        <%= @patient_bean.age rescue "&nbsp;" %>&nbsp;
       </td>
       <td style="border-top: 1px solid #000; border-bottom: 1px solid #000;" align="center">
         &nbsp;

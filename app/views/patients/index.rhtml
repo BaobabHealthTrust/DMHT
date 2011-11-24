@@ -10,6 +10,25 @@
       //tt_cancel_destination = '/clinic';
       tt_cancel_show = '/clinic';
     </script>
+    
+    <style>
+			#patient-graph {
+					position: absolute;
+					border: 1px solid #DDDDDD;
+					border-radius: 5px 5px 5px 5px;
+					height: 230px;
+					margin-bottom: 0;
+					margin-left: 5px;
+					margin-top: 5px;
+					overflow: auto;
+					width: 32%;
+					left:42%;
+					top:0%;
+					z-index:100;
+					background-color: white;
+			}
+    </style>
+    
   </head>
   <body><div id='content'>
       <div id='description' style='color:#777;position:absolute;margin-top:-70px;'></div><center>
@@ -18,7 +37,11 @@
             <tr>
               <th colspan=2>Patient Dashboard</th>
             </tr>
+
             <h1 id='project_name'>
+              <div id="patient-graph">
+									<iframe id="custom_page" src="/patients/dashboard_graph?id=24"></iframe>
+              </div>
               <%if User.current_user.activities.include?('Manage Lab Orders') or User.current_user.activities.include?('Manage Lab Results') or
        User.current_user.activities.include?('Manage Sputum Submissions') or User.current_user.activities.include?('Manage TB Clinic Visits') or
        User.current_user.activities.include?('Manage TB Reception Visits') or User.current_user.activities.include?('Manage TB Registration Visits') or
@@ -28,26 +51,25 @@
                   DM
                <%end%>
             </h1>
-            <span id='patient_name'><%= @patient.name rescue "" %></span>
-            <span id='patient_id'><%= @patient.national_id_with_dashes rescue "" %></span>
-            <span id='patient_residence'><%= @patient.person.addresses.last.city_village rescue "" %></span>
-            <span id='patient_age'><%= @patient.person.age rescue "" %></span>
-            <span id='patient_gender'><%= @patient.gender rescue "" %></span>
+            <span id='patient_name'><%= @patient_bean.name  %></span>
+            <span id='patient_id'><%= @patient_bean.national_id_with_dashes %></span>
+            <span id='patient_residence'><%= @patient_bean.address %></span>
+            <span id='patient_age'><%= @patient_bean.age %></span>
+            <span id='patient_gender'><%= @patient_bean.sex %></span>
 
             <div id="patient_card">
-               <span value="<%= @patient.person.phone_numbers.collect {|k,v| v}.first rescue 'Unknown' %>">Phone Number</span>
-               <span value="<%= @patient.diabetes_number rescue 'Unknown' %>">DC Number</span>
+               <span value="<%= @diabetes_number %>">DC Number</span>
                <span value="<%= @current_updated_outcome %>">Outcome</span>
             </div>
             <select id="tabs">
               <option value='/patients/overview?patient_id=<%= @patient.id %>'>Overview</option>
               <option value='/patients/visit_history?patient_id=<%= @patient.id %>'>Current Visit</option>
               <option value='/patients/past_visits_summary?patient_id=<%= @patient.id %>'>Past Visits</option>
-              <option value="/patients/hiv_status?patient_id=<%= @patient.id -%>">HIV Status</option>
+              <option value="/patients/hiv?patient_id=<%= @patient.id -%>">HIV Status</option>
               <option value="/patients/recent_screen_complications?patient_id=<%= @patient.id -%>">Recent Complications</option>
               <option value="/patients/diabetes_treatments?patient_id=<%= @patient.id -%>">Current Medication</option>
               <option value="/patients/important_medical_history?patient_id=<%= @patient.id -%>">Medical History</option>
-              <option value="/encounters/patient_medical_history?patient_id=<%= @patient.id -%>">Patient Medical History</option>
+              <option value="/patients/patient_medical_history?patient_id=<%= @patient.id -%>">Patient Medical History</option>
               <option value='/patients/personal/<%= @patient.id -%>'>Printouts/Other</option>
             </select>
             <% if @patient.person.dead == 1%>
@@ -62,16 +84,18 @@
                 </select>
              <% else %>
                 <select id="links">
-                  <option value='/prescriptions/?patient_id=<%= @patient.id -%>'>Treatment</option>
-                  <option value='/patients/guardians_dashboard/<%= @patient.id -%>'>Guardians</option>
+                  <option value='/patients/treatment_dashboard?patient_id=<%= @patient.id -%>'>Treatment</option>
+									<option value='/patients/generate_booking?patient_id=<%= @patient.id -%>'>Bookings</option>
                   <!--%if User.current_user.activities.include?('Manage Patient Programs')%-->
                     <option value='/patients/programs_dashboard/<%= @patient.id -%>'>Outcomes</option>
                   <!--%end%-->
-                  <option value='/patients/print_visit?patient_id=<%= @patient.id -%>'>Print Visit</option>
+                  <!-- option value='/patients/print_visit?patient_id=<%= @patient.id -%>'>Print Visit</option -->
+										<option value='/patients/complications?patient_id=<%= @patient.id -%>'>Complications</option>
+										<option value='/encounters/new/first_time_visit_questions?patient_id=<%= @patient.id -%>'>Medical history</option>
                 </select>
                 <select id="navigation_links">
                     <option link="/encounter_types?patient_id=<%= @patient.id -%>" ttSize = "160px">Tasks</option>
-                    <option link="/patients/mastercard?patient_id=<%= @patient.id -%>">Complications</option>
+                    <!-- option link="/patients/mastercard?patient_id=<%= @patient.id -%>">Complications</option -->
                   <% if show_lab_results %>
                     <option link="/lab/results/<%=@patient.id -%>">Lab results</option>
                   <%end%>

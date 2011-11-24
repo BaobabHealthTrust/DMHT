@@ -65,7 +65,9 @@ class DrugOrder < ActiveRecord::Base
   
   # prn should be 0 | 1
   def self.write_order(encounter, patient, obs, drug, start_date, auto_expire_date, dose, frequency, prn, instructions = nil, equivalent_daily_dose = nil)
-    encounter ||= patient.current_treatment_encounter
+    user_person_id = encounter.provider_id
+
+    #encounter ||= patient.current_treatment_encounter(start_date, user_person_id)
     units = drug.units || 'per dose'
     duration = (auto_expire_date.to_date - start_date.to_date).to_i rescue nil
     equivalent_daily_dose = nil
@@ -150,5 +152,40 @@ class DrugOrder < ActiveRecord::Base
   def total_required
     (duration * equivalent_daily_dose)
   end
+
+  def self.all_orders_complete(patient,encounter_date)                               
+    type = EncounterType.find_by_name('TREATMENT').id                           
+    all = Encounter.find(:all,                                                  
+      :conditions =>["patient_id = ? AND DATE(encounter_datetime) = ?           
+      AND encounter_type = ?",patient.id , encounter_date , type])              
+                                                                                
+    complete = true                                                             
+    (all || []).each do |encounter|                                             
+      encounter.drug_orders.each do | drug_order |                              
+        complete = (drug_order.amount_needed <= 0)                              
+        return complete unless complete                                         
+      end                                                                       
+    end                                                                         
+    return complete                                                             
+  end  
   
+  def self.prescription_dates(patient,date)
+    type = EncounterType.find_by_name('TREATMENT').id                           
+    all = Encounter.find(:all,                                                  
+      :conditions =>["patient_id = ? AND DATE(encounter_datetime) = ?           
+      AND encounter_type = ?",patient.id , date.to_date , type])                        
+                                                                                
+    start_date = nil ; end_date = nil                                        
+    (all || []).each do |encounter|                                             
+      encounter.orders.each do | order |
+        start_date = order.start_date.to_date if start_date.blank?
+        end_date = order.auto_expire_date.to_date if end_date.blank?
+                                                
+        end_date = order.auto_expire_date.to_date if (order.auto_expire_date.to_date < end_date)
+        start_date = order.start_date.to_date if (order.start_date.to_date < start_date)
+      end                                                                       
+    end                                                                         
+    return [start_date,end_date]
+  end
+
 end

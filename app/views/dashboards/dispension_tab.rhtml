@@ -118,7 +118,11 @@
             <%= text_field_tag :identifier, '', {:id => 'barcode', :class => 'touchscreenTextInput', :style => 'position:absolute;width:230px' } %>
             <%= submit_tag "Submit", :style => "display:none" %>
           </form>
-          <button id="set_appointment" class="silver" style="float:right;margin-top:-25px;"><span>Set appointment</span></button>
+
+          <% if @transfer_out_site.blank? %>
+            <button id="set_appointment" class="silver" style="float:right;margin-top:-25px;">
+              <span>Set appointment</span></button>
+          <% end %>
         </div>
       </div>
     </div>
@@ -130,7 +134,7 @@
 
     <% @prescriptions.each do | order | %>
         row = document.getElementById("<%=order.id%>")
-        <% if order.drug_order.drug.tb_medication? %>
+        <% if MedicationService.tb_medication(order.drug_order.drug) %>
             row.style.background = 'lightBlue';
         <%else%>
             row.style.background = '';

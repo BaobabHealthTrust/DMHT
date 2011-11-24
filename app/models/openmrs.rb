@@ -28,6 +28,11 @@ module Openmrs
       name = name.to_s.gsub('_', ' ')
       self.find_by_name(name)
     end
+
+    # Include voided or retired records
+    def find_with_voided(options)
+      with_exclusive_scope { self.find(options)}
+    end
   end  
 
   def self.included(base)
@@ -61,17 +66,18 @@ module Openmrs
   def after_void(reason = nil)
   end
   
-  def void(reason = "Voided through #{BART_VERSION}")
+  def void(reason = "Voided through #{BART_VERSION}",date_voided = Time.now,
+      voided_by = (User.current_user.user_id unless User.current_user.nil?))
     unless voided?
-      self.date_voided = Time.now
+      self.date_voided = date_voided
       self.voided = 1
       self.void_reason = reason
-      self.voided_by = User.current_user.user_id unless User.current_user.nil?
+      self.voided_by = voided_by
       self.save
       self.after_void(reason)
     end    
   end
-  
+
   def voided?
     self.attributes.has_key?("voided") ? voided == 1 : raise("Model does not support voiding")
   end 

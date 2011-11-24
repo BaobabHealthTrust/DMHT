@@ -1,5 +1,20 @@
 class ApplicationController < ActionController::Base
   include AuthenticatedSystem
+	  Mastercard
+    PatientIdentifierType
+    WeightHeight
+    CohortTool
+    Encounter
+    EncounterType
+    Location
+    DrugOrder
+    User
+    Task
+    GlobalProperty
+    Person
+    Regimen
+    ConceptName
+    Concept
 
   require "fastercsv"
 
@@ -25,17 +40,6 @@ class ApplicationController < ActionController::Base
     render :file => "#{RAILS_ROOT}/app/views/errors/error.rhtml", :layout=> false, :status => 404
   end if RAILS_ENV == 'production'
 
-  def next_task(patient)
-    session_date = session[:datetime].to_date rescue Date.today
-    task = Task.next_task(Location.current_location, patient,session_date)
-    begin
-      return task.url if task.present? && task.url.present?
-      return "/patients/show/#{patient.id}" 
-    rescue
-      return "/patients/show/#{patient.id}" 
-    end
-  end
-
   def print_and_redirect(print_url, redirect_url, message = "Printing, please wait...", show_next_button = false, patient_id = nil)
     @print_url = print_url
     @redirect_url = redirect_url
@@ -54,63 +58,41 @@ class ApplicationController < ActionController::Base
   end
 
   def show_lab_results
-    GlobalProperty.find_by_property('show.lab.results').property_value == "yes" rescue false
+    PatientService.get_global_property_value('show.lab.results') == "yes" rescue false
   end
 
   def use_filing_number
-    GlobalProperty.find_by_property('use.filing.number').property_value == "yes" rescue false
+    PatientService.get_global_property_value('use.filing.number') == "yes" rescue false
   end    
 
-  def generic_locations
-    Location.workstation_locations
+ def generic_locations
+  field_name = "name"
+
+  Location.find_by_sql("SELECT *
+          FROM location
+          WHERE location_id IN (SELECT location_id
+                         FROM location_tag_map
+                          WHERE location_tag_id = (SELECT location_tag_id
+                                 FROM location_tag
+                                 WHERE name = 'Workstation Location'))
+             ORDER BY name ASC").collect{|name| name.send(field_name)} rescue []
   end
 
   def site_prefix
-    site_prefix = GlobalProperty.find_by_property("site_prefix").property_value rescue false
+    site_prefix = PatientService.get_global_property_value("site_prefix") rescue false
     return site_prefix
   end
 
   def use_user_selected_activities
-    GlobalProperty.find_by_property('use.user.selected.activities').property_value == "yes" rescue false
+    PatientService.get_global_property_value('use.user.selected.activities') == "yes" rescue false
   end
   
   def tb_dot_sites_tag
-    GlobalProperty.find_by_property('tb_dot_sites_tag').property_value rescue nil
+    PatientService.get_global_property_value('tb_dot_sites_tag') rescue nil
   end
 
   def create_from_remote                                                        
-    GlobalProperty.find_by_property('create.from.remote').property_value == "yes" rescue false
-  end
-
-  # Convert a list +Concept+s of +Regimen+s for the given +Patient+ <tt>age</tt>
-  # into select options. See also +EncountersController#arv_regimen_answers+
-  def regimen_options(regimen_concepts, age)
-    options = regimen_concepts.map{ |r|
-      [r.concept_id,
-       (r.concept_names.typed("SHORT").first ||
-        r.concept_names.typed("FULLY_SPECIFIED").first).name]
-    }
-	
-    suffixed_options = options.collect{ |opt|
-      opt_reg = Regimen.find(:all,
-                             :select => 'regimen_index',
-							 :order => 'regimen_index',
-                             :conditions => ['concept_id = ?', opt[0]]
-                            ).uniq.first
-      if age >= 15
-        suffix = "A"
-      else
-        suffix = "P"
-      end
-
-      #[opt[0], "#{opt_reg.regimen_index}#{suffix} - #{opt[1]}"]
-		if opt_reg.regimen_index > -1
-      		["#{opt_reg.regimen_index}#{suffix} - #{opt[1]}", opt[0], opt_reg.regimen_index.to_i]
-		else
-      		["#{opt[1]}", opt[0], opt_reg.regimen_index.to_i]
-		end
-    }.sort_by{|opt| opt[2]}
-
+    PatientService.get_global_property_value('create.from.remote') == "yes" rescue false
   end
 
 private
@@ -118,5 +100,5 @@ private
   def find_patient
     @patient = Patient.find(params[:patient_id] || session[:patient_id] || params[:id]) rescue nil
   end
-  
+
 end

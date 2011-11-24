@@ -98,12 +98,6 @@ class Observation < ActiveRecord::Base
     "#{formatted_name}:  #{self.answer_string(tags)}"
   end
 
-  def to_s_formatted
-    text = "#{self.concept.name.name rescue 'Unknown concept name'}"
-    text += ": #{self.answer_string}" if(self.answer_string.downcase != "yes" && self.answer_string.downcase != "unknown")
-    text
-  end
-  
   def name(tags=[])
     formatted_name = self.concept_name.tagged(tags).name rescue nil
     formatted_name ||= self.concept_name.name rescue nil
@@ -122,31 +116,6 @@ class Observation < ActiveRecord::Base
     Concept.find_by_concept_id(self.value_coded).concept_names.typed("SHORT").first.name || ConceptName.find_by_concept_id(self.value_coded).name rescue ''
   end
 
-  def self.patients_with_multiple_start_reasons(start_date , end_date)
-    art_eligibility_id      = ConceptName.find_by_name('REASON FOR ART ELIGIBILITY').concept_id
-    arv_number_id           = PatientIdentifierType.find_by_name('ARV Number').patient_identifier_type_id
-    national_identifier_id  = PatientIdentifierType.find_by_name('National id').patient_identifier_type_id
-
-    patients = self.find_by_sql(["SELECT person_id, concept_id, date_created, value_coded_name_id FROM obs
-                                           WHERE (SELECT COUNT(*) FROM obs observation
-                                                  WHERE observation.concept_id = ?
-                                                    AND observation.person_id = obs.person_id) >= 1
-                                                    AND date_created >= ? AND date_created <= ?
-                                                    AND obs.concept_id = ?", art_eligibility_id, start_date , end_date, art_eligibility_id])
-    patients_data = []
-
-    patients.each do |reason|
-      arv_number   = PatientIdentifier.identifier(reason[:person_id], arv_number_id).identifier           rescue []
-      national_id  = PatientIdentifier.identifier(reason[:person_id], national_identifier_id).identifier  rescue []
-      start_reason = ConceptName.find(reason[:value_coded_name_id]).name
-
-      patients_data << [reason[:person_id].to_s, arv_number, national_id,
-                 reason[:date_created].strftime("%Y-%m-%d %H:%M:%S") , start_reason]
-    end
-
-    patients_data
-  end
-  
   def self.new_accession_number
     last_accn_number = Observation.find(:last, :conditions => ["accession_number IS NOT NULL" ], :order => "accession_number + 0").accession_number.to_s rescue "00" #the rescue is for the initial accession number start up
     last_accn_number_with_no_chk_dgt = last_accn_number.chop.to_i
@@ -164,4 +133,17 @@ class Observation < ActiveRecord::Base
     "#{formatted_name}:  #{Location.find(self.answer_string(tags)).name}"
   end
 
+  def to_s_location_name(tags=[])
+    formatted_name = self.concept_name.tagged(tags).name rescue nil
+    formatted_name ||= self.concept_name.name rescue nil
+    formatted_name ||= self.concept.concept_names.tagged(tags).first.name rescue nil
+    formatted_name ||= self.concept.concept_names.first.name rescue 'Unknown concept name'
+    "#{Location.find(self.answer_string(tags)).name}"
+  end
+  
+  def to_s_formatted
+    text = "#{self.concept.fullname rescue 'Unknown concept name'}"
+    text += ": #{self.answer_string}" if(self.answer_string.downcase != "yes" && self.answer_string.downcase != "unknown")
+    text
+  end
 end

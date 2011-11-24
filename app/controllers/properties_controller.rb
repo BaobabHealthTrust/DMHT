@@ -1,6 +1,6 @@
 class PropertiesController < ApplicationController
   def set_clinic_holidays
-    @clinic_holidays = GlobalProperty.find_by_property('clinic.holidays').property_value rescue nil
+    @clinic_holidays = PatientService.get_global_property_value('clinic.holidays') rescue nil
     render :layout => "menu"
   end
 
@@ -21,7 +21,7 @@ class PropertiesController < ApplicationController
   end
 
   def clinic_holidays
-    @holidays = GlobalProperty.find_by_property('clinic.holidays').property_value rescue []
+    @holidays = PatientService.get_global_property_value('clinic.holidays') rescue []
     @holidays = @holidays.split(',').collect{|date|date.to_date}.sort unless @holidays.blank?
     render :layout => "menu"
   end
@@ -50,8 +50,8 @@ class PropertiesController < ApplicationController
       flash[:notice] = "Week day(s) successfully created."
       redirect_to "/properties/clinic_days" and return
     end
-    @peads_clinic_days = GlobalProperty.find_by_property('peads.clinic.days').property_value rescue nil
-    @clinic_days = GlobalProperty.find_by_property('clinic.days').property_value rescue nil
+    @peads_clinic_days = PatientService.get_global_property_value('peads.clinic.days') rescue nil
+    @clinic_days = PatientService.get_global_property_value('clinic.days') rescue nil
     render :layout => "menu"
   end
 
@@ -63,14 +63,16 @@ class PropertiesController < ApplicationController
 
   def week_days(property)
     wkdays = {}
-    days = GlobalProperty.find_by_property(property).property_value rescue ''
+    days = PatientService.get_global_property_value(property) rescue ''
     days.split(',').map do | day |
       wkdays[day] = 'X'
     end rescue nil
     return wkdays
   end
 
-  def site_code
+  def site_code  
+    location = Location.find(Location.current_health_center.id)
+    @neighborhood_cell = location.neighborhood_cell
     if request.post?
       location = Location.find(Location.current_health_center.id)
       location.neighborhood_cell = params[:site_code]

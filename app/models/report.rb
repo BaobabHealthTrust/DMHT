@@ -10,7 +10,7 @@ module Report
     if(!quarter_beginning.nil? && !quarter_ending.nil?)
       date_range = [quarter_beginning, quarter_ending]
 		elsif (!quarter.nil? && quarter == "Cumulative")
-      quarter_beginning = Encounter.initial_encounter.encounter_datetime.to_date
+      quarter_beginning = PatientService.initial_encounter.encounter_datetime.to_date rescue Date.today
       quarter_ending    = Date.today.to_date
 
       date_range        = [quarter_beginning, quarter_ending]

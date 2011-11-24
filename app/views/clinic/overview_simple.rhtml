@@ -33,7 +33,7 @@
     <table id="stats" cellpadding="14">
       <tr style="color: #fff; background-color: #666;">
         <th style="text-align:left;">Task Type</th>
-        <th><%= User.current_user.person.name rescue 'Me'%></th>
+        <th><%= @user rescue 'Me'%></th>
         <th>Today</th>
        <!-- <th>This Year</th>
         <th>Total to Date</th> -->
@@ -43,8 +43,6 @@
           <td style="text-align:left;"><%= type.capitalize %></td>
           <td><%= @me[type].to_i %></td>
           <td><%= @today[type].to_i %></td>
-         <!-- <td><%= @year[type].to_i %></td>
-          <td><%= @ever[type].to_i %></td> -->
         </tr>
       <% end %>
     </table>

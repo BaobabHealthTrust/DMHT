@@ -95,7 +95,7 @@
 
 </script>    
 <div id="header">
-  <%= @patient.name  %>&nbsp;(<%=@patient.person.sex.first%>)&nbsp;Age:&nbsp;<%=@patient.person.age%><br />
+  <%= @patient_bean.name  %>&nbsp;(<%=@patient_bean.sex %>)&nbsp;Age:&nbsp;<%=@patient_bean.age%><br />
   <%=@type.gsub('_',' ')%>&nbsp;History
 </div><br />
 <div>

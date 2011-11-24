@@ -89,12 +89,6 @@ class User < ActiveRecord::Base
   def self.encrypt(password,salt)
     Digest::SHA1.hexdigest(password+salt)
   end
- 
-  # This goes away after 1.6 is here I think, but the users table in 1.5 has no
-  # auto-increment
-  def self.auto_increment
-    User.last.user_id + 1 rescue 0
-  end
   
   def activities
     a = activities_property

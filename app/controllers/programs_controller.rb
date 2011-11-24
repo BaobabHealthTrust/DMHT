@@ -64,7 +64,7 @@ class ProgramsController < ApplicationController
   def locations
     #@locations = Location.most_common_program_locations(params[:q] || '')
     if params[:transfer_type].blank? || params[:transfer_type].nil?
-        @locations = Location.most_common_locations(params[:q] || '')
+        @locations = most_common_locations(params[:q] || '')
     else
         search = params[:q] || ''
         location_tag_id = LocationTag.find_by_name("#{params[:transfer_type]}").id
@@ -245,6 +245,29 @@ class ProgramsController < ApplicationController
         @invalid_date_ranges = closed_states.join(',')
       end
     end
-  end 
+  end
+
+  # Looks for the most commonly used element in the database and sorts the results based on the first part of the string
+  def most_common_program_locations(search)
+    return (Location.find_by_sql([
+      "SELECT DISTINCT location.name AS name, location.location_id AS location_id \
+       FROM location \
+       INNER JOIN patient_program ON patient_program.location_id = location.location_id AND patient_program.voided = 0 \
+       WHERE location.retired = 0 AND name LIKE ? \
+       GROUP BY patient_program.location_id \
+       ORDER BY INSTR(name, ?) ASC, COUNT(name) DESC, name ASC \
+       LIMIT 10",
+       "%#{search}%","#{search}"]) + [Location.current_health_center]).uniq
+  end
+
+  def most_common_locations(search)
+    return (Location.find_by_sql([
+      "SELECT DISTINCT location.name AS name, location.location_id AS location_id \
+       FROM location \
+       WHERE location.retired = 0 AND name LIKE ? \
+       ORDER BY name ASC \
+       LIMIT 10",
+       "%#{search}%"])).uniq
+  end
 
 end

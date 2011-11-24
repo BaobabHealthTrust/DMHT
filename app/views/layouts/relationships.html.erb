@@ -42,15 +42,16 @@
   <body id="mateme">  
     <div id="container">      
       <div id="content">
-        <div id="header" style="height:160px;margin-top:-15px;padding-left:20px;">
-          <h1><%= Location.current_location.name %></h1>
+        <div id="header" style="height:160px;margin-top:-5px;padding-left:20px;">
+          <h1>Scan or register guardian</h1><br/><br/><br/><br/><br/><br/>
+         <!--
           <div id="version" style="padding-top:44px;"><%= version %></div>
           <div id="user" style="margin-top:-4px;">Logged in as <%= User.current_user.username %></div>
           <div style="margin-top:40px;font-weight:bold">In order to create a guardian you need to find or register a person.<br/>
             If the related person already has a health passport, scan the barcode now, <br/>
-            otherwise click find or register by name.</div>
+            otherwise click find or register by name.</div> -->
           <form id='barcodeForm' action="/people/search">
-            <div style="float:left">Scan a barcode:</div>
+            <div style="float:left">Scan barcode:</div>
             <%= hidden_field_tag :relation, @patient.patient_id %>
             <%= text_field_tag :identifier, '', {:id => 'barcode', :class => 'touchscreenTextInput', :style => 'position:absolute' } %>
             <%= submit_tag "Submit", :style => "display:none" %>

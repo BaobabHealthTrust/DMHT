@@ -136,17 +136,6 @@ module TouchscreenHelper
     content << touch_meta_tag(concept, patient, time, kind, options)
     content
   end
-
-  def touch_identifier_dc_number_tag(patient, type, value, options={}, time=DateTime.now())
-    options = {
-      :field_type => 'alpha',
-      :allowFreeText => true
-    }.merge(options)
-    content = ""
-    content << text_field_tag("identifier", value, options)
-    content << hidden_field_tag("prefix", "#{GlobalProperty.find_by_property("dc.number.prefix").property_value rescue ''}")
-    content
-  end
   
   def touch_identifier_tag(patient, type, value, options={}, time=DateTime.now())
     options = {

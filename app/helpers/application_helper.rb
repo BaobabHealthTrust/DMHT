@@ -16,69 +16,75 @@ module ApplicationHelper
   end
   
   def fancy_or_high_contrast_touch
-    fancy = GlobalProperty.find_by_property("interface").property_value == "fancy" rescue false
+    fancy = get_global_property_value("interface") == "fancy" rescue false
     fancy ? "touch-fancy.css" : "touch.css"
   end
   
   def show_intro_text
-    GlobalProperty.find_by_property("show_intro_text").property_value == "yes" rescue false
+    get_global_property_value("show_intro_text") == "yes" rescue false
   end
   
   def ask_home_village
-    GlobalProperty.find_by_property("demographics.home_village").property_value == "yes" rescue false
+    get_global_property_value("demographics.home_village") == "yes" rescue false
   end
 
   def site_prefix
-    site_prefix = GlobalProperty.find_by_property("site_prefix").property_value rescue false
+    site_prefix = get_global_property_value("site_prefix") rescue false
     return site_prefix
   end
 
   def ask_mothers_surname
-    GlobalProperty.find_by_property("demographics.mothers_surname").property_value == "yes" rescue false
+    get_global_property_value("demographics.mothers_surname") == "yes" rescue false
   end
   
   def ask_middle_name
-    GlobalProperty.find_by_property("demographics.middle_name").property_value == "yes" rescue false
+    get_global_property_value("demographics.middle_name") == "yes" rescue false
   end
 
   def ask_visit_home_for_TB_therapy
-    GlobalProperty.find_by_property("demographics.visit_home_for_treatment").property_value == "yes" rescue false
+    get_global_property_value("demographics.visit_home_for_treatment") == "yes" rescue false
   end
   
   def ask_sms_for_TB_therapy
-    GlobalProperty.find_by_property("demographics.sms_for_TB_therapy").property_value == "yes" rescue false
+    get_global_property_value("demographics.sms_for_TB_therapy") == "yes" rescue false
   end
 
   def ask_ground_phone
-    GlobalProperty.find_by_property("demographics.ground_phone").property_value == "yes" rescue false
+    get_global_property_value("demographics.ground_phone") == "yes" rescue false
   end
 
   def ask_blood_pressure
-    GlobalProperty.find_by_property("vitals.blood_pressure").property_value == "yes" rescue false
+    get_global_property_value("vitals.blood_pressure") == "yes" rescue false
   end
 
   def ask_temperature
-    GlobalProperty.find_by_property("vitals.temperature").property_value == "yes" rescue false
+    get_global_property_value("vitals.temperature") == "yes" rescue false
   end  
 
   def ask_standard_art_side_effects
-    GlobalProperty.find_by_property("art_visit.standard_art_side_effects").property_value == "yes" rescue false
+    get_global_property_value("art_visit.standard_art_side_effects") == "yes" rescue false
   end  
 
   def show_lab_results
-    GlobalProperty.find_by_property('show.lab.results').property_value == "yes" rescue false
+    get_global_property_value('show.lab.results') == "yes" rescue false
   end
   
   def use_filing_number
-    GlobalProperty.find_by_property('use.filing.number').property_value == "yes" rescue false
+    get_global_property_value('use.filing.number') == "yes" rescue false
   end
 
   def use_user_selected_activities
-    GlobalProperty.find_by_property('use.user.selected.activities').property_value == "yes" rescue false
+    get_global_property_value('use.user.selected.activities') == "yes" rescue false
   end
 
   def use_extended_staging_questions
-    GlobalProperty.find_by_property('use.extended.staging.questions').property_value == "yes" rescue false
+    get_global_property_value('use.extended.staging.questions') == "yes" rescue false
+  end
+
+  def get_global_property_value(global_property)
+    GlobalProperty.find(:first,
+                        :conditions => {:property => "#{global_property}"}
+                       ).property_value
   end
 
   def month_name_options
@@ -103,7 +109,7 @@ module ApplicationHelper
   
   def show_identifiers(location_id, patient)
     content = ""
-    idents = GlobalProperty.find_by_property("dashboard.identifiers").property_value
+    idents = get_global_property_value("dashboard.identifiers")
     json = JSON.parse(idents)
     names = json[location_id.to_s] rescue []
     names.each do |name|
@@ -169,7 +175,16 @@ module ApplicationHelper
   end
 
   def generic_locations
-    Location.workstation_locations
+    field_name = "name"
+
+    Location.find_by_sql("SELECT *
+            FROM location
+          WHERE location_id IN (SELECT location_id
+                         FROM location_tag_map
+                          WHERE location_tag_id = (SELECT location_tag_id
+                                 FROM location_tag
+                                 WHERE name = 'Workstation Location'))
+             ORDER BY name ASC").collect{|name| name.send(field_name)} rescue []
   end
   
   def concept_sets(concept_name)
@@ -184,5 +199,21 @@ module ApplicationHelper
       "<option value=\"#{encounter_url}\">#{encounter_name}</option>"
     end
   end
-
+  
+  def convert_time(duration)
+		if(!duration.blank?)
+			if(duration.to_i < 7)
+				(duration.to_i > 0)?(( duration.to_i > 1)? "#{duration} days" :"1 day"): "<i>(New)</i>"
+			elsif(duration.to_i < 30)
+				week = (duration.to_i)/7
+				week > 1? "#{week} weeks" : "1 week"
+			elsif(duration.to_i < 367)
+				month = (duration.to_i)/30
+				month > 1? "#{month} months" : "1 month"
+			else
+				year = (duration.to_i)/365
+				year > 1? "#{year} years" : "1 year"
+			end
+		end
+	end
 end

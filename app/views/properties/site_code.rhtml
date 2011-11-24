@@ -15,6 +15,6 @@
 </script>
 
 <% form_tag 'site_code', :method => :post do %>
-  <%= text_field_tag :site_code,  nil, {:field_type => 'alpha', :helpText => 'Site code', :allowFreeText => true, :textCase => 'upper' } %>
+  <%= text_field_tag :site_code,  @neighborhood_cell , {:field_type => 'alpha', :helpText => 'Site code', :allowFreeText => true, :textCase => 'upper' } %>
   <%= submit_tag "Create" %>
 <% end -%>

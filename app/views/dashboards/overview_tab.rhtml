@@ -47,7 +47,7 @@
               <li class="data <%= cycle('even', 'odd') %>" program="<%= prog.id %>">
                 <div class="program">
                   <%=(h prog.program.name.humanize).gsub('Hiv','HIV').gsub('Tb','TB') %> started <%=h prog.date_enrolled.strftime("%b-%Y") rescue 'Unknown' %>
-                  <br /><font class='patient_state'>Current state: <%=h prog.patient_states.last.to_s.humanize %></font>
+                  <br /><font class='patient_state'>Current state: <%=h prog.patient_states.last.to_s.humanize.gsub('-art','-ART').gsub('arvs','ARVs') %></font>
                 </div>
               </li>
             <%
@@ -69,11 +69,16 @@
 
 
         <div style="display: table-cell; width: 50%; padding: 10px; border: 1px solid #eee; -moz-border-radius: 15px;">
-          <%= render "simple_graph" %>
+
+          <div id="charts" >
+          </div>
+
         </div>
       </div>
       <div  style="display: table-row;">
+
         <div style="display: table-cell; width: 50%; padding: 5px; border: 1px solid #eee; -moz-border-radius: 15px;">
+
           <div id="treatment">
             <!-- h2>Treatment</h2 -->
             <ul class="list small" style="height:140px; -moz-border-radius: 15px;">

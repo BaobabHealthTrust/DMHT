@@ -1,8 +1,7 @@
 class Lab < ActiveRecord::Base
   set_table_name "map_lab_panel"
 
-  def self.results(patient)
-    patient_ids = patient.id_identifiers
+  def self.results(patient, patient_ids)
     results = self.find_by_sql(["
 SELECT * FROM Lab_Sample s
 INNER JOIN Lab_Parameter p ON p.sample_id = s.sample_id
@@ -26,8 +25,7 @@ GROUP BY short_name ORDER BY m.short_name",patient_ids
     results
   end
 
-  def self.results_by_type(patient,type)
-    patient_ids = patient.id_identifiers
+  def self.results_by_type(patient, type, patient_ids)
     results_hash = {}
     results = self.find_by_sql(["
 SELECT * FROM Lab_Sample s

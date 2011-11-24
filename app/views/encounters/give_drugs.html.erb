@@ -34,7 +34,7 @@
     <h2>TB</h2>
     <ul id="prescriptions" class="list" style="height:200px;width:100%;">
       <% @prescriptions.each do |order| %>
-        <%next if order.drug_order.drug.arv?%>
+        <% next if MedicationService.arv(order.drug_order.drug) %>
         <li class="data <%= cycle('even', 'odd') %>" prescription="<%= order.id %>">
           <div class="void"><img src="/images/cancel_flat_small.png"/></div>
           <div class="summary">
@@ -57,7 +57,7 @@
     <h2>ART</h2>
     <ul id="prescriptions" class="list" style="height:200px;width:100%;">
       <% @prescriptions.each do |order| %>
-        <%next unless order.drug_order.drug.arv?%>
+        <% next unless MedicationService.arv(order.drug_order.drug) %>
         <li class="data <%= cycle('even', 'odd') %>" prescription="<%= order.id %>">
           <div class="void"><img src="/images/cancel_flat_small.png"/></div>
           <div class="summary">
