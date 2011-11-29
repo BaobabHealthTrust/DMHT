@@ -18,7 +18,7 @@ overflow:auto;
 }
 </style>
 
-<form id='complication_type' action="/encounters/complications" method='post'>
+<form id='complication_type' action="/encounters/new/complications" method='post'>
   <%= select_tag(:select_complication_type,
     options_for_select([
           " ",
@@ -29,5 +29,13 @@ overflow:auto;
           "Renal"].sort),
     :helpText => "COMPLICATIONS<br/>Select the type of complication:")%>
   <%= hidden_field_tag("[patient_id]", @patient.patient_id) %>
+  
+	<% if @retrospective %>
+		<p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
+		<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
+	<% else %>
+		<%= hidden_field_tag "filter[provider]", nil %>
+	<% end %> 
+  
   <%= submit_tag("Next", :id => "nextButton") %>
 </form>

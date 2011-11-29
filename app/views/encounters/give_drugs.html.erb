@@ -84,6 +84,14 @@
       <form id='barcodeForm' action="/dispensations/create?patient_id=<%= @patient.id -%>" method="post">
         <div style="float:left;margin-top:-6px;"><label for="barcode" style="margin-top:-5px;"><img src="/images/barcode.jpg" style="vertical-align:top;background:white;"/></label></div>
         <%= text_field_tag :identifier, '', {:id => 'barcode', :class => 'touchscreenTextInput', :style => 'position:absolute;width:230px' } %>
+        
+				<% if @retrospective %>
+					<p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
+					<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
+				<% else %>
+					<%= hidden_field_tag "filter[provider]", nil %>
+				<% end %> 
+        
         <%= submit_tag "Submit", :style => "display:none" %>
       </form>
     </div>

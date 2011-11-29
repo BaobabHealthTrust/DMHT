@@ -26,8 +26,11 @@
     <% elsif obs.concept_id == ConceptName.find_by_name("TB status").concept_id %>
       <div class="encounter"><%=(h obs.to_s(["FULLY_SPECIFIED", "order"])).gsub('hiv','HIV').gsub('Hiv','HIV')%></div>
 
+    <% elsif obs.concept_id == ConceptName.find_by_name("Year of occurrence").concept_id %>
+      <div class="encounter"><%=(h "#{obs.to_s(["short", "order"]).to_s.split(":")[0]}: #{obs.to_s(["short", "order"]).to_s.split(":")[1].to_i}").gsub('hiv','HIV').gsub('Hiv','HIV') %></div>
+
     <% else %>
-      <div class="encounter"><%=(h obs.to_s(["short", "order"])).gsub('hiv','HIV').gsub('Hiv','HIV')%></div>
+      <div class="encounter"><%= (h obs.to_s(["short", "order"])).gsub('hiv','HIV').gsub('Hiv','HIV') %></div>
     <% end %>
   </li>
 <% end %>

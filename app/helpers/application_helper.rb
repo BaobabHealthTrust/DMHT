@@ -7,9 +7,22 @@ module ApplicationHelper
     link = link_to(name, options, html_options, *parameters_for_method_reference)
   end
 
+=begin
   def img_button_submit_to(url, image, options = {}, params = {})
     content = ""
     content << "<form method='post' action='#{url}'><input type='image' src='#{image}'/>"
+    params.each {|n,v| content << "<input type='hidden' name='#{n}' value='#{v}'/>" }
+    content << "</form>"
+    content
+  end
+=end
+
+  def img_button_submit_to(url, image, options = {}, params = {})
+    content = ""
+    content << "<form " + ((options[:form_id])?("id=#{options[:form_id]}"):"id='frm_general'") + " method='post' action='#{url}'><input type='image' src='#{image}' " +
+      ((options[:confirm])?("onclick=\"return confirmRecordDeletion('" +
+      options[:confirm] + "', '" + ((options[:form_id])?("#{options[:form_id]}"):"frm_general") + "')\""):"") + "/>"
+
     params.each {|n,v| content << "<input type='hidden' name='#{n}' value='#{v}'/>" }
     content << "</form>"
     content
@@ -87,10 +100,10 @@ module ApplicationHelper
                        ).property_value
   end
 
-  def month_name_options
+  def month_name_options(selected_months = [])
     i=0
     options_array = [[]] +Date::ABBR_MONTHNAMES[1..-1].collect{|month|[month,i+=1]} + [["Unknown","Unknown"]]
-    options_for_select(options_array)  
+    options_for_select(options_array, selected_months)
   end
   
   def age_limit

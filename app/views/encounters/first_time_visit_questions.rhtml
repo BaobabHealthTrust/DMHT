@@ -60,7 +60,7 @@
       <%= encounter_button((short_names[name.upcase] || name),
             @encounter_url[name.upcase],
             @button_classes[name.upcase]) %>
-    <% end %>
+    <% end  rescue nil %>
   </select>
 </div>
 

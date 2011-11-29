@@ -1,7 +1,7 @@
 <h3>Update the patient's name</h3>
 <%=@search_result %>
 <script type="text/javascript">
-  tt_cancel_destination = '/patients/demographics?patient_id=<%= @patient.id %>'
+  tt_cancel_destination = '/patients/edit_demographics?patient_id=<%= @patient.id %>'
   tstSearchMode = "<%= @patient_or_guardian %>";
 </script>
 <form id="search" action="/person_names/edit/<%= @patient.id %>" method="post">
@@ -17,6 +17,7 @@
                        :ajaxURL => "/search/PatientName?field=family_name&value=",
                        :allowFreeText => "true" %>
   </p>
+    <label for="other_name">Other Name</label>
     <%= text_field_tag :other_name, @other_name,
                        :ajaxURL => "/search/identifier/?type=other%20name&text=",
                        :allowFreeText => "true", :optional => "true" %>

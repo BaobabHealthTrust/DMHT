@@ -127,14 +127,12 @@
     :tt_pageStyleClass => "NoKeyboard",                                         
     :helpText => "Patient has been -ve for more than 3 months. Refer patient to HTC?" } %>
 
-   <% session_date = session[:datetime].to_date rescue nil                       
-    if session_date %>
-
-    <p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
-<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
-    <% else %>
-      <%= hidden_field_tag "filter[provider]", nil %>
-    <%end%>
+	<% if @retrospective %>
+		<p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
+		<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
+	<% else %>
+		<%= hidden_field_tag "filter[provider]", nil %>
+	<% end %> 
 
    <%= submit_tag "Finish" %>    
 

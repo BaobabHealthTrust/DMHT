@@ -1,3 +1,4 @@
+<%= javascript_include_tag "utils" %>
 <%= @destination_page =  "/encounters/new/first_time_visit_questions?patient_id=" + @patient.id.to_s %>
 
 <%
@@ -42,7 +43,7 @@
   <%= hidden_field_tag "encounter[encounter_datetime]", DateTime.now %>
   <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
 
-  <%  if @patient.has_diabetes_initial_questions? %>
+  <%  if @has_initial_questions %>
 
     <%= hidden_field_tag("observations[][value_datetime]", @patient.diabetes_diagnosis_date_observation.value_datetime) %>
     <%= hidden_field_tag("observations[][value_modifier]", @patient.diabetes_diagnosis_date_observation.value_modifier) %>
@@ -70,6 +71,7 @@
     %>
 
     <%= select_tag "year_of_initial_diagnosis", options_for_select(@select_init_diagnosis_year, ((@encounter_obs)?(@encounter_obs["year_of_initial_diagnosis"]):"")),options %>
+
 
     <%= select_tag "month_of_initial_diagnosis", month_name_options((@encounter_obs)?(@encounter_obs["month_of_diagnosis"]):""),
       {:tt_requireNextClick => false,
@@ -162,6 +164,13 @@
 
   <%= hidden_field_tag("next_url",@destination_page) %>
 
+	<% if @retrospective %>
+		<p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
+		<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
+	<% else %>
+		<%= hidden_field_tag "filter[provider]", nil %>
+	<% end %>
+	
 <%= submit_tag "Finish" %>
 </form>
 

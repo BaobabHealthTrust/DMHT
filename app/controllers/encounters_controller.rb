@@ -1,9 +1,7 @@
 class EncountersController < ApplicationController
-
-  before_filter :set_patient_details
-  
   def create(params=params, session=session)
-    #params.to_yaml
+    #raise params.to_yaml
+	
     if params['encounter']['encounter_type_name'] == 'TB_INITIAL'
       (params[:observations] || []).each do |observation|
         if observation['concept_name'].upcase == 'TRANSFER IN' and observation['value_coded_or_text'] == "YES"
@@ -166,6 +164,22 @@ class EncountersController < ApplicationController
         observation[:value_coded_or_text_multiple].compact!
         observation[:value_coded_or_text_multiple].reject!{|value| value.blank?}
       end  
+      
+      # convert values from 'mmol/litre' to 'mg/declitre'
+      if(observation[:measurement_unit])
+        observation[:value_numeric] = observation[:value_numeric].to_f * 18 if ( observation[:measurement_unit] == "mmol/l")
+        observation.delete(:measurement_unit)
+      end
+
+      if(observation[:parent_concept_name])
+        concept_id = Concept.find_by_name(observation[:parent_concept_name]).id rescue nil
+        observation[:obs_group_id] = Observation.find(:first, :conditions=> ['concept_id = ? AND encounter_id = ?',concept_id, encounter.id]).id rescue ""
+        observation.delete(:parent_concept_name)
+      end
+      
+      extracted_value_numerics = observation[:value_numeric]
+      extracted_value_coded_or_text = observation[:value_coded_or_text]
+
       if observation[:value_coded_or_text_multiple] && observation[:value_coded_or_text_multiple].is_a?(Array) && !observation[:value_coded_or_text_multiple].blank?
         
         values = observation.delete(:value_coded_or_text_multiple)
@@ -175,21 +189,17 @@ class EncountersController < ApplicationController
                 observation[:accession_number] = Observation.new_accession_number 
             end
             Observation.create(observation) 
-        end    
+        end
+      elsif extracted_value_numerics.class == Array
+            
+        extracted_value_numerics.each do |value_numeric|
+          observation[:value_numeric] = value_numeric
+          Observation.create(observation)
+        end
+        
       else      
         observation.delete(:value_coded_or_text_multiple)
-        
-		    if(observation[:measurement_unit])
-		      observation[:value_numeric] = observation[:value_numeric].to_f * 18 if ( observation[:measurement_unit] == "mmol/l")
-		      observation.delete(:measurement_unit)
-		    end
 
-		    if(observation[:parent_concept_name])
-		      concept_id = Concept.find_by_name(observation[:parent_concept_name]).id rescue nil
-		      observation[:obs_group_id] = Observation.find(:first, :conditions=> ['concept_id = ? AND encounter_id = ?',concept_id, encounter.id]).id rescue ""
-		      observation.delete(:parent_concept_name)
-		    end
-      
         Observation.create(observation)
       end
     end
@@ -283,7 +293,7 @@ class EncountersController < ApplicationController
       if params['encounter']['encounter_type_name'].to_s.upcase == "APPOINTMENT" && !params[:report_url].nil? && !params[:report_url].match(/report/).nil?
          redirect_to  params[:report_url].to_s and return
       end
-      redirect_to PatientService.next_task(@patient)
+      redirect_to next_task(@patient)
      end
     else
       if params[:voided]
@@ -297,12 +307,19 @@ class EncountersController < ApplicationController
     end
   end
 
-	def new	
+	def new
 		@patient = Patient.find(params[:patient_id] || session[:patient_id])
 		@patient_bean = PatientService.get_patient(@patient.person)
 		session_date = session[:datetime].to_date rescue Date.today
-		    @current_height = PatientService.get_patient_attribute_value(@patient, "current_height")
-		    @min_weight = PatientService.get_patient_attribute_value(@patient, "min_weight")
+
+		if session[:datetime]
+			@retrospective = true 
+		else
+			@retrospective = false
+		end
+
+		@current_height = PatientService.get_patient_attribute_value(@patient, "current_height")
+		@min_weight = PatientService.get_patient_attribute_value(@patient, "min_weight")
         @max_weight = PatientService.get_patient_attribute_value(@patient, "max_weight")
         @min_height = PatientService.get_patient_attribute_value(@patient, "min_height")
         @max_height = PatientService.get_patient_attribute_value(@patient, "max_height")
@@ -319,7 +336,15 @@ class EncountersController < ApplicationController
         if 'tb_reception'.upcase == (params[:encounter_type].upcase rescue '')
             @phone_numbers = PatientService.phone_numbers(Person.find(params[:patient_id]))
         end
-        
+
+        if 'first_time_visit_questions'.upcase == (params[:encounter_type].upcase rescue '')		
+			if (params[:void] && params[:void] == 'true')
+				url = "/patients/show/#{@patient.id}"
+				Encounter.find(params[:encounter_id]).void and \
+				redirect_to url and return rescue redirect_to url
+			end
+        end
+
         if 'ART_VISIT' == (params[:encounter_type].upcase rescue '')
             session_date = session[:datetime].to_date rescue Date.today
 
@@ -351,7 +376,7 @@ class EncountersController < ApplicationController
 				o.answer_string if o.to_s.include?("Transfer out to")} rescue nil
 
 		@recent_sputum_results = PatientService.recent_sputum_results(@patient.id) rescue nil
-    @recent_sputum_submissions = PatientService.recent_sputum_submissions(@patient_id) rescue nil
+    	@recent_sputum_submissions = PatientService.recent_sputum_submissions(@patient_id) rescue nil
 		@continue_treatment_at_site = []
 		Encounter.find(:last,:conditions =>["encounter_type = ? and patient_id = ? AND DATE(encounter_datetime) = ?",
 		EncounterType.find_by_name("TB CLINIC VISIT").id,
@@ -416,8 +441,8 @@ class EncountersController < ApplicationController
 		sputum_results_not_given(@patient.id).each{|order| @sputum_results_not_given[order.accession_number] = Concept.find(order.value_coded).fullname rescue order.value_text}
 
 		@tb_status = recent_lab_results(@patient.id, session_date)
-    # use @patient_tb_status  for the tb_status moved from the patient model
-    @patient_tb_status = PatientService.patient_tb_status(@patient)
+    	# use @patient_tb_status  for the tb_status moved from the patient model
+    	@patient_tb_status = PatientService.patient_tb_status(@patient)
 		@patient_is_transfer_in = is_transfer_in(@patient)
 		@patient_transfer_in_date = get_transfer_in_date(@patient)
 		@patient_is_child_bearing_female = is_child_bearing_female(@patient)
@@ -451,42 +476,6 @@ class EncountersController < ApplicationController
 		       @location_transferred_to << o.to_s_location_name.strip if o.to_s.include?("Transfer out to") rescue nil
 		     end
 		   end
-		end
-		
-		if params[:encounter_type]
-			if params[:encounter_type] == 'first_time_visit_questions'
-				# disable re-entry of existing encounters
-				@existing_encounter_types = @patient.encounters.find(:all,
-				  :group => 'encounter_type').map(&:name)
-				@button_classes = Hash.new('green')
-				@encounter_url = Hash.new
-				@medical_history_encounters = ['Diabetes History',
-				 # 'Diabetes Treatments',
-				  #'Hospital Admissions',
-				  'Past Diabetes Medical History',
-				  #'Complications',
-				  #'Hypertension Management',
-				  'General Health'
-				]
-
-				other_urls = {'Hospital Admissions' => 'Hospital Admissions',
-				  'Complications' => 'Initial Complications'
-				}
-				@medical_history_encounters.each do |name|
-				  if @existing_encounter_types.include? name.upcase
-				    @button_classes[name.upcase] = 'gray'
-				    @encounter_url[name.upcase] = '#'
-				  else
-				    url_name = other_urls[name] || name
-				    url_name = "Past Medical History" if url_name == "Past Diabetes Medical History"
-				    @encounter_url[name.upcase] = "/encounters/#{url_name.downcase.gsub(' ',
-				    '_')}?patient_id=#{@patient.id}"
-				  end
-				end
-				render :action => params[:encounter_type] and return
-
-			end
-			render :action => params[:encounter_type]
 		end
 
 		@tb_classification = nil
@@ -552,15 +541,60 @@ class EncountersController < ApplicationController
 			end
         end
 
+		if (params[:encounter_type].upcase rescue '') == 'HIV_STAGING'
+			if @patient_bean.age > 14 
+				@who_stage_i = concept_set('WHO STAGE I ADULT AND PEDS') + concept_set('WHO STAGE I ADULT')
+				@who_stage_ii = concept_set('WHO STAGE II ADULT AND PEDS') + concept_set('WHO STAGE II ADULT')
+				@who_stage_iii = concept_set('WHO STAGE III ADULT AND PEDS') + concept_set('WHO STAGE III ADULT')
+				@who_stage_iv = concept_set('WHO STAGE IV ADULT AND PEDS') + concept_set('WHO STAGE IV ADULT')
+
+				if PatientService.get_global_property_value('use.extended.staging.questions') == "yes"
+					@not_explicitly_asked = concept_set('WHO Stage defining conditions not explicitly asked adult')
+				end
+			else
+				@who_stage_i = concept_set('WHO STAGE I ADULT AND PEDS') + concept_set('WHO STAGE I PEDS')
+				@who_stage_ii = concept_set('WHO STAGE II ADULT AND PEDS') + concept_set('WHO STAGE II PEDS')
+				@who_stage_iii = concept_set('WHO STAGE III ADULT AND PEDS') + concept_set('WHO STAGE III PEDS')
+				@who_stage_iv = concept_set('WHO STAGE IV ADULT AND PEDS') + concept_set('WHO STAGE IV PEDS')
+				if PatientService.get_global_property_value('use.extended.staging.questions') == "yes"
+					@not_explicitly_asked = concept_set('WHO Stage defining conditions not explicitly asked peds')
+				end
+			end
+
+			if !@retrospective
+				@who_stage_i = @who_stage_i - concept_set('Unspecified Staging Conditions')
+				@who_stage_ii = @who_stage_ii - concept_set('Unspecified Staging Conditions')
+				@who_stage_iii = @who_stage_iii - concept_set('Unspecified Staging Conditions')
+				@who_stage_iv = @who_stage_iv - concept_set('Unspecified Staging Conditions') - concept_set('Calculated WHO HIV staging conditions')
+			end
+			
+			if @tb_status == true && @hiv_status != 'Negative'
+		    	tb_hiv_exclusions = [['Pulmonary tuberculosis (current)', 'Pulmonary tuberculosis (current)'], 
+					['Tuberculosis (PTB or EPTB) within the last 2 years', 'Tuberculosis (PTB or EPTB) within the last 2 years']]
+				@who_stage_iii = @who_stage_iii - tb_hiv_exclusions
+			end
+  			
+			@confirmatory_hiv_test_type = Observation.question("CONFIRMATORY HIV TEST TYPE").first(:conditions => {:person_id => @patient.person}, :include => :answer_concept_name).answer_concept_name.name rescue 'UNKNOWN'
+
+			#raise concept_set('PRESUMED SEVERE HIV CRITERIA IN INFANTS').to_yaml
+		end
+		
+		if (params[:encounter_type].upcase rescue '') == 'DIABETES INITIAL QUESTIONS'
+			all_encounters = patient.encounters.active.find(:all, :include => [:type]).map{|e| e.type.name}
+
+			# Initial Questions have to be answered for every patient if not done yet
+			@has_initial_questions = all_encounters.include?("DIABETES INITIAL QUESTIONS")
+		end
+
+
 		redirect_to "/" and return unless @patient
 
-		redirect_to PatientService.next_task(@patient) and return unless params[:encounter_type]
+		redirect_to next_task(@patient) and return unless params[:encounter_type]
 
 		redirect_to :action => :create, 'encounter[encounter_type_name]' => params[:encounter_type].upcase, 'encounter[patient_id]' => @patient.id and return if ['registration'].include?(params[:encounter_type])
-
-
+		
 		if (params[:encounter_type].upcase rescue '') == 'HIV_STAGING' and  (PatientService.get_global_property_value('use.extended.staging.questions') == "yes" rescue false)
-			render :template => 'encounters/llh_hiv_staging'
+			render :template => 'encounters/extended_hiv_staging'
 		else
 			render :action => params[:encounter_type] if params[:encounter_type]
 		end
@@ -1155,33 +1189,84 @@ class EncountersController < ApplicationController
     (count_drug_count[1] / equivalent_daily_dose).to_i
   end
 
-  def patient_medical_history
- 
-    render :template => false, :layout => false
+  def new_appointment                                                   
+    #render :layout => "menu"                                                    
   end
-  
-  def set_patient_details
-    if (params[:patient_id] || session[:patient_id])
-      @patient = Patient.find(params[:patient_id] || session[:patient_id]) if (!@patient)
-      void_encounter if (params[:void] && params[:void] == 'true')
 
-      @encounter_type_ids = []
-      encounters_list = ["initial diabetes complications","complications",
-        "diabetes history", "diabetes treatments",
-        "hospital admissions", "general health",
-        "hypertension management",
-        "past diabetes medical history"]
+  def update
 
-      @encounter_type_ids = EncounterType.find_all_by_name(encounters_list).each{|e| e.encounter_type_id}
-
-      @encounters   = @patient.encounters.find(:all, :order => 'encounter_datetime DESC',
-        :conditions => ["patient_id= ? AND encounter_type in (?)",
-          @patient.patient_id,@encounter_type_ids])
-                      
-      @encounter_names = @patient.encounters.active.map{|encounter| encounter.name}.uniq rescue []
-
-      @encounter_datetimes = @encounters.map { |each|each.encounter_datetime.strftime("%b-%Y")}.uniq
-
+    @encounter = Encounter.find(params[:encounter_id])
+    ActiveRecord::Base.transaction do
+      @encounter.void
     end
+    
+    encounter = Encounter.new(params[:encounter])
+    encounter.encounter_datetime = session[:datetime] unless session[:datetime].blank? or encounter.name == 'DIABETES TEST'
+    encounter.save
+
+       # saving  of encounter states
+    if(params[:complete])
+      encounter_state = EncounterState.find(encounter.encounter_id) rescue nil
+
+      if(encounter_state) # update an existing encounter_state
+        state =  params[:complete] == "true"? 1 : 0
+        EncounterState.update_attributes(:encounter_id => encounter.encounter_id, :state => state)
+      else # a new encounter_state
+        state =  params[:complete] == "true"? 1 : 0
+        EncounterState.create(:encounter_id => encounter.encounter_id, :state => state)
+      end
+    end
+
+    (params[:observations] || []).each{|observation|
+      # Check to see if any values are part of this observation
+      # This keeps us from saving empty observations
+      values = "coded_or_text group_id boolean coded drug datetime numeric modifier text".split(" ").map{|value_name|
+        observation["value_#{value_name}"] unless observation["value_#{value_name}"].blank? rescue nil
+      }.compact
+
+      next if values.length == 0
+      observation.delete(:value_text) unless observation[:value_coded_or_text].blank?
+      observation[:encounter_id] = encounter.id
+      observation[:obs_datetime] = encounter.encounter_datetime ||= Time.now()
+      observation[:person_id] ||= encounter.patient_id
+      observation[:concept_name] ||= "OUTPATIENT DIAGNOSIS" if encounter.type.name == "OUTPATIENT DIAGNOSIS"
+
+      # convert values from 'mmol/litre' to 'mg/declitre'
+      if(observation[:measurement_unit])
+        observation[:value_numeric] = observation[:value_numeric].to_f * 18 if ( observation[:measurement_unit] == "mmol/l")
+        observation.delete(:measurement_unit)
+      end
+
+      if(observation[:parent_concept_name])
+        concept_id = Concept.find_by_name(observation[:parent_concept_name]).id rescue nil
+        observation[:obs_group_id] = Observation.find(:first, :conditions=> ['concept_id = ? AND encounter_id = ?',concept_id, encounter.id]).id rescue ""
+        observation.delete(:parent_concept_name)
+      end
+
+      concept_id = Concept.find_by_name(observation[:concept_name]).id rescue nil
+      obs_id = Observation.find(:first, :conditions=> ['concept_id = ? AND encounter_id = ?',concept_id, encounter.id]).id rescue nil
+
+      extracted_value_numerics = observation[:value_numeric]
+      if (extracted_value_numerics.class == Array)
+
+        extracted_value_numerics.each do |value_numeric|
+          observation[:value_numeric] = value_numeric
+          Observation.create(observation)
+        end
+      else
+        Observation.create(observation)
+      end
+              
+    }
+
+    @patient = Patient.find(params[:encounter][:patient_id])
+
+    # redirect to a custom destination page 'next_url'
+    #if(params[:next_url])
+      redirect_to "/patients/show/#{@patient.patient_id}" and return
+    #else
+    #  redirect_to next_task(@patient)
+    #end
+
   end
 end

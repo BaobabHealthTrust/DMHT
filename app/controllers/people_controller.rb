@@ -99,7 +99,7 @@ class PeopleController < ApplicationController
     @found_person_id = params[:found_person_id] 
     @relation = params[:relation]
     @person = Person.find(@found_person_id) rescue nil
-    @task = PatientService.main_next_task(Location.current_location,@person.patient,session_date.to_date)
+    @task = main_next_task(Location.current_location,@person.patient,session_date.to_date)
     @arv_number = PatientService.get_patient_identifier(@person, 'ARV Number')
 	@patient_bean = PatientService.get_patient(@person)
     render :layout => 'menu'
@@ -217,12 +217,12 @@ class PeopleController < ApplicationController
           archived_patient = PatientService.patient_to_be_archived(person.patient)
           message = PatientService.patient_printing_message(person.patient,archived_patient,creating_new_patient = true)
           unless message.blank?
-            print_and_redirect("/patients/filing_number_and_national_id?patient_id=#{person.id}" , PatientService.next_task(person.patient),message,true,person.id)
+            print_and_redirect("/patients/filing_number_and_national_id?patient_id=#{person.id}" , next_task(person.patient),message,true,person.id)
           else
-            print_and_redirect("/patients/filing_number_and_national_id?patient_id=#{person.id}", PatientService.next_task(person.patient)) 
+            print_and_redirect("/patients/filing_number_and_national_id?patient_id=#{person.id}", next_task(person.patient)) 
           end
         else
-          print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", PatientService.next_task(person.patient))
+          print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person.patient))
         end
       end
     else
@@ -241,7 +241,7 @@ class PeopleController < ApplicationController
         session[:datetime] = date_of_encounter #if date_of_encounter.to_date != Date.today
       end
       unless params[:id].blank?
-        redirect_to PatientService.next_task(Patient.find(params[:id])) 
+        redirect_to next_task(Patient.find(params[:id])) 
       else
         redirect_to :action => "index"
       end
@@ -455,6 +455,37 @@ class PeopleController < ApplicationController
     ['','Driver','Housewife','Messenger','Business','Farmer','Salesperson','Teacher',
      'Student','Security guard','Domestic worker', 'Police','Office worker',
      'Preschool child','Mechanic','Prisoner','Craftsman','Healthcare Worker','Soldier'].sort.concat(["Other","Unknown"])
+  end
+  
+  def edit
+    # only allow these fields to prevent dangerous 'fields' e.g. 'destroy!'
+    valid_fields = ['birthdate','gender']
+    unless valid_fields.include? params[:field]
+      redirect_to :controller => 'patients', :action => :demographics, :id => params[:id]
+      return
+    end
+
+    @person = Person.find(params[:id])
+    if request.post? && params[:field]
+      if params[:field]== 'gender'
+        @person.gender = params[:person][:gender]
+      elsif params[:field] == 'birthdate'
+        if params[:person][:birth_year] == "Unknown"
+          @person.set_birthdate_by_age(params[:person]["age_estimate"])
+        else
+          PatientService.set_birthdate(@person, params[:person]["birth_year"],
+                                params[:person]["birth_month"],
+                                params[:person]["birth_day"])
+        end
+        @person.birthdate_estimated = 1 if params[:person]["birthdate_estimated"] == 'true'
+        @person.save
+      end
+      @person.save
+      redirect_to :controller => :patients, :action => :edit_demographics, :id => @person.id
+    else
+      @field = params[:field]
+      @field_value = @person.send(@field)
+    end
   end
 
 private

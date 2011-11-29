@@ -67,9 +67,15 @@
     'UREA',
     'MACROVASCULAR'
   ]
+  
+  if params[:diabetes_test_type]
+  	test_type = params[:diabetes_test_type]
+  else
+  	test_type = 'CREATININE'
+  end
 %>
 
-  <%= hidden_field_tag( "diabetes_test_type",params[:diabetes_test_type],{:id=>"diabetes_test_type"}) %>
+  <%= hidden_field_tag( "diabetes_test_type",test_type,{:id=>"diabetes_test_type"}) %>
 
   <%= select_tag( "creatinine_unit", options_for_select(['', 'mg/dl', 'µmol/l']), {
       :helpText => 'Unit for Creatinine Value',
@@ -751,13 +757,12 @@ $('infoBar'+tstCurrentPage).innerHTML = 'Urea (' + $('urea_unit').value + ')';
 
   <% end %>
   
-	<% session_date = session[:datetime].to_date rescue nil                       
-	if session_date %>
-	<p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
+	<% if @retrospective %>
+		<p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
 		<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
 	<% else %>
 		<%= hidden_field_tag "filter[provider]", nil %>
-	<%end%>
+	<% end %> 
 
   <%= hidden_field_tag("next_url",@destination_page) %>
   <%= submit_tag "Finish" %>

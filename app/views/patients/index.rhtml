@@ -10,25 +10,6 @@
       //tt_cancel_destination = '/clinic';
       tt_cancel_show = '/clinic';
     </script>
-    
-    <style>
-			#patient-graph {
-					position: absolute;
-					border: 1px solid #DDDDDD;
-					border-radius: 5px 5px 5px 5px;
-					height: 230px;
-					margin-bottom: 0;
-					margin-left: 5px;
-					margin-top: 5px;
-					overflow: auto;
-					width: 32%;
-					left:42%;
-					top:0%;
-					z-index:100;
-					background-color: white;
-			}
-    </style>
-    
   </head>
   <body><div id='content'>
       <div id='description' style='color:#777;position:absolute;margin-top:-70px;'></div><center>
@@ -39,9 +20,7 @@
             </tr>
 
             <h1 id='project_name'>
-              <div id="patient-graph">
-									<iframe id="custom_page" src="/patients/dashboard_graph?id=24"></iframe>
-              </div>
+				<div id="custom_banner" path="/patients/dashboard_graph?id=<%= @patient.id %>"></div>
               <%if User.current_user.activities.include?('Manage Lab Orders') or User.current_user.activities.include?('Manage Lab Results') or
        User.current_user.activities.include?('Manage Sputum Submissions') or User.current_user.activities.include?('Manage TB Clinic Visits') or
        User.current_user.activities.include?('Manage TB Reception Visits') or User.current_user.activities.include?('Manage TB Registration Visits') or
@@ -91,10 +70,11 @@
                   <!--%end%-->
                   <!-- option value='/patients/print_visit?patient_id=<%= @patient.id -%>'>Print Visit</option -->
 										<option value='/patients/complications?patient_id=<%= @patient.id -%>'>Complications</option>
-										<option value='/encounters/new/first_time_visit_questions?patient_id=<%= @patient.id -%>'>Medical history</option>
+										<!-- option value='/encounters/new/first_time_visit_questions?patient_id=<%= @patient.id -%>'>Medical history</option -->
                 </select>
                 <select id="navigation_links">
                     <option link="/encounter_types?patient_id=<%= @patient.id -%>" ttSize = "160px">Tasks</option>
+					<option link='/patients/edit_demographics?patient_id=<%= @patient.id -%>'>Edit Demographics</option>
                     <!-- option link="/patients/mastercard?patient_id=<%= @patient.id -%>">Complications</option -->
                   <% if show_lab_results %>
                     <option link="/lab/results/<%=@patient.id -%>">Lab results</option>

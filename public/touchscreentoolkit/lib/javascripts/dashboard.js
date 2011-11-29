@@ -501,7 +501,16 @@ function generateDashboard(){
         ageRow.appendChild(agevalue);
     }
 
-    if(__$('project_name')){
+    if(__$('custom_banner')){
+        var application = document.createElement("div");
+        application.id = "patient-dashboard-custom";
+
+        content.appendChild(application);
+
+        application.innerHTML = "<iframe src='" + (__$('custom_banner').getAttribute("path") ? 
+            __$('custom_banner').getAttribute("path") : "") + "' id='custom_page'></iframe>";;
+
+    } else if(__$('project_name')){
         var application = document.createElement("div");
         application.id = "patient-dashboard-application";
 
@@ -604,7 +613,9 @@ function generateDashboard(){
             var page = (children[i].value.trim() != children[i].innerHTML.trim() ? children[i].value :
                 "tabpages/" + children[i].innerHTML.trim().toLowerCase().replace(/\s/gi, "_") + ".html")
 
-            heading.push([children[i].innerHTML.trim(), page]);
+            var selected = (children[i].getAttribute("selectedTab") ? true : false);
+            
+            heading.push([children[i].innerHTML.trim(), page, selected]);
         }
 
         generateTab(heading, __$("patient-dashboard-main"))
@@ -734,19 +745,21 @@ function generateGeneralDashboard(){
 
     nav.appendChild(finish);
 
-    var logout = document.createElement("button");
-    logout.id = "btnCancel";
-    logout.innerHTML = "<span>Cancel</span>";
-    logout.className = "red";
-    logout.style.cssFloat = "left";
-    logout.style.margin = "10px";
-    logout.onclick = function(){
-        if(tt_cancel_show){
-            window.location = tt_cancel_show;
+    if(tt_cancel_show){
+        var logout = document.createElement("button");
+        logout.id = "btnCancel";
+        logout.innerHTML = "<span>Cancel</span>";
+        logout.className = "red";
+        logout.style.cssFloat = "left";
+        logout.style.margin = "10px";
+        logout.onclick = function(){
+            if(tt_cancel_show){
+                window.location = tt_cancel_show;
+            }
         }
-    }
 
-    nav.appendChild(logout);
+        nav.appendChild(logout);
+    }
 
     main.innerHTML += page;
 
@@ -802,10 +815,22 @@ function activate(id){
 
             __$(page_id).src = page;
 
-            __$(controls[i]).className = "active-tab";
+            if(__$(controls[i]).getAttribute("selectedTab")){
+                __$(controls[i]).className = "selectedHighlightedTab";
+            } else {
+                __$(controls[i]).className = "active-tab";
+            }
+            
             __$("view_" + controls[i]).style.display = "block";
         } else {
-            __$(controls[i]).className = "inactive-tab";
+            
+            if(__$(controls[i]).getAttribute("selectedTab")){
+                __$(controls[i]).className = "deSelectedHighlightedTab";
+            } else {
+                __$(controls[i]).className = "inactive-tab";
+            }
+            //__$(controls[i]).className = "inactive-tab";
+            
             __$("view_" + controls[i]).style.display = "none";
         }
     }
@@ -877,6 +902,11 @@ function generateTab(headings, target, content){
         }
         tab.innerHTML = headings[i][0];
         tab.setAttribute("link", headings[i][1]);
+        
+        if(headings[i][2]){
+            tab.setAttribute("selectedTab", true);
+        }
+        
         tab.onclick = function(){
             activate(this.id);
         }

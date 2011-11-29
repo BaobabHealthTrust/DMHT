@@ -20,7 +20,7 @@ class PatientIdentifiersController < ApplicationController
         identifier_type = PatientIdentifierType.find(params[:type])
         current_identifiers = patient.patient_identifiers.find_all_by_identifier_type(identifier_type.id)
         current_identifiers.each do |identifier|
-          identifier.void!('given another identifier')
+          identifier.void('given another identifier')
         end if current_identifiers
 
         patient_identifier = PatientIdentifier.new
@@ -34,7 +34,7 @@ class PatientIdentifiersController < ApplicationController
         
         patient_identifier.patient = patient
         patient_identifier.save
-        redirect_to :controller => :patients, :action => :demographics, :id => patient.id
+        redirect_to :controller => :patients, :action => :edit_demographics, :id => patient.id
       end
 
     else
@@ -55,6 +55,7 @@ class PatientIdentifiersController < ApplicationController
       render :layout => true
     end
   end
+  
   def patient_identifier_exists(identifier, type, prefix = nil)
     if prefix != nil
       identifier = prefix.to_s + identifier.to_s

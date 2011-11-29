@@ -286,4 +286,13 @@ module DiabetesService
     } 
     label.print(1)
   end
+  
+  def self.ds_number(patient)
+    identifier_type = PatientIdentifierType.find_by_name("DS Number").id
+    test_condtion   = ["voided = 0 AND identifier_type = ? AND patient_id = ?", identifier_type, patient.id]
+    ds_number = PatientIdentifier.find(:first,:conditions => test_condtion).identifier rescue "Unknown"
+
+    return ds_number
+  end
+
 end

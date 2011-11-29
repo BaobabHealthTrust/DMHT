@@ -3,7 +3,7 @@
 </style>
 <h3>Update the patient's addresses</h3>
 <script type="text/javascript">
-  tt_cancel_destination = '/patients/demographics?patient_id=<%= @patient.id %>'
+  tt_cancel_destination = '/patients/edit_demographics?patient_id=<%= @patient.id %>'
 </script>
 <form action="/person_addresses/edit/<%= @patient.id %>" method="post">
   <%=  hidden_field_tag(:field, @field)%>

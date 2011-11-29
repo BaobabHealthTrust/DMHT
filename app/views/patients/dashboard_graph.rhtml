@@ -13,10 +13,9 @@
     border-bottom: 1px solid white;
   }
   #simplegraphholder {
-    border: 1px solid #eee;
     display: block;
     width: 278px;
-    height: 188px;
+    height: 190px;
     padding: 5px;
   }
   #graph{
@@ -24,19 +23,32 @@
   }
 </style>
 
+<link rel="stylesheet" href="/touchscreentoolkit/lib/stylesheets/touch-fancy.css" type="text/css" />
 <script language="javascript" type="text/javascript" src="/javascripts/jquery.js"></script>
 <script language="javascript" type="text/javascript" src="/javascripts/jquery.flot.js"></script>
 
+<script language="javascript" type="text/javascript">
+  <!--
+    var current_graph = 0;  
+  //-->
+</script>
+
 <div id="graph">
   <div id="choices">
-    <div id="graph0" class="graph-button" onmousedown="plotAccordingToChoices(0);">Blood Sugar</div>
-    <div id="graph1" class="graph-button" onmousedown="plotAccordingToChoices(1);">BP</div>
+    <div id="graph0" class="graph-button" onmousedown="plotAccordingToChoices(0); current_graph=0">Blood Sugar</div>
+    <div id="graph1" class="graph-button" onmousedown="plotAccordingToChoices(1); current_graph=1">BP</div>
     <!--div id="graph2" class="graph-button" onmousedown="plotAccordingToChoices(2);">Weight</div-->
-    <div id="graph3" class="graph-button" onmousedown="plotAccordingToChoices(3);">BMI</div>
-    <div id="graph4" class="graph-button" onmousedown="plotAccordingToChoices(4);">HbA1c</div>
+    <div id="graph3" class="graph-button" onmousedown="plotAccordingToChoices(3); current_graph=3">BMI</div>
+    <div id="graph4" class="graph-button" onmousedown="plotAccordingToChoices(4); current_graph=4">HbA1c</div>
   </div>
   <div id="simplegraphholder"></div>
 </div>
+
+<button onclick="window.parent.location = '/patients/graph_main?patient_id=<%= @patient.id %>&graph=' + current_graph" 
+        class="btn" style="position: absolute; top: 0px; left: 249px; width: 10px; 
+        padding: 0px; min-width: 50px; padding-bottom: 4px;">
+  +
+</button>
 
 <script type="text/javascript">
   jQuery.noConflict();
@@ -234,7 +246,7 @@
 
                   switch(key){
                     case 0: /* blood sugar tab */
-                      y_axis = { min: 40, max: 300, ticks: 8};
+                      y_axis = { min: 40, max: 500, ticks: 8};
                       break;
 
                     case 1:/* BP tab */

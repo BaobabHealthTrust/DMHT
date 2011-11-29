@@ -10,4 +10,8 @@ class GlobalProperty < ActiveRecord::Base
   def self.use_user_selected_activities
     GlobalProperty.find_by_property('use.user.selected.activities').property_value == "yes" rescue false
   end
+  
+  def self.prefix
+    self.find_by_property("dc.number.prefix").property_value rescue ""
+  end
 end

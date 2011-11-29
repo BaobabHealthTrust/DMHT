@@ -1,6 +1,6 @@
 <h3>Update the patient's attribute</h3>
 <script type="text/javascript">
-  tt_cancel_destination = '/patients/demographics?patient_id=<%= @patient.id %>'
+  tt_cancel_destination = '/patients/edit_demographics?patient_id=<%= @patient.id %>'
 </script>
 <form id="search" action="/person_attributes/edit/<%= @patient.id %>" method="post">
   <p>

@@ -1,252 +1,393 @@
-<%= javascript_include_tag "barcode" %>
-<style>
-  .tt_controls_scan_specimen_1 #keyboard{
-    display:none;
-  }
+<%= javascript_include_tag 'jquery' %>
+<%= javascript_include_tag "utils" %>
+<script type="text/javascript">
+  var tt_cancel_destination = "/patients/show/<%= @patient.patient_id %>"
 
-  .tt_controls_scan_specimen_2 #keyboard{
-    display:none;
-  }
+  function resetPageAttributes(currentPage, attr){
+    var attributes = {};
 
-  .tt_controls_scan_specimen_3 #keyboard{
-    display:none;
-  }
+    switch(attr){
+      case 'fbs':
+        if ($('fbs_unit').value == 'mmol/l')
+          attributes = {'min':[2.7],'max':[27.8]};
+        else
+          attributes = {'min':[50],'max':[500]};
+      break;
 
-  .tt_controls_sputum_microscopy_year #char{
-    display:none;
-  }
+      case 'rbs':
+        if ($('rbs_unit').value == 'mmol/l')
+          attributes = {'min':[2.7],'max':[27.8]};
+        else
+          attributes = {'min':[50],'max':[500]};
+      break;
 
-  .tt_controls_sputum_microscopy_month .keyboard{ display:none; }
-  #tt_page_sputum_microscopy_month .options{height:550px;}
-  #tt_page_sputum_microscopy_month .options li{font-size:30px;}
-</style>
+      case 'hba1c':
+        attributes = {'min':[4], 'max':[30], 'absoluteMin':[0], 'absoluteMax':[50]};
+      break;
 
-<script>
-  var tt_cancel_destination = "/encounters/new/lab?patient_id=<%= @patient.patient_id -%>";
-  var result_filed_ids = [];
-  var specimen_field_ids = [];
+      case 'cf':
+        if ($('cf_unit').value == 'mmol/l')
+          attributes = {'min':[7],'max':[17]};
+        else if($('cf_unit').value == 'mg/dl')
+          attributes = {'min':[130],'max':[300]};
+        else{
+          $('cf_value_text').value     = '';
+          $('cf_value_numeric').value  = '';
+        }
+      break;
 
-  var tb_status =  'TB NOT suspected';
-
-  var acc_numbers = {<%= @sputum_submission_waiting_results.collect{|k,v| "#{k}:'#{v}'"}.sort.join(",")%>};
-
-  var acc_numbers_check = {<%= @sputum_submission_waiting_results.collect{|k,v| "#{k}:'#{v}'"}.sort.join(",")%>};
-
-  function compileDate(){
-    var tmpDate = $('sputum_microscopy_year').value + "-" + $('sputum_microscopy_month').value +"-" +$('sputum_microscopy_day').value;
-    return tmpDate;
-  }
-
-  function checkSputumDate(){
-    <% @session_date = "#{session[:datetime]} rescue #{Date.today}" %>
-
-    var sessionDate = "<%="#{@session_date.to_date.year},#{@session_date.to_date.month},#{@session_date.to_date.day}"%>";
-
-    var todayDate = new Date(sessionDate);
-
-    var dateCheck = "";
-
-    <% @sputum_date = "#{@recent_sputum_submissions.map{|obs_datetime| obs_datetime.obs_datetime}.uniq} rescue #{Date.today}" %>
-    var sputumDate = "<%="#{@sputum_date.to_date.year},#{@sputum_date.to_date.month},#{@sputum_date.to_date.day}"%>";
-    var sputum = new Date(sputumDate);
-
-    var sputumDate = new Date($('sputum_microscopy_year').value, $('sputum_microscopy_month').value - 1, $('sputum_microscopy_day').value);
-
-   if ((sputumDate <= todayDate) && (sputumDate >= sputum)){
-     dateCheck = 'true'
-   }else {
-     dateCheck = 'false'
-   }
-    return dateCheck
- }
-
-  function concat(obj){
-    var s = "";
-
-    for(var t in obj){
-        s += t + "|";
+      case 'cnf':
+        if ($('cnf_unit').value == 'mmol/l')
+          attributes = {'min':[7],'max':[17]};
+        else if($('cnf_unit').value == 'mg/dl')
+          attributes = {'min':[130],'max':[300]};
+        else{
+          $('cnf_value_text').value     = '';
+          $('cnf_value_numeric').value  = '';
+          }
+      break;
     }
 
-    s = s.trim().substr(0,s.trim().length-1);
-
-    return s;
+    setAttributes(currentPage, attributes);
   }
 
-  barcodeFocusOnce = true;
-  
-  //setTimeout("setupBarcode()", 300);
-  function setupBarcode(){
-    barcodeId = tstInputTarget.id;
-    barcodeScanAction = gotoNextPage;
-    setTimeout("focusForBarcodeInput()", 300);
-    loadBarcodePage();
-  }
+  function setAttributes(currentPage, attributes){
 
-   function inform() {
-    $('infoBar'+tstCurrentPage).innerHTML = "Scan the label on the sputum collection bottle";
-  }
-
-  function summary() {
-    results = '<ul>';
-    for(i = 0 ; i < result_filed_ids.length ; i++) {
-      if ($(result_filed_ids[i]).value != 'NEGATIVE') {
-        tb_status =  'Confirmed TB NOT on treatment'
-      }
-      var specimen = $(specimen_field_ids[i]).value
-      results += '<li><b>' + acc_numbers[specimen] + " Results (Accession number: " + specimen + ") : </b>" + $(result_filed_ids[i]).options[$(result_filed_ids[i]).selectedIndex].text  + '</li>'
+    for (var value in attributes){
+      $(currentPage).setAttribute(value, attributes[value]);
     }
-    results += '</ul>';
-
-    //var display = "<div><span class='title'>TB Status: " + tb_status + "</span></div>";
-    var display = "<div><span class='title' style='font-size:25px;padding-top:7px;'>" + results + "</span></div>";
-    $('inputFrame'+tstCurrentPage).innerHTML = '<div id="summary">' + display + '</div>' ;    
-    $("clearButton").style.display = 'none';
   }
 
-  function resetAttributes() {
-    $('nextButton').setAttribute('onmousedown','gotoNextPage();');
-  }
-  
-  function setAttributes() {
-    saved_tb_status = "<%=@patient_tb_status %>"
-    if (saved_tb_status.match(/treatment/i))
-      return
+  function setConceptNamesAndValues(){
 
-    $('nextButton').setAttribute('onmousedown','finish();');
-  }
+    var values_string = selectedValue('test_types');
 
+    $('fbs_test_type_concept_name').value           = '';
+    $('fbs_test_type_value_coded_or_text').value    = '';
+    $('fbs_concept_name').value                     = '';
+    $('fbs_parent_concept_name').value              = '';
 
-   function finish() {
-    submitForm = document.getElementById("lab_results");
+    $('rbs_test_type_concept_name').value           = '';
+    $('rbs_test_type_value_coded_or_text').value    = '';
+    $('rbs_concept_name').value                     = '';
+    $('rbs_parent_concept_name').value              = '';
 
-    newElement = document.createElement("input");
-    newElement.setAttribute("name","observations[][value_coded_or_text]");
-    newElement.setAttribute("type","hidden");
-    newElement.value = tb_status;
-    submitForm.appendChild(newElement);
+    $('HbA1c_test_type_concept_name').value         = '';
+    $('HbA1c_test_type_value_coded_or_text').value  = '';
+    $('HbA1c_concept_name').value                   = '';
+    $('HbA1c_parent_concept_name').value            = '';
 
-    newElement = document.createElement("input");
-    newElement.setAttribute("name","observations[][concept_name]");
-    newElement.setAttribute("type","hidden");
-    newElement.value = "TB STATUS";
-    submitForm.appendChild(newElement);
+    $('cf_test_type_concept_name').value            = '';
+    $('cf_test_type_value_coded_or_text').value     = '';
+    $('cf_concept_name').value                      = '';
+    $('cf_parent_concept_name').value               = '';
 
-    newElement = document.createElement("input");
-    newElement.setAttribute("name","observations[][patient_id]");
-    newElement.setAttribute("type","hidden");
-    newElement.value = "<%=@patient.id%>";
-    submitForm.appendChild(newElement);
+    $('cnf_test_type_concept_name').value           = '';
+    $('cnf_test_type_value_coded_or_text').value    = '';
+    $('cnf_concept_name').value                     = '';
+    $('cnf_parent_concept_name').value              = '';
 
-    submitForm.submit();
-    return;
+    if(values_string.contains("FASTING BLOOD SUGAR")){
+      $('fbs_test_type_concept_name').value           = 'BLOOD SUGAR TEST TYPE';
+      $('fbs_parent_concept_name').value              = 'BLOOD SUGAR TEST TYPE';
+      $('fbs_test_type_value_coded_or_text').value    = 'FASTING';
+      $('fbs_concept_name').value                     = 'FASTING';
+    }
+
+    if(values_string.contains("RANDOM BLOOD SUGAR")){
+      $('rbs_test_type_concept_name').value           = 'BLOOD SUGAR TEST TYPE';
+      $('rbs_parent_concept_name').value              = 'BLOOD SUGAR TEST TYPE';
+      $('rbs_test_type_value_coded_or_text').value    = 'RANDOM';
+      $('rbs_concept_name').value                     = 'RANDOM';
+    }
+
+    if(values_string.contains("HbA1c")){
+      $('HbA1c_test_type_concept_name').value         = 'BLOOD SUGAR TEST TYPE';
+      $('HbA1c_parent_concept_name').value            = 'BLOOD SUGAR TEST TYPE';
+      $('HbA1c_test_type_value_coded_or_text').value  = 'HbA1c';
+      $('HbA1c_concept_name').value                   = 'HbA1c';
+    }
+
+    if(values_string.contains("CHOLESTEROL FASTING")){
+      $('cf_test_type_concept_name').value            = 'CHOLESTEROL TEST TYPE';
+      $('cf_parent_concept_name').value               = 'CHOLESTEROL TEST TYPE';
+      $('cf_test_type_value_coded_or_text').value     = 'FASTING';
+      $('cf_concept_name').value                      = 'FASTING';
+    }
+
+    if(values_string.contains("CHOLESTEROL NOT FASTING")){
+      $('cnf_test_type_concept_name').value           = 'CHOLESTEROL TEST TYPE';
+      $('cnf_parent_concept_name').value              = 'CHOLESTEROL TEST TYPE';
+      $('cnf_test_type_value_coded_or_text').value    = 'NOT FASTING';
+      $('cnf_concept_name').value                     = 'NOT FASTING';
+    }
   }
 </script>
 
-  <%if @sputum_submission_waiting_results.empty?%>
-    <div class="inputPage NoKeyboard" id="page" style="display: block;">
-    <div id="trigger"></div>
-    <div id="infoBar" class="infoBarClass"></div>
-    <label id="helpText" class="helpTextClass" for="">This patient has not submitted sputum orders</label>
-  </div>
-  <div id="buttons" class="buttonsDiv" style="top:456;">
-    <div id="tt_extraButtons"></div>
-    <button onmousedown="window.location=tt_cancel_destination;" id="cancelButton" class="button navButton red"><span>Cancel</span></button>
-  </div>
-  <script>
-		setTimeout("window.location=tt_cancel_destination;", 5000);
-  </script>
+<form action="/encounters/create/lab_results">
+  <% default={
+    :allowFreeText => 'true',
+  } %>
 
- <%else%>
-
-<form id='lab_results' action="/encounters/create" method='post'>
   <%= hidden_field_tag "encounter[encounter_type_name]", "LAB RESULTS" %>
   <%= hidden_field_tag "encounter[patient_id]", @patient.id %>
   <%= hidden_field_tag "encounter[encounter_datetime]", DateTime.now() %>
   <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
 
-  <% @sputum_date = "#{@recent_sputum_submissions.map{|obs_datetime| obs_datetime.obs_datetime}.uniq} rescue #{Date.today}" %>
+  <% options=default.merge({
+      :field_type => 'text',
+      :helpText => "Select the type of test taken:",
+      :id => "test_types",
+      :tt_onUnLoad => "setConceptNamesAndValues()",
+      :multiple => true,
+      :tt_pageStyleClass => "MultiSelectList",
+      :optional => true
+    }) %>
 
-  <!--TODO
-  -->
-   <%#= touch_text_field_tag "LABORATORY SERIAL NUMBER", @patient, nil,
-    {:id => "lab_serial_number",
-     :field_type => 'number',
-     :helpText => "Laboratory serial number" } %>
+  <% @treatements_list = ["FASTING BLOOD SUGAR", "RANDOM BLOOD SUGAR", "CHOLESTEROL FASTING", "CHOLESTEROL NOT FASTING", "HbA1c"] %>
+  <%= select_tag("test_type_values",options_for_select(@treatements_list),options)%>
 
-  <label for='sputum_microscopy_year'>HIV test year</label>
-  <%= text_field_tag "sputum_microscopy_year", nil, {:helpText => 'Sputum microscopy year', :field_type => 'number', :absoluteMin => "1982", :min => "1982", :absoluteMax => Date.today.year, :tt_pageStyleClass => "Numeric NumbersOnly"}  %>
+  <% options = default.merge({
+          :id           => "fbs_unit",
+          :field_type   => "text",
+          :tt_onload    => "$('infoBar'+tstCurrentPage).innerHTML = ' Fasting Blood Sugar'",
+          :condition    => "$('fbs_test_type_value_coded_or_text').value == 'FASTING'",
+          :tt_onUnLoad  => "$('fbs_measurement_unit').value = $('fbs_unit').value",
+          :tt_requireNextClick => false,
+          :helpText   =>"Select blood sugar units of measure"
+      }) %>
+    <%= select_tag("fbs_unit", options_for_select([
+      "",
+      "mmol/l",
+      "mg/dl"
+      ]), options ) %>
 
-  <label for='sputum_microscopy_month'>Sputum microscopy month</label>
-  <%= select_tag "sputum_microscopy_month", month_name_options,
-    {:helpText => 'Sputum microscopy month',
-     :condition => '$("sputum_microscopy_year").value.toLowerCase() != "unknown"'}%>
+  <% options = default.merge({
+        :id             => "fbs_value",
+        :field_type     => 'number',
+        :helpText       =>"Fasting Blood Sugar Value",
+        :condition      => "$('fbs_test_type_value_coded_or_text').value == 'FASTING'",
+        :min            => 50,
+        :max            => 500,
+        :validationRule    => "([0-9]+(\\.)*[0-9]*)|Unknown$",
+        :validationMessage => "You must enter a decimal between 0 and 9 (for example: 36<b>.6</b>)",
+        :tt_pageStyleClass => "Numeric NumbersOnlyWithDecimal",
+        :tt_onUnLoad  => "$('fbs_value_numeric').value = $('fbs_value').value",
+        :tt_onload    => "resetPageAttributes('touchscreenInput'+tstCurrentPage, 'fbs');"
+      }) %>
 
-  <label for='sputum_microscopy_day'>Sputum microscopy day</label>
-  <%= text_field_tag "sputum_microscopy_day",  nil, :field_type => 'number',
-       :helpText => 'Sputum microscopy day',
-       :validationCode => "checkSputumDate() == 'true'",
-       :validationMessage => "Sputum Microsopy date is either greater than today's date or sputum submission date #{@sputum_date.to_date}",
-       :condition => '($("sputum_microscopy_year").value != "Unknown") && ($("sputum_microscopy_month").value != "Unknown")', :tt_onLoad => ";getDayOfMonthPicker($('sputum_microscopy_year').value, $('sputum_microscopy_month').value)", :tt_onUnload => "$('sputum_microscopy_date').value = compileDate()" %>
+    <%= text_field_tag "fbs_value_numeric", nil, options%>
+    <!-- set the test type concept name and value -->
+    <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'fbs_test_type_concept_name'}) %>
+    <%= hidden_field_tag("observations[][value_coded_or_text]", "", {:id => 'fbs_test_type_value_coded_or_text'}) %>
+    <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
 
-  <%= touch_hidden_tag "SPUTUM MICROSCOPY DATE", @patient, "", :id => "sputum_microscopy_date", :value_datetime => true%>
+    <!-- set the test concept and value -->
+    <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'fbs_concept_name'}) %>
+    <%= hidden_field_tag("observations[][value_numeric]",       "", {:id => 'fbs_value_numeric'} ) %>
+    <%= hidden_field_tag("observations[][measurement_unit]",    nil,{:id => 'fbs_measurement_unit'}) %>
+    <%= hidden_field_tag("observations[][parent_concept_name]", "", {:id => 'fbs_parent_concept_name'}) %>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
-  <%= touch_select_tag "VISUAL APPEARANCE OF SPUTUM SPECIMEN", @patient, options_for_select(@sputum_visual_appearance),
-    {:id => "visual_appearance_of_sputum_specimen",
-     :tt_pageStyleClass => "NoKeyboard",
-     :helpText => "Visual appearance of sputum specimen" } %>
-     <%acc_numbers = @sputum_submission_waiting_results.collect{|k,v| k}.sort%>
-     <%counter = 4 %>
-     <% (@sputum_submission_waiting_results.size).times do |i|%>
+    <% options = default.merge({
+          :id           => "rbs_unit",
+          :field_type   => "text",
+          :tt_onload    => "$('infoBar'+tstCurrentPage).innerHTML = ' Random Blood Sugar'",
+          :condition      => "$('rbs_test_type_value_coded_or_text').value == 'RANDOM'",
+          :tt_onUnLoad  => "$('rbs_measurement_unit').value = $('rbs_unit').value",
+          :tt_requireNextClick => false,
+          :helpText   =>"Select blood sugar units of measure"
+      }) %>
+    <%= select_tag("rbs_unit", options_for_select([
+      "",
+      "mmol/l",
+      "mg/dl"
+      ]), options ) %>
 
-    <% element_id = "specimen#{i+1}"%>
-    <%destination_id = "specimen_#{i+1}"%>
-    <%reg_ex = @sputum_submission_waiting_results.collect{|k,v| k}.join('|')%>
+  <% options = default.merge({
+        :id             => "rbs_value",
+        :field_type     => 'number',
+        :helpText       =>"Random Blood Sugar Value",
+        :condition      => "$('rbs_test_type_value_coded_or_text').value == 'RANDOM'",
+        :min            => 50,
+        :max            => 500,
+        :validationRule    => "([0-9]+(\\.)*[0-9]*)|Unknown$",
+        :validationMessage => "You must enter a decimal between 0 and 9 (for example: 36<b>.6</b>)",
+        :tt_pageStyleClass => "Numeric NumbersOnlyWithDecimal",
+        :tt_onUnLoad  => "$('rbs_value_numeric').value = $('rbs_value').value",
+        :tt_onload    => "resetPageAttributes('touchscreenInput'+tstCurrentPage, 'rbs');"
+      }) %>
 
-    <% id = (i+1) %>
-    <script>
-       result_filed_ids.push("sputum_specimen_<%=id%>_result");
-       specimen_field_ids.push("specimen<%=id%>");
-    </script>
+    <%= text_field_tag "rbs_value_numeric", nil, options%>
+    <!-- set the test type concept name and value -->
+    <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'rbs_test_type_concept_name'}) %>
+    <%= hidden_field_tag("observations[][value_coded_or_text]", "", {:id => 'rbs_test_type_value_coded_or_text'}) %>
+    <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
 
-      <%= text_field_tag element_id, nil,
-      {:id => element_id,
-       :helpText => "Scan specimen #{i+1}",
-       :field_type => 'number',
-       :tt_onLoad => "setupBarcode();inform(); setupBarcode();",
-       :validationCode => "acc_numbers_check[__$('touchscreenInput' + tstCurrentPage).value] != undefined",
-       :validationMessage => "Not a valid accession number: #{reg_ex} or a duplicate accession_number",
-       :tt_onUnload => "__$('sputum_specimen_#{i+1}_result_#{i+1}').value = __$('#{element_id}').value;",
-       :tt_pageStyleClass => "Numeric NumbersOnly"}  %>
+    <!-- set the test concept and value -->
+    <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'rbs_concept_name'}) %>
+    <%= hidden_field_tag("observations[][value_numeric]",       "", {:id => 'rbs_value_numeric'} ) %>
+    <%= hidden_field_tag("observations[][measurement_unit]",    nil,{:id => 'rbs_measurement_unit'}) %>
+    <%= hidden_field_tag("observations[][parent_concept_name]", "", {:id => 'rbs_parent_concept_name'}) %>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
-    <%= touch_select_tag "#{@sputum_submission_waiting_results[acc_numbers[i]]} RESULTS", @patient, options_for_select(@sputum_results),
-      {:id => "sputum_specimen_#{i+1}_result",
-      :tt_pageStyleClass => "NoKeyboard",
-      :accession_number => i + 1,
-      :tt_onUnload => "delete acc_numbers_check[__$('specimen'+__$('sputum_specimen_#{i+1}_result').getAttribute('accession_number')).value]",
-      :tt_onLoad => "__$('helpText' + tstCurrentPage).innerHTML= acc_numbers[__$('specimen'+__$('sputum_specimen_#{i+1}_result').getAttribute('accession_number')).value] + ' Results (Accession number: ' +__$('specimen'+__$('sputum_specimen_#{i+1}_result').getAttribute('accession_number')).value + ')'",
+    <% options = default.merge({
+        :id             => "HbA1c_value",
+        :field_type     => 'number',
+        :helpText       =>"Enter HbA1c Value",
+        :condition      => "$('HbA1c_test_type_value_coded_or_text').value == 'HbA1c'",
+        :min            => 0,
+        :max            => 30,
+        :absoluteMin    => 0,
+        :absoluteMax    => 50,
+        :validationRule    => "([0-9]+(\\.)*[0-9]*)|Unknown$",
+        :validationMessage => "You must enter a decimal between 0 and 9 (for example: 36<b>.6</b>)",
+        :tt_pageStyleClass => "Numeric NumbersOnlyWithDecimal",
+        :tt_onUnLoad  => "$('HbA1c_value_numeric').value = $('HbA1c_value').value",
+        :tt_onload    => "resetPageAttributes('touchscreenInput'+tstCurrentPage, 'hba1c');"
+      }) %>
 
-      :helpText => "'#{@sputum_submission_waiting_results[acc_numbers[i]]}  Results (Accession number: ' +__$('specimen'+__$('sputum_specimen_#{i+1}_result').getAttribute('accession_number')).value + ')'" } %>
-s[i]})" } %>
-      <%counter += 2%>
+    <%= text_field_tag "HbA1c_value_numeric", nil, options%>
+    <!-- set the test type concept name and value -->
+    <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'HbA1c_test_type_concept_name'}) %>
+    <%= hidden_field_tag("observations[][value_coded_or_text]", "", {:id => 'HbA1c_test_type_value_coded_or_text'}) %>
+    <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
 
-   <%end%>
+    <!-- set the test concept and value -->
+    <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'HbA1c_concept_name'}) %>
+    <%= hidden_field_tag("observations[][value_numeric]",       "", {:id => 'HbA1c_value_numeric'} ) %>
+    <%= hidden_field_tag("observations[][measurement_unit]",    nil,{:id => 'HbA1c_measurement_unit'}) %>
+    <%= hidden_field_tag("observations[][parent_concept_name]", "", {:id => 'HbA1c_parent_concept_name'}) %>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
 
-  <label for='summary'>Results Summary</label>
-    <%= text_field_tag :summary, nil, { 
-        :tt_onLoad => "summary();setAttributes();", 
-        :tt_onUnLoad => "resetAttributes();",
-        :optional => "true", 
-        :tt_pageStyleClass => "NoControls" 
-    } %>
+    <% options = default.merge({
+          :id           => "cf_unit",
+          :field_type   => "text",
+          :tt_onload    => "$('infoBar'+tstCurrentPage).innerHTML = ' Cholesterol Fasting'",
+          :condition    => "$('cf_test_type_value_coded_or_text').value == 'FASTING'",
+          :tt_onUnLoad  => "$('cf_measurement_unit').value = $('cf_unit').value",
+          :tt_requireNextClick => false,
+          :helpText   =>"Select cholesterol units of measure"
+      }) %>
+    <%= select_tag("cf_unit", options_for_select([
+      "",
+      "mmol/l",
+      "mg/dl",
+      "Lo/Hi"
+      ]), options ) %>
 
-  <% session_date = session[:datetime].to_date rescue nil                       
-    if session_date %>
+  <% options = default.merge({
+        :id             => "cf_value",
+        :field_type     => 'number',
+        :helpText       =>"Cholesterol Fasting Value",
+        :condition      => "($('cf_test_type_value_coded_or_text').value == 'FASTING') && ($('cf_unit').value != 'Lo/Hi')",
+        :min            => 50,
+        :max            => 500,
+        :validationRule    => "([0-9]+(\\.)*[0-9]*)|Unknown$",
+        :validationMessage => "You must enter a decimal between 0 and 9 (for example: 36<b>.6</b>)",
+        :tt_pageStyleClass => "Numeric NumbersOnlyWithDecimal",
+        :tt_onUnLoad  => "$('cf_value_numeric').value = $('cf_value').value",
+        :tt_onload    => "resetPageAttributes('touchscreenInput'+tstCurrentPage, 'cf');"
+      }) %>
 
-    <p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
-<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
-    <% else %>
-      <%= hidden_field_tag "filter[provider]", nil %>
-    <%end%> 
-  <%= submit_tag "Finish" %>    
+    <%= text_field_tag "cf_value_numeric", nil, options%>
+
+    <% options = default.merge({
+      :field_type   => 'text',
+      :id           => "cf_lo_or_hi",
+      :tt_onUnLoad  => "$('cf_value_text').value = $('cf_lo_or_hi').value",
+      :condition    => "($('cf_test_type_value_coded_or_text').value == 'FASTING') && ($('cf_unit').value == 'Lo/Hi')",
+      :helpText     =>"Cholesterol Fasting Value",
+      :tt_onload    => "resetPageAttributes('touchscreenInput'+tstCurrentPage, 'cf');",
+      :tt_requireNextClick => false
+    }) %>
+    <%= select_tag("cf_value_lo_or_hi", options_for_select(["","Lo","Hi"]), options ) %>
+
+    <!-- set the test type concept name and value -->
+    <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'cf_test_type_concept_name'}) %>
+    <%= hidden_field_tag("observations[][value_coded_or_text]", "", {:id => 'cf_test_type_value_coded_or_text'}) %>
+    <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+    <!-- set the test concept and value -->
+    <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'cf_concept_name'}) %>
+    <%= hidden_field_tag("observations[][value_text]",          "", {:id => 'cf_value_text'} ) %>
+    <%= hidden_field_tag("observations[][value_numeric]",       "", {:id => 'cf_value_numeric'} ) %>
+    <%= hidden_field_tag("observations[][measurement_unit]",    nil,{:id => 'cf_measurement_unit'}) %>
+    <%= hidden_field_tag("observations[][parent_concept_name]", "", {:id => 'cf_parent_concept_name'}) %>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+
+    <% options = default.merge({
+          :id           => "cnf_unit",
+          :field_type   => "text",
+          :tt_onload    => "$('infoBar'+tstCurrentPage).innerHTML = ' Cholesterol Not Fasting'",
+          :condition    => "$('cnf_test_type_value_coded_or_text').value == 'NOT FASTING'",
+          :tt_onUnLoad  => "$('cnf_measurement_unit').value = $('cnf_unit').value",
+          :tt_requireNextClick => false,
+          :helpText   =>"Select cholesterol units of measure"
+      }) %>
+    <%= select_tag("cnf_unit", options_for_select([
+      "",
+      "mmol/l",
+      "mg/dl",
+      "Lo/Hi"
+      ]), options ) %>
+
+  <% options = default.merge({
+        :id             => "cnf_value",
+        :field_type     => 'number',
+        :helpText       =>"Cholesterol Not Fasting Value",
+        :condition      => "($('cnf_test_type_value_coded_or_text').value == 'NOT FASTING')  && ($('cnf_unit').value != 'Lo/Hi')",
+        :min            => 50,
+        :max            => 500,
+        :validationRule    => "([0-9]+(\\.)*[0-9]*)|Unknown$",
+        :validationMessage => "You must enter a decimal between 0 and 9 (for example: 36<b>.6</b>)",
+        :tt_pageStyleClass => "Numeric NumbersOnlyWithDecimal",
+        :tt_onUnLoad  => "$('cnf_value_numeric').value = $('cnf_value').value",
+        :tt_onload    => "resetPageAttributes('touchscreenInput'+tstCurrentPage, 'cnf');"
+      }) %>
+
+    <%= text_field_tag "cnf_value_numeric", nil, options%>
+
+    <% options = default.merge({
+      :field_type   => 'text',
+      :id           => "cnf_lo_or_hi",
+      :tt_onUnLoad  => "$('cnf_value_text').value = $('cnf_lo_or_hi').value",
+      :condition    => "($('cnf_test_type_value_coded_or_text').value == 'NOT FASTING')  && ($('cnf_unit').value == 'Lo/Hi')",
+      :helpText     =>"Cholesterol Not Fasting Value",
+      :tt_onload    => "resetPageAttributes('touchscreenInput'+tstCurrentPage, 'cnf');",
+      :tt_requireNextClick => false
+    }) %>
+    <%= select_tag("cnf_value_lo_or_hi", options_for_select(["","Lo","Hi"]), options ) %>
+
+    <!-- set the test type concept name and value -->
+    <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'cnf_test_type_concept_name'}) %>
+    <%= hidden_field_tag("observations[][value_coded_or_text]", "", {:id => 'cnf_test_type_value_coded_or_text'}) %>
+    <%= hidden_field_tag("observations[][patient_id]",          @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]",        DateTime.now()) %>
+
+    <!-- set the test concept and value -->
+    <%= hidden_field_tag("observations[][concept_name]",        "", {:id => 'cnf_concept_name'}) %>
+    <%= hidden_field_tag("observations[][value_text]",          "", {:id => 'cnf_value_text'} ) %>
+    <%= hidden_field_tag("observations[][value_numeric]",       "", {:id => 'cnf_value_numeric'} ) %>
+    <%= hidden_field_tag("observations[][measurement_unit]",    nil,{:id => 'cnf_measurement_unit'}) %>
+    <%= hidden_field_tag("observations[][parent_concept_name]", "", {:id => 'cnf_parent_concept_name'}) %>
+    <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
+    <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
+
+	<% if @retrospective %>
+		<p><label for="filter_provider">Staff who provided the information (Provider)</label></br>
+		<%= text_field "filter" , 'provider', :helpText => 'Staff who provided the information (Provider)', :ajaxURL => '/user/username?username=' %></p>
+	<% else %>
+		<%= hidden_field_tag "filter[provider]", nil %>
+	<% end %>
+	
+    <%= submit_tag "Finish" %>
 </form>
-<% end %>
