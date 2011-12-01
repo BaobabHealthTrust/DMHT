@@ -34,10 +34,12 @@ class DispensationsController < ApplicationController
     # set current location via params if given
     Location.current_location = Location.find(params[:location]) if params[:location]
 
-		if !params[:filter][:provider].blank?
-     user_person_id = User.find_by_username(params[:filter][:provider]).person_id
+    if params[:filter] and !params[:filter][:provider].blank?
+      user_person_id = User.find_by_username(params[:filter][:provider]).person_id
+    elsif params[:location]
+      user_person_id = params[:provider_id]
     else
-     user_person_id = User.find_by_user_id(session[:user_id]).person_id
+      user_person_id = User.find_by_user_id(session[:user_id]).person_id
     end
 
     @encounter = current_dispensation_encounter(@patient, session_date, user_person_id)
@@ -68,16 +70,16 @@ class DispensationsController < ApplicationController
       :encounter_id => @encounter.id,
       :value_drug => @drug_value,
       :value_numeric => params[:quantity],
-      :obs_datetime => session[:datetime] || Time.now())
+      :obs_datetime => session_date || Time.now())
     if obs.save
       @patient.patient_programs.find_last_by_program_id(Program.find_by_name("HIV PROGRAM")).transition(
-               :state => "On antiretrovirals",:start_date => session[:datetime] || Time.now()) if MedicationService.arv(@drug) rescue nil
+               :state => "On antiretrovirals",:start_date => session_date || Time.now()) if MedicationService.arv(@drug) rescue nil
 
     @tb_programs = @patient.patient_programs.in_uncompleted_programs(['TB PROGRAM', 'MDR-TB PROGRAM'])
 
       if !@tb_programs.blank?
         @patient.patient_programs.find_last_by_program_id(Program.find_by_name("TB PROGRAM")).transition(
-               :state => "Currently in treatment",:start_date => session[:datetime] || Time.now()) if   MedicationService.tb_medication(@drug)
+               :state => "Currently in treatment",:start_date => session_date || Time.now()) if   MedicationService.tb_medication(@drug)
       end
 
       unless @order.blank?

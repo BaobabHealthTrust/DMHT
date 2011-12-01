@@ -33,7 +33,7 @@ class PeopleController < ApplicationController
     end rescue []
 
     if Location.current_location.blank?
-      Location.current_location = Location.find(PatientService.get_global_property_value('current_health_center_id'))
+      Location.current_location = Location.find(CoreService.get_global_property_value('current_health_center_id'))
     end rescue []
 
     person = PatientService.create_from_form(person_params)
@@ -76,15 +76,18 @@ class PeopleController < ApplicationController
         found_person = PatientService.create_from_form(found_person_data['person']) unless found_person_data.nil?
       end
       if found_person
-        #redirect_to search_complete_url(found_person.id, params[:relation]) and return
-        redirect_to :action => 'confirm', :found_person_id => found_person.id, :relation => params[:relation] and return
+        if params[:relation]
+          redirect_to search_complete_url(found_person.id, params[:relation]) and return
+        else
+          redirect_to :action => 'confirm', :found_person_id => found_person.id, :relation => params[:relation] and return
+        end
       end
     end
-
+    @relation = params[:relation]
     @people = PatientService.person_search(params)
     @patients = []
     @people.each do | person |
-        patient = PatientService.get_patient(person)
+        patient = PatientService.get_patient(person) rescue nil
         @patients << patient
     end
     
@@ -92,16 +95,15 @@ class PeopleController < ApplicationController
   
   def confirm
     session_date = session[:datetime] || Date.today
-    
     if request.post?
       redirect_to search_complete_url(params[:found_person_id], params[:relation]) and return
     end
     @found_person_id = params[:found_person_id] 
     @relation = params[:relation]
     @person = Person.find(@found_person_id) rescue nil
-    @task = main_next_task(Location.current_location,@person.patient,session_date.to_date)
+    @task = main_next_task(Location.current_location, @person.patient, session_date.to_date)
     @arv_number = PatientService.get_patient_identifier(@person, 'ARV Number')
-	@patient_bean = PatientService.get_patient(@person)
+	  @patient_bean = PatientService.get_patient(@person)
     render :layout => 'menu'
   end
 
@@ -184,9 +186,8 @@ class PeopleController < ApplicationController
     #for now BART2 will use BART1 for patient/person creation until we upgrade BART1 to 2
     #if GlobalProperty.find_by_property('create.from.remote') and property_value == 'yes'
     #then we create person from remote machine
-
     if create_from_remote
-      person_from_remote = create_remote_person(params)
+      person_from_remote = PatientService.create_remote_person(params)
       person = PatientService.create_from_form(person_from_remote["person"]) unless person_from_remote.blank?
 
       if !person.blank?
@@ -329,6 +330,7 @@ class PeopleController < ApplicationController
     render :text => landmarks.join('') and return
   end
 
+=begin
   #This method was taken out of encounter model. It is been used in
   #people/index (view) which seems not to be used at present.
   def count_by_type_for_date(date)
@@ -343,6 +345,7 @@ class PeopleController < ApplicationController
     }
     encounters_by_type
   end
+=end
 
   def art_info_for_remote(national_id)
 
@@ -456,7 +459,7 @@ class PeopleController < ApplicationController
      'Student','Security guard','Domestic worker', 'Police','Office worker',
      'Preschool child','Mechanic','Prisoner','Craftsman','Healthcare Worker','Soldier'].sort.concat(["Other","Unknown"])
   end
-  
+
   def edit
     # only allow these fields to prevent dangerous 'fields' e.g. 'destroy!'
     valid_fields = ['birthdate','gender']
@@ -487,7 +490,7 @@ class PeopleController < ApplicationController
       @field_value = @person.send(@field)
     end
   end
-
+  
 private
   
   def search_complete_url(found_person_id, primary_person_id)

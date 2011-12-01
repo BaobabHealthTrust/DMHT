@@ -21,14 +21,7 @@
 
             <h1 id='project_name'>
 				<div id="custom_banner" path="/patients/dashboard_graph?id=<%= @patient.id %>"></div>
-              <%if User.current_user.activities.include?('Manage Lab Orders') or User.current_user.activities.include?('Manage Lab Results') or
-       User.current_user.activities.include?('Manage Sputum Submissions') or User.current_user.activities.include?('Manage TB Clinic Visits') or
-       User.current_user.activities.include?('Manage TB Reception Visits') or User.current_user.activities.include?('Manage TB Registration Visits') or
-       User.current_user.activities.include?('Manage HIV Status Visits') %>
-                 <span style="font-size: 55px;">DM</span>
-               <%else%>
                   DM
-               <%end%>
             </h1>
             <span id='patient_name'><%= @patient_bean.name  %></span>
             <span id='patient_id'><%= @patient_bean.national_id_with_dashes %></span>
@@ -64,7 +57,7 @@
              <% else %>
                 <select id="links">
                   <option value='/patients/treatment_dashboard?patient_id=<%= @patient.id -%>'>Treatment</option>
-									<option value='/patients/generate_booking?patient_id=<%= @patient.id -%>'>Bookings</option>
+				  <option value='/patients/generate_booking?patient_id=<%= @patient.id -%>'>Bookings</option>
                   <!--%if User.current_user.activities.include?('Manage Patient Programs')%-->
                     <option value='/patients/programs_dashboard/<%= @patient.id -%>'>Outcomes</option>
                   <!--%end%-->

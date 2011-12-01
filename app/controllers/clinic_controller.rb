@@ -77,7 +77,7 @@ class ClinicController < ApplicationController
   end
 
   def overview_tab
-    simple_overview_property = PatientService.get_global_property_value("simple_application_dashboard") rescue nil
+    simple_overview_property = CoreService.get_global_property_value("simple_application_dashboard") rescue nil
 
     simple_overview = false
     if simple_overview_property != nil
@@ -86,7 +86,7 @@ class ClinicController < ApplicationController
       end
     end
 
-    @types = PatientService.get_global_property_value("statistics.show_encounter_types") rescue EncounterType.all.map(&:name).join(",")
+    @types = CoreService.get_global_property_value("statistics.show_encounter_types") rescue EncounterType.all.map(&:name).join(",")
     @types = @types.split(/,/)
 
     @me = Encounter.statistics(@types, :conditions => ['DATE(encounter_datetime) = DATE(NOW()) AND encounter.creator = ?', User.current_user.user_id])

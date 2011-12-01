@@ -17,16 +17,16 @@ module DiabetesService
     result ? JSON.parse(result) : nil
   end
   
-	def self.treatments(patient)
-		self.treatement_orders(patient.id)
-	end
+def self.treatments(patient)
+	self.treatement_orders(patient.id)
+end
 	
   def self.treatement_orders(patient_id)
-
     treatment_encouter_id   = EncounterType.find_by_name("TREATMENT").id
     drug_order_id           = OrderType.find_by_name("DRUG ORDER").id
     diabetes_id             = Concept.find_by_name("DIABETES MEDICATION").id
     hypertensition_id       = Concept.find_by_name("HYPERTENSION").id
+    hypertensition_medication_id  = Concept.find_by_name("HYPERTENSION MEDICATION").id
 
     Order.find_by_sql("SELECT distinct orders.order_id, orders.concept_id,concept_name.name AS drug_name,obs.value_coded AS diagnosis_id,
                          MAX(auto_expire_date) AS end_date, MIN(start_date) AS start_date,
@@ -39,11 +39,10 @@ module DiabetesService
                         INNER JOIN concept_name ON concept_name.concept_id = orders.concept_id
                         INNER JOIN drug_order ON drug_order.order_id = orders.order_id
                         INNER JOIN drug ON drug.drug_id = drug_order.drug_inventory_id
-                        INNER JOIN concept_name_tag_map on concept_name_tag_map.concept_name_id = concept_name.concept_name_id
                         WHERE encounter_type = #{treatment_encouter_id} AND encounter.patient_id = #{patient_id}
                           AND encounter.voided = 0 AND orders.voided = 0
                           AND orders.order_type_id = #{drug_order_id} AND obs.value_coded IN (#{diabetes_id}, #{hypertensition_id})
-                          AND concept_name_tag_id = 4
+						  AND orders.concept_id IN (SELECT concept_id FROM concept_set WHERE concept_set IN (#{diabetes_id}, #{hypertensition_id}, #{hypertensition_medication_id}))
                         GROUP BY order_id, obs.value_coded
                         ORDER BY drug_name, start_date DESC")
   end
@@ -293,6 +292,106 @@ module DiabetesService
     ds_number = PatientIdentifier.find(:first,:conditions => test_condtion).identifier rescue "Unknown"
 
     return ds_number
+  end
+  
+  def self.current_orders(patient)
+    encounter = current_treatment_encounter(patient)
+    orders = encounter.orders.active
+    orders
+  end
+  
+  def self.current_treatment_encounter(patient)
+    type = EncounterType.find_by_name("TREATMENT")
+    encounter = patient.encounters.current.find_by_encounter_type(type.id)
+    encounter ||= patient.encounters.create(:encounter_type => type.id)
+  end
+  
+  def self.drug_details(drug_info, diagnosis_name)
+    #raise drug_info.inspect
+    
+    insulin = false
+    if (drug_info[0].downcase.include? "insulin") && ((drug_info[0].downcase.include? "lente") ||
+          (drug_info[0].downcase.include? "soluble")) || ((drug_info[0].downcase.include? "glibenclamide") && (drug_info[1] == ""))
+
+      if(drug_info[0].downcase == "insulin, lente")     # due to error noticed when searching for drugs
+        drug_info[0] = "LENTE INSULIN"
+      end
+
+      if(drug_info[0].downcase == "insulin, soluble")     # due to error noticed when searching for drugs
+        drug_info[0] = "SOLUBLE INSULIN"
+      end
+      
+      name = "%"+drug_info[0]+"%"
+      insulin = true
+
+    else
+
+      # do not remove the '(' in the following string
+      name = "%"+drug_info[0]+"%("+drug_info[1]+"%"
+
+    end
+    
+    diagnosis_id = Concept.find_by_name(diagnosis_name);
+
+    drug_details = Array.new
+
+    concept_name_id = ConceptName.find_by_name("DRUG FREQUENCY CODED").concept_id
+
+    drugs = self.matching_drugs(diagnosis_id, name)
+
+    unless(drugs)
+      # no results found: try removing the '(' in the name string
+      name = "%"+drug_info[0]+"%"+drug_info[1]+"%"
+
+      drugs = Drug.matching_drugs(diagnosis_id, name)
+    end
+
+    unless(insulin)
+
+      drug_frequency = drug_info[2].upcase rescue nil
+
+      preferred_concept_name_id = Concept.find_by_name(drug_frequency).concept_id
+      preferred_dmht_tag_id = ConceptNameTag.find_by_tag("preferred_dmht").concept_name_tag_id
+
+      drug_frequency = ConceptName.find(:first, :select => "concept_name.name",
+        :joins => "INNER JOIN concept_answer ON concept_name.concept_id = concept_answer.answer_concept
+                                INNER JOIN concept_name_tag_map cnmp
+                                  ON  cnmp.concept_name_id = concept_name.concept_name_id",
+        :conditions => ["concept_answer.concept_id = ? AND concept_name.concept_id = ? AND voided = 0
+                                  AND cnmp.concept_name_tag_id = ?", concept_name_id, preferred_concept_name_id, preferred_dmht_tag_id])
+
+      drugs.each do |drug|
+
+        drug_details += [:drug_concept_id => drug.concept_id,
+          :drug_name => drug.name, :drug_strength => drug.strength,
+          :drug_formulation => drug.formulation, :drug_prn => 0, :drug_frequency => drug_frequency.name]
+
+      end
+
+    else
+
+      drugs.each do |drug|
+
+        drug_details += [:drug_concept_id => drug.concept_id,
+          :drug_name => drug.name, :drug_strength => drug.strength,
+          :drug_formulation => drug.formulation, :drug_prn => 0, :drug_frequency => ""]
+
+      end
+
+    end
+
+    drug_details
+
+  end
+  
+  def self.matching_drugs(diagnosis_id, name)
+    Drug.find(:all,:select => "concept.concept_id AS concept_id, concept_name.name AS name,
+        drug.dose_strength AS strength, drug.name AS formulation",
+      :joins => "INNER JOIN concept       ON drug.concept_id = concept.concept_id
+               INNER JOIN concept_set   ON concept.concept_id = concept_set.concept_id
+               INNER JOIN concept_name  ON concept_name.concept_id = concept.concept_id",
+      :conditions => ["concept_set.concept_set = ? AND drug.name LIKE ?", diagnosis_id, name],
+      :group => "concept.concept_id, drug.name, drug.dose_strength")
   end
 
 end

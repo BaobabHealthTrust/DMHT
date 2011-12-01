@@ -182,7 +182,7 @@ module TouchscreenHelper
     }.merge(options)                 
     content = ""
     content << text_field_tag("identifier", value, options)
-    content << hidden_field_tag("prefix", GlobalProperty.prefix)
+    content << hidden_field_tag("prefix", prefix)
     content
   end
 end

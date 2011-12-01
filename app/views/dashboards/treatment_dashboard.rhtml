@@ -38,7 +38,7 @@
               <th colspan=2>Patient Treatment Dashboard</th>
             </tr>
             <h1 id='project_name'>
-              BART
+              DM
             </h1>
             <span id='patient_name'><%= @patient_bean.name rescue "" %></span>
             <span id='patient_id'><%= @patient_bean.national_id_with_dashes rescue "" %></span>
@@ -78,7 +78,8 @@
               <option value='/patients/history_treatment?patient_id=<%= @patient.id %>'>Treatment history</option>
             </select>
             <select id="links">
-              <option value='/regimens/new?patient_id=<%= @patient.id -%>'>Regimen</option>
+              <option value='/prescriptions/advanced_prescription?patient_id=<%= @patient.id -%>'>Advanced prescription</option>
+              <!-- option value='/regimens/new?patient_id=<%= @patient.id -%>'>Regimen</option -->
               <option value='/prescriptions/auto?patient_id=<%= @patient.id -%>'>Prescribe</option>
               <option value='/dispensations/new?patient_id=<%= @patient.id -%>'>Dispense</option>
               <option value='/patients/tb_treatment_card?patient_id=<%= @patient.id -%>'>TB Treatment Card</option>

@@ -333,7 +333,7 @@ class RegimensController < ApplicationController
 		render :layout => false and return unless patient_program
 
 		regimen_concepts = patient_program.regimens(PatientService.get_patient_attribute_value(patient_program.patient, "current_weight")).uniq
-		@options = PatientService.regimen_options(regimen_concepts, params[:patient_age].to_i)
+		@options = MedicationService.regimen_options(regimen_concepts, params[:patient_age].to_i)
 		#raise @options.to_yaml
 		render :layout => false
 	end

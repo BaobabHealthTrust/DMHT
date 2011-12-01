@@ -1,4 +1,5 @@
 module PatientService
+	include CoreService
 	require 'bean'
 
   def self.remote_demographics(person_obj)
@@ -308,6 +309,7 @@ module PatientService
 
   end
   
+
   def self.patient_national_id_label(patient)
 	  patient_bean = get_patient(patient.person)
     return unless patient_bean.national_id
@@ -372,14 +374,6 @@ module PatientService
     end
     return status
   end
-=begin
-  def get_patients_identifier(patient, identifier_type, force = false)
-    id = patient.patient_identifiers.find_by_identifier_type(PatientIdentifierType.find_by_name(identifier_type).id).identifier rescue nil
-    return id unless force
-    id ||= PatientIdentifierType.find_by_name(identifier_type).next_identifier(:patient => patient).identifier
-    id
-  end
-=end
 
  def self.patient_is_child?(patient)
    return self.get_patient_attribute_value(patient, "age") <= 14 unless self.get_patient_attribute_value(patient, "age").nil?
@@ -435,12 +429,6 @@ module PatientService
     ConceptName.find_by_name("TB STATUS").concept_id]).value_coded).fullname rescue "UNKNOWN"
  end
  
- def self.get_global_property_value(global_property)
-    GlobalProperty.find(:first,
-                        :conditions => {:property => "#{global_property}"}
-                       ).property_value
- end
-
  def self.reason_for_art_eligibility(patient)
     reasons = patient.person.observations.recent(1).question("REASON FOR ART ELIGIBILITY").all rescue nil
     reasons.map{|c|ConceptName.find(c.value_coded_name_id).name}.join(',') rescue nil
@@ -581,9 +569,7 @@ EOF
     return table
   end
 
-  def self.patient_printing_filing_number_label(number=nil)
-    return number[5..5] + " " + number[6..7] + " " + number[8..-1] unless number.nil?
-  end
+
 
   def self.patient_age_at_initiation(patient, initiation_date = nil)
     return self.age(patient.person, initiation_date) unless initiation_date.nil?
@@ -691,38 +677,6 @@ EOF
       today.month < birth_date.month && person.date_created.year == today.year) ? 1 : 0
   end
 
-  # Convert a list +Concept+s of +Regimen+s for the given +Patient+ <tt>age</tt>
-  # into select options. See also +EncountersController#arv_regimen_answers+
-  def self.regimen_options(regimen_concepts, age)
-    options = regimen_concepts.map{ |r|
-      [r.concept_id,
-
-        (r.concept_names.typed("SHORT").first ||
-        r.concept_names.typed("FULLY_SPECIFIED").first).name]
-    }
-	
-    suffixed_options = options.collect{ |opt|
-      opt_reg = Regimen.find(:all,
-                             :select => 'regimen_index',
-							 :order => 'regimen_index',
-                             :conditions => ['concept_id = ?', opt[0]]
-                            ).uniq.first
-      if age >= 15
-        suffix = "A"
-      else
-        suffix = "P"
-      end
-
-      #[opt[0], "#{opt_reg.regimen_index}#{suffix} - #{opt[1]}"]
-		if opt_reg.regimen_index > -1
-      		["#{opt_reg.regimen_index}#{suffix} - #{opt[1]}", opt[0], opt_reg.regimen_index.to_i]
-		else
-      		["#{opt[1]}", opt[0], opt_reg.regimen_index.to_i]
-		end
-    }.sort_by{|opt| opt[2]}
-
-  end
-
   def self.old_filing_number(patient, type = 'Filing Number')
     identifier_type = PatientIdentifierType.find_by_name(type)
     PatientIdentifier.find_by_sql(["
@@ -751,7 +705,7 @@ EOF
 
   def self.next_filing_number_to_be_archived(current_patient , next_filing_number)
     ActiveRecord::Base.transaction do
-      global_property_value = GlobalProperty.find_by_property("filing.number.limit").property_value rescue '10000'
+      global_property_value = CoreService.get_global_property_value("filing.number.limit").to_s rescue '10000'
       active_filing_number_identifier_type = PatientIdentifierType.find_by_name("Filing Number")
       dormant_filing_number_identifier_type = PatientIdentifierType.find_by_name('Archived filing number')
 
@@ -813,6 +767,10 @@ EOF
 
     true
   end
+
+	def self.patient_printing_filing_number_label(number=nil)
+		return number[5..5] + " " + number[6..7] + " " + number[8..-1] unless number.nil?
+	end
   
 	def self.create_from_form(params)
 		address_params = params["addresses"]
@@ -1114,7 +1072,7 @@ EOF
                                  patient.id,EncounterType.find_by_name('HIV STAGING').id])
 
     if hiv_staging.blank? and user_selected_activities.match(/Manage HIV staging visits/i)
-      extended_staging_questions = get_global_property_value('use.extended.staging.questions')
+      extended_staging_questions = CoreService.get_global_property_value('use.extended.staging.questions')
       extended_staging_questions = extended_staging_questions.property_value == 'yes' rescue false
       task.encounter_type = 'HIV STAGING'
       task.url = "/encounters/new/hiv_staging?show&patient_id=#{patient.id}" if not extended_staging_questions

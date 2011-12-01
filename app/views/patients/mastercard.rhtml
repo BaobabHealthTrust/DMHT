@@ -112,7 +112,7 @@
                         <i><%= h("#{observation.obs_datetime.to_date.strftime('%b %Y')}") %></i>
                       </div>
                       <div style="float:right;padding:7px;">
-                        <%= img_button_submit_to "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
+                        <%= img_button_submit_to_with_confirm "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
                           {:confirm => "Are you sure you want to void this test?", :form_id => "frm_creatinine_"+i.to_s},
                           {:encounter_id => observation.encounter_id, :void => true} %>
                       </div>
@@ -185,7 +185,7 @@
                         <i><%= h("#{observation.obs_datetime.to_date.strftime('%b %Y')}") %></i>
                       </div>
                       <div style="float:right;padding:7px;">
-                        <%= img_button_submit_to "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
+                        <%= img_button_submit_to_with_confirm "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
                           {:confirm => "Are you sure you want to void this test?", :form_id => "frm_urine_protein_"+i.to_s},
                           {:encounter_id => observation.encounter_id, :void => true} -%>
                       </div>
@@ -270,7 +270,7 @@
                         <i><%= h("#{encounter.encounter_datetime.to_date.strftime('%b %Y')}") %></i>
                       </div>
                       <div style="float:right;padding:7px;">
-                        <%= img_button_submit_to "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
+                        <%= img_button_submit_to_with_confirm "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
                           {:confirm => "Are you sure you want to void this test?", :form_id => "frm_visual_acuity_"+i.to_s},
                           {:encounter_id => encounter.encounter_id, :void => true} -%>
                       </div>
@@ -363,7 +363,7 @@
                       </div>
 
                       <div style="float:right;padding:7px;">
-                        <%= img_button_submit_to "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
+                        <%= img_button_submit_to_with_confirm "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
                           {:confirm => "Are you sure you want to void this test?", :form_id => "frm_fundoscopy_"+i.to_s},
                           {:encounter_id => encounter.encounter_id, :void => true} -%>
                       </div>
@@ -444,7 +444,7 @@
                         <i><%= h("#{encounter.encounter_datetime.to_date.strftime('%b %Y')}") %></i>
                       </div>
                       <div style="float:right;padding:7px;">
-                        <%= img_button_submit_to "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
+                        <%= img_button_submit_to_with_confirm "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
                           {:confirm => "Are you sure you want to void this test?", :form_id => "frm_foot_check_"+i.to_s},
                           {:encounter_id => encounter.encounter_id, :void => true} -%>
                       </div>
@@ -530,7 +530,7 @@
                         <i><%= h("#{observation.obs_datetime.to_date.strftime('%b %Y')}") %></i>
                       </div>
                       <div style="float:right;padding:7px;">
-                        <%= img_button_submit_to "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
+                        <%= img_button_submit_to_with_confirm "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
                           {:confirm => "Are you sure you want to void this test?", :form_id => "frm_urea_"+i.to_s},
                           {:encounter_id => observation.encounter_id, :void => true} -%>
                       </div>
@@ -618,7 +618,7 @@
                         <i><%= h("#{observation.obs_datetime.to_date.strftime('%b %Y')}") %></i>
                       </div>
                       <div style="float:right;padding:7px;">
-                        <%= img_button_submit_to "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
+                        <%= img_button_submit_to_with_confirm "/patients/mastercard/#{@patient.patient_id}", "/images/cancel_flat_small_red.png",
                           {:confirm => "Are you sure you want to void this test?", :form_id => "frm_macrovascular_"+i.to_s},
                           {:encounter_id => observation.encounter_id, :void => true} -%>
                       </div>

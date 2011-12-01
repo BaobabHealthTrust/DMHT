@@ -18,7 +18,7 @@ class UserController < ApplicationController
         session[:location_id] = location.id if location
         Location.current_location = location if location
 
-        show_activites_property = PatientService.get_global_property_value("show_activities_after_login") rescue "false"
+        show_activites_property = CoreService.get_global_property_value("show_activities_after_login") rescue "false"
         if show_activites_property == "true"
           redirect_to(:action => "activities") 
         else                   
@@ -32,7 +32,7 @@ class UserController < ApplicationController
 
   # List roles containing the string given in params[:value]
   def role
-    valid_roles = PatientService.get_global_property_value("valid_roles") rescue nil
+    valid_roles = CoreService.get_global_property_value("valid_roles") rescue nil
     role_conditions = ["role LIKE (?)", "%#{params[:value]}%"]
     role_conditions = ["role LIKE (?) AND role IN (?)",
                        "%#{params[:value]}%",
@@ -49,7 +49,7 @@ class UserController < ApplicationController
 
   @users_with_provider_role = []
   users.each do |user|
-    @users_with_provider_role << user if UserRole.find_by_user_id(user.user_id).role == "Provider"
+    @users_with_provider_role << user if UserRole.find_by_user_id(user.user_id).role == "Provider" rescue nil
   end
 
   users = @users_with_provider_role.map{| u | "<li value='#{u.username}'>#{u.username}</li>" } 
@@ -288,7 +288,7 @@ class UserController < ApplicationController
     #raise @privileges.to_yaml
 
     @activities = User.current_user.activities.reject{|activity| 
-      PatientService.get_global_property_value("disable_tasks").split(",").include?(activity)
+      CoreService.get_global_property_value("disable_tasks").split(",").include?(activity)
     } rescue User.current_user.activities
    
     #raise @privileges.to_yaml
@@ -302,7 +302,7 @@ class UserController < ApplicationController
     end
     
    #.gsub('Hiv','HIV') .gsub('Tb','TB').gsub('Art','ART').gsub('hiv','HIV')
-   # .gsub('Hiv','HIV').gsub('Tb','TB').gsub('Art','ART').gsub('hiv','HIV')
+   #.gsub('Hiv','HIV').gsub('Tb','TB').gsub('Art','ART').gsub('hiv','HIV')
     
     @encounter_types = EncounterType.find(:all).map{|enc|enc.name.gsub(/.*\//,"").gsub(/\..*/,"").humanize}
     @available_encounter_types = Dir.glob(RAILS_ROOT+"/app/views/encounters/*.rhtml").map{|file|file.gsub(/.*\//,"").gsub(/\..*/,"").humanize}
@@ -354,7 +354,7 @@ class UserController < ApplicationController
   end
   
   def generate_encounter_privilege_map
-      encounter_privilege_map = PatientService.get_global_property_value("encounter_privilege_map").to_s rescue ''
+      encounter_privilege_map = CoreService.get_global_property_value("encounter_privilege_map").to_s rescue ''
       encounter_privilege_map = encounter_privilege_map.split(",")
       encounter_privilege_hash = {}
       encounter_privilege_map.each do |encounter_privilege|
@@ -364,7 +364,7 @@ class UserController < ApplicationController
   end
   
   def generate_privilege_encounter_map
-      encounter_privilege_map = PatientService.get_global_property_value("encounter_privilege_map").to_s rescue ''
+      encounter_privilege_map = CoreService.get_global_property_value("encounter_privilege_map").to_s rescue ''
       encounter_privilege_map = encounter_privilege_map.split(",")
       encounter_privilege_hash = {}
       encounter_privilege_map.each do |encounter_privilege|

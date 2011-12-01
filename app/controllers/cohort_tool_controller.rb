@@ -813,7 +813,7 @@ class CohortToolController < ApplicationController
       patients_data <<{ 'person_id' => person.id,
                         'arv_number' => patient_bean.arv_number,
                         'name' => patient_bean.name,
-                        'national_id' => patient_bean.get_national_id,
+                        'national_id' => patient_bean.national_id,
                         'gender' => patient_bean.sex,
                         'age' => patient_bean.age,
                         'birthdate' => patient_bean.birth_date,

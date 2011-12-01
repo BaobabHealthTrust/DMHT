@@ -8,7 +8,6 @@ class Encounter < ActiveRecord::Base
   belongs_to :type, :class_name => "EncounterType", :foreign_key => :encounter_type, :conditions => {:retired => 0}
   belongs_to :provider, :class_name => "Person", :foreign_key => :provider_id, :conditions => {:voided => 0}
   belongs_to :patient, :conditions => {:voided => 0}
-  named_scope :active, :conditions => 'encounter.voided = 0'
 
   # TODO, this needs to account for current visit, which needs to account for possible retrospective entry
   named_scope :current, :conditions => 'DATE(encounter.encounter_datetime) = CURRENT_DATE()'
