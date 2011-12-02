@@ -1,6 +1,6 @@
 class ApplicationController < ActionController::Base
   include AuthenticatedSystem
-	  Mastercard
+    Mastercard
     PatientIdentifierType
     PatientIdentifier
     PersonAttribute
