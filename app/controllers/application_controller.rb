@@ -289,7 +289,7 @@ class ApplicationController < ActionController::Base
             next
           end if not PatientService.patient_hiv_status(patient).match(/Positive/i)
 
-          if PatientService.patient_tb_status(patient).match(/treatment/i) and not patient_hiv_status(patient).match(/Positive/i)
+          if PatientService.patient_tb_status(patient).match(/treatment/i) and not PatientService.patient_hiv_status(patient).match(/Positive/i)
             next
           end if not first_vitals.blank?
 
