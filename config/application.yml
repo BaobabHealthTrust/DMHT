@@ -3,6 +3,7 @@ production:
  use.user.selected.activities: yes
 
 development:
+ dc.number.prefix: QECH
  application_generic_medication: Diabetes medication
  create_from_remote: no
  use.user.selected.activities: false
