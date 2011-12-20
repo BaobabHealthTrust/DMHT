@@ -2,7 +2,7 @@
 <%= @destination_page =  "/people" %>
 
 <script type="text/javascript">
-  var tt_cancel_destination = "<%= @destination_page -%>"
+  var tt_cancel_destination = "/patients/show/<%= @patient.patient_id %>"
   var months = ["Unknown","Jan", "Feb", "Mar", "Apr", "May", "Jun",
                 "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
 
@@ -24,12 +24,12 @@
 	%>
       <%= hidden_field_tag "encounter_id", "#{((params[:encounter_id])?params[:encounter_id]:"")}" %>
 
-      <%= hidden_field_tag "encounter[encounter_type_name]", "DIABETES INITIAL QUESTIONS" %>
-      <%= hidden_field_tag "encounter[patient_id]", @patient.id %>
-      <%= hidden_field_tag "encounter[encounter_datetime]", DateTime.now %>
-      <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
+	<%= hidden_field_tag "encounter[encounter_type_name]", "DIABETES INITIAL QUESTIONS" %>
+	<%= hidden_field_tag "encounter[patient_id]", @patient.id %>
+	<%= hidden_field_tag "encounter[encounter_datetime]", DateTime.now %>
+	<%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
 
-  <%if @has_initial_questions == false %>
+	<%if @has_initial_questions == false %>
 		<% type_list = ["NEW PATIENT", "TRANSFER IN", "TEMPORARY PATIENT"] %>
 		<%= touch_select_tag "TYPE OF PATIENT", @patient, options_for_select(type_list),
 			{	:id => "patient_type",
@@ -82,7 +82,7 @@
 				:tt_pageStyleClass => "NoKeyboard",
 				:helpText => "Year(s) of TB Diagnosis" } %>
      
-  <%end%>
+	<%end%>
   
 	<% if !@patient.patient_programs.current.local.map(&:program).map(&:name).include?('DIABETES PROGRAM') %>
 		<%= hidden_field_tag("programs[][patient_program_id]", nil) %>

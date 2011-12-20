@@ -533,6 +533,18 @@ class EncountersController < ApplicationController
 			end
         end
 
+		if (params[:encounter_type].upcase rescue '') == "DIABETES_INITIAL_QUESTIONS"
+			encounter_available = Encounter.find(:first,:conditions =>["patient_id = ? AND encounter_type = ?",
+				                             @patient.id, EncounterType.find_by_name("DIABETES INITIAL QUESTIONS").id],
+				                             :order =>'encounter_datetime DESC',:limit => 1)
+
+			if encounter_available.blank?  
+				@has_initial_questions = false
+			else 
+				@has_initial_questions = true
+			end 
+		end
+
 		if (params[:encounter_type].upcase rescue '') == 'HIV_STAGING'
 			if @patient_bean.age > 14 
 				@who_stage_i = concept_set('WHO STAGE I ADULT AND PEDS') + concept_set('WHO STAGE I ADULT')
