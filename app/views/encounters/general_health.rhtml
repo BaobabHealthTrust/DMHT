@@ -1,4 +1,3 @@
-<%= @destination_page =  "/encounters/new/first_time_visit_questions?patient_id=" + @patient.id.to_s %>
 
 <%
 
@@ -9,7 +8,7 @@
 %>
 
 <script type ="text/javascript">
-  var tt_cancel_destination = "<%= @destination_page -%>"
+  var tt_cancel_destination = "/patients/show/<%= @patient.patient_id %>";
 
    <%unless(params[:encounter_id])%>
       <%= "var save_state = true;" %>

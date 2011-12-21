@@ -11,7 +11,7 @@ class PatientsController < ApplicationController
     @programs = @patient.patient_programs.all
     @alerts = alerts(@patient, session_date) rescue nil
     @restricted = ProgramLocationRestriction.all(:conditions => {:location_id => Location.current_health_center.id })
-    @current_updated_outcome = @patient.patient_programs.find_last_by_program_id(Program.find_by_name("DIABETES PROGRAM")).patient_states.last.name
+    @current_updated_outcome = @patient.patient_programs.find_last_by_program_id(Program.find_by_name("DIABETES PROGRAM")).patient_states.last.name rescue ''
     @restricted.each do |restriction|    
       @encounters = restriction.filter_encounters(@encounters)
       @prescriptions = restriction.filter_orders(@prescriptions)

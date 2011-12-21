@@ -5,7 +5,10 @@ class EncounterTypesController < ApplicationController
         role_privileges = RolePrivilege.find(:all,:conditions => ["role IN (?)", user_roles])
 
         privileges = role_privileges.each.map{ |role_privilege_pair| role_privilege_pair["privilege"].humanize }
+		
 
+		#raise privileges.to_yaml
+ 
         @encounter_privilege_map = CoreService.get_global_property_value("encounter_privilege_map").to_s rescue ''
 
         @encounter_privilege_map = @encounter_privilege_map.split(",")
@@ -23,16 +26,18 @@ class EncounterTypesController < ApplicationController
         end
         roles_for_the_user = roles_for_the_user.uniq
 
-        if use_user_selected_activities
+        #if use_user_selected_activities
         #redirect_to "/user/activities?patient_id=#{params[:patient_id]}"
-        end
+        #end
+		
         
         # TODO add clever sorting
         @encounter_types = EncounterType.find(:all).map{|enc|enc.name.gsub(/.*\//,"").gsub(/\..*/,"").humanize}
         @available_encounter_types = Dir.glob(RAILS_ROOT+"/app/views/encounters/*.rhtml").map{|file|file.gsub(/.*\//,"").gsub(/\..*/,"").humanize}
         @available_encounter_types -= @available_encounter_types - @encounter_types
 
-        #@available_encounter_types = ((@available_encounter_types) - ((@available_encounter_types - roles_for_the_user) + (roles_for_the_user - @available_encounter_types)))
+		
+        @available_encounter_types = ((@available_encounter_types) - ((@available_encounter_types - roles_for_the_user) + (roles_for_the_user - @available_encounter_types)))
         @available_encounter_types = @available_encounter_types.sort
         
         #@available_encounter_types = @available_encounter_types.sort << "IPT contact person"

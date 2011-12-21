@@ -41,8 +41,10 @@ class PatientIdentifiersController < ApplicationController
 		@patient = Patient.find(params[:id])
 		@identifier_type = PatientIdentifierType.find(params[:type])
 		@identifier = @patient.patient_identifiers.find_by_identifier_type(@identifier_type.id)
+		
+		prefix = params[:type]
 
-		if params[:type] = 14
+		if params[:type] == '14' 
 			@prefix = DiabetesService.dc_number_prefix
 		end 
 

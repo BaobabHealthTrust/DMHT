@@ -1,5 +1,4 @@
 <%= javascript_include_tag "utils" %>
-<%= @destination_page =  "/patients/show?patient_id=" + @patient.id.to_s %>
 
 <%
 
@@ -9,7 +8,7 @@
 
 %>
 <script>
-  var tt_cancel_destination = "<%= @destination_page -%>"
+  var tt_cancel_destination = "/patients/show/<%= @patient.patient_id %>"; 
   var months = ["Unknown","Jan", "Feb", "Mar", "Apr", "May", "Jun",
                 "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
 
