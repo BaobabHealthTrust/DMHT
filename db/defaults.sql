@@ -128,7 +128,7 @@ INSERT INTO `location_tag` (`name`, `description`, `creator`, `date_created`, `r
                ('Central TB DOT Sites', NULL, 1, '2011-04-27 14:58:31', 0, NULL, NULL, NULL, (SELECT UUID())),
                ('Central TB Registration Centres', NULL, 1, '2011-04-27 14:58:31', 0, NULL, NULL, NULL, (SELECT UUID())),
                ('South TB DOT Sites', NULL, 1, '2011-04-27 14:58:31', 0, NULL, NULL, NULL, (SELECT UUID())),
-               ('South TB Registration Centres', NULL, 1, '2011-04-27 14:58:31', 0, NULL, NULL, NULL, (SELECT UUID())),('Ward', NULL, 1, '2011-04-27 14:58:31', 0, NULL, NULL, NULL, (SELECT UUID())),('KCH referral section', NULL, 1, '2011-04-27 14:58:31', 0, NULL, NULL, NULL, (SELECT UUID()));
+               ('South TB Registration Centres', NULL, 1, '2011-04-27 14:58:31', 0, NULL, NULL, NULL, (SELECT UUID())),('Ward', NULL, 1, '2011-04-27 14:58:31', 0, NULL, NULL, NULL, (SELECT UUID())),('KCH referral section', NULL, 1, '2011-04-27 14:58:31', 0, NULL, NULL, NULL, (SELECT UUID())),('Facility adult sections', NULL, 1, '2011-04-27 14:58:31', 0, NULL, NULL, NULL, (SELECT UUID())),('Facility peads sections', NULL, 1, '2011-04-27 14:58:31', 0, NULL, NULL, NULL, (SELECT UUID()));
 
 SET @'workstation_tag_id' = (SELECT location_tag_id FROM location_tag WHERE name = 'Workstation Location');
 INSERT INTO `location_tag_map` (`location_id`, `location_tag_id`) SELECT `location_id`, @'workstation_tag_id' FROM `location` WHERE `description` = 'Workstation Location';
@@ -138,6 +138,12 @@ INSERT INTO `location_tag_map` (`location_id`, `location_tag_id`) SELECT `locati
 
 SET @'kch_referral_section_tag_id' = (SELECT location_tag_id FROM location_tag WHERE name = 'KCH referral section');
 INSERT INTO `location_tag_map` (`location_id`, `location_tag_id`) SELECT `location_id`, @'kch_referral_section_tag_id' FROM `location` WHERE `description` = 'Ward';
+
+SET @'facility_adults_sections_tag_id' = (SELECT location_tag_id FROM location_tag WHERE name = 'Facility adult sections');
+INSERT INTO `location_tag_map` (`location_id`, `location_tag_id`) SELECT `location_id`, @'facility_adults_sections_tag_id' FROM `location` WHERE `name` IN ("Ante-Natal Ward","Burns","Gynaecology Ward","Labour Ward","Post-Natal Ward","Post-Natal Ward(Low Risk)","Post-Natal Ward(High Risk)","Ward 3A","Ward 4B","Ward 5A","Ward 5B","Ward 6A");
+
+SET @'facility_peads_sections_tag_id' = (SELECT location_tag_id FROM location_tag WHERE name = 'Facility peads sections');
+INSERT INTO `location_tag_map` (`location_id`, `location_tag_id`) SELECT `location_id`, @'facility_peads_sections_tag_id' FROM `location` WHERE `name` IN ("Malaria Research Ward","Moyo Ward","Oncology Ward","Peadiatrics Nursery Ward","Paeiatrics Special Care Ward","Paediatrics Surgical Ward");
 
 SET @'workstation_tag_id' = (SELECT location_tag_id FROM location_tag WHERE name = 'Central TB DOT Sites');
 INSERT INTO `location_tag_map` (`location_id`, `location_tag_id`) SELECT `location_id`, @'workstation_tag_id' FROM `location` WHERE `name` IN ("UNC Project Bwaila Hospital", "Kamuzu Central Hospital", "Lighthouse", "Nkhoma Hospita", "St Gabriel Hospital", "Likuni Hospital", "Partners in hope", "Dae-Yang Hospital", "Kabudula Rural Hospital", "Mitundu Rural hospital", "Kawale Urban Health centre", " UNC Project Kawale", "Kamuzu Barracks Dispensary", "SOS clinic", "Area 18 urban Health centre", " UNC project Area 18", "Kang'oma Health Centre", "UNC Project Area 25", " Area 25 urban Health centre", "Chiwamba Health Centre", "Lumbadzi Health centre", "Ngoni Health centre", "Mbabvi Health centre", "Ukwe Health centre", "Nsaru Health centre", "Malembo Health Centre", "Chokowa Health Centre (Lilongwe)", "Khongoni Health Centre", "Chileka Health Centre (Lilongwe)", "Ndaula Health Centre", "Ming'ongo Health Centre", "Malingunde Health Centre", "Dickson Health Centre", "Chiunjiza Health Centre", "Mlale Hospital", "Kachale Health Centre", "Chadza Health Cetntre", "Nathenje Health Centre", "Matapila ealth Centre", "Mtenthera Health Centre", "Diamphwe Health Centre", "Chimbalanga Health Centre", "Nthondo Health Centre", "Chitedze Health Centre", "Nambuma Health Centre ", "Mbang'ombe 1 Health Centre", "Baylor Childrens centre");
