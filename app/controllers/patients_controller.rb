@@ -173,6 +173,10 @@ class PatientsController < ApplicationController
     if use_user_selected_activities
       @links << ["Change User Activities","/user/activities/#{User.current_user.id}?patient_id=#{patient.id}"]
     end
+    
+    if true
+    	@links << ["DM visit (Print)", "/patients/dm_visit_label/#{patient.id}"]
+    end
 
     @links << ["Recent Lab Orders Label","/patients/recent_lab_orders?patient_id=#{patient.id}"]
     @links << ["Transfer out label (Print)","/patients/print_transfer_out_label/#{patient.id}"]
@@ -180,6 +184,41 @@ class PatientsController < ApplicationController
     render :template => 'dashboards/personal_tab', :layout => false
   end
 
+	def dm_visit_label
+		print_and_redirect("/patients/dm_label/?patient_id=#{params[:id]}", "/patients/show/#{params[:id]}")		
+	end
+	
+  def dm_label
+    print_string = generate_dm_visit_label(@patient, User.current_user.user_id) #rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a DM visit label for that patient")
+    send_data(print_string,:type=>"application/label; charset=utf-8", :stream=> false, :filename=>"#{params[:patient_id]}#{rand(10000)}.lbl", :disposition => "inline")
+  end
+	
+  def generate_dm_visit_label(patient, user_id)
+    label = ZebraPrinter::StandardLabel.new
+    label.font_size = 3
+    label.font_horizontal_multiplier = 1
+    label.font_vertical_multiplier = 1
+    label.left_margin = 50
+    encs = patient.encounters.current.find(:all)
+    return nil if encs.blank?
+    
+    label.draw_multi_text("Visit: #{encs.first.encounter_datetime.strftime("%d/%b/%Y %H:%M")}", :font_reverse => true)    
+    encs.each {|encounter|
+      # next if encounter.name.humanize == "Registration"
+      if encounter.name.upcase == "TREATMENT" || encounter.name.upcase == "APPOINTMENT" ||
+          encounter.name.upcase == "LAB RESULTS" || encounter.name.upcase == "VITALS" ||
+          encounter.name.upcase == "UPDATE HIV STATUS" || 
+          (encounter.name.upcase == "DIABETES TEST" && (encounter.to_s.include?("URINE") || 
+            encounter.to_s.include?("CR"))) 
+        label.draw_multi_text("#{encounter.name.humanize}: #{encounter.to_s}", :font_reverse => false)
+      end
+    }
+    user    = User.find(user_id)
+    facility = "QECH"
+    label.draw_multi_text("Seen by: #{user.name.titleize} at #{facility} DM Clinic", :font_reverse => true)    
+    label.print(1)
+  end
+  
   def history
     render :template => 'dashboards/history', :layout => 'dashboard' 
   end

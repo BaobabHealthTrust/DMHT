@@ -10,6 +10,7 @@ development:
  use.user.selected.activities: false
  vitals.blood_pressure: true
  advanced.prescription.interface: true
+ auto_set_appointment: true
 
 test: &TEST
  create_from_remote: no
