@@ -21,6 +21,31 @@ class PatientsController < ApplicationController
     @date = (session[:datetime].to_date rescue Date.today).strftime("%Y-%m-%d")
 
      @location = Location.find(session[:location_id]).name rescue ""
+	
+    hiv_test_date    = PatientService.hiv_test_date(@patient.id).strftime("%d/%b/%Y") rescue "UNKNOWN"
+    hiv_test_date = "Unkown" if hiv_test_date.blank?  
+    @hivHighlight = false
+    
+		if((hiv_test_date.to_s.upcase == "UNKNOWN") || ( (hiv_test_date.to_s.upcase != "UNKNOWN") && (((((Time.now().to_f - (hiv_test_date.to_datetime.to_f rescue 0))/ 31536000).to_i) > 0))))
+			@hivHighlight = true
+		end
+		
+		@recents = DiabetesService.patient_recent_screen_complications(@patient.patient_id)
+		
+    max_creatinine = !is_diabetes_test_expired(@recents["max_creatinine_date"])
+    max_foot_check = !is_diabetes_test_expired(@recents["max_foot_check_date"])
+    max_visual_acuity = !is_diabetes_test_expired(@recents["max_visual_acuity_date"])
+    max_urine_protein = !is_diabetes_test_expired(@recents["max_urine_protein_date"])
+    max_fundoscopy = !is_diabetes_test_expired(@recents["max_fundoscopy_date"])
+    max_urea = !is_diabetes_test_expired(@recents["max_urea_date"])
+    max_macrovascular = !is_diabetes_test_expired(@recents["max_macrovascular_date"])
+    
+    @highlight = ((@recents["urea"] && @recents["foot_check"] && @recents["visual_acuity"] && 
+          @recents["macrovascular"] && @recents["creatinine"] && 
+          @recents["fundoscopy"] && @recents["urine_protein"] && max_creatinine && 
+          max_foot_check && max_visual_acuity && max_urine_protein && 
+          max_fundoscopy && max_urea && max_macrovascular) ? false : true)
+          
      if @location.downcase == "outpatient" || params[:source]== 'opd'
         render :template => 'dashboards/opdtreatment_dashboard', :layout => false
      else
@@ -2469,6 +2494,10 @@ class PatientsController < ApplicationController
     return
   end
   
+  def is_diabetes_test_expired(diabetes_test)
+    ((((Date.today - diabetes_test.to_date).to_f/365.0)>1.0) ? true: false) rescue false
+  end
+
   private
 
 end

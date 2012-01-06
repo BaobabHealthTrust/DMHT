@@ -37,8 +37,10 @@
               <option value='/patients/overview?patient_id=<%= @patient.id %>'>Overview</option>
               <option value='/patients/visit_history?patient_id=<%= @patient.id %>'>Current Visit</option>
               <option value='/patients/past_visits_summary?patient_id=<%= @patient.id %>'>Past Visits</option>
-              <option value="/patients/hiv?patient_id=<%= @patient.id -%>">HIV Status</option>
-              <option value="/patients/recent_screen_complications?patient_id=<%= @patient.id -%>">Recent Complications</option>
+              <option value="/patients/hiv?patient_id=<%= @patient.id -%>"
+              <%= (@hivHighlight ? " selectedTab='true'" : "") %> >HIV Status</option>
+              <option value="/patients/recent_screen_complications?patient_id=<%= @patient.id -%>"
+              <%= (@highlight ? " selectedTab='true'" : "") %> >Recent Complications</option>
               <option value="/patients/diabetes_treatments?patient_id=<%= @patient.id -%>">Current Medication</option>
               <option value="/patients/important_medical_history?patient_id=<%= @patient.id -%>">Medical History</option>
               <option value="/patients/patient_medical_history?patient_id=<%= @patient.id -%>">Patient Medical History</option>
