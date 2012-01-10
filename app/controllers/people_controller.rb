@@ -194,6 +194,9 @@ class PeopleController < ApplicationController
         success = true
         person.patient.remote_national_id
       end
+    elsif create_from_dde
+       person = PatientService.create_patient_from_dde(params)
+       success = true if person
     else
       success = true
       person = PatientService.create_from_form(params[:person])
