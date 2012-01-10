@@ -1192,4 +1192,7 @@ private
     @patient = Patient.find(params[:patient_id] || session[:patient_id] || params[:id]) rescue nil
   end
 
+  def create_from_dde                      
+    CoreService.get_global_property_value('create.from.dde').to_s == "true" rescue false
+  end
 end
