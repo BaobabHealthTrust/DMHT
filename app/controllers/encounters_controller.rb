@@ -544,6 +544,26 @@ class EncountersController < ApplicationController
 				@has_initial_questions = true
 			end 
 		end
+		
+		if ['GENERAL_HEALTH', 'DIABETES_HISTORY', 'PAST_DIABETES_MEDICAL_HISTORY'].include?((params[:encounter_type].upcase rescue ''))
+		
+			encounter = params[:encounter_type].upcase
+			encounter_available = Encounter.find(:first,:conditions =>["patient_id = ? AND encounter_type = ?",
+				                             @patient.id, EncounterType.find_by_name(encounter.humanize.upcase).id],
+				                             :order =>'encounter_datetime DESC',:limit => 1)
+			@has_diabetes_history = false
+			@has_general_health = false
+			@past_diabetes_medical_history = false
+						
+			if encounter == 'GENERAL_HEALTH' && !encounter_available.blank?
+				@has_general_health = true			
+			elsif encounter == 'DIABETES_HISTORY' && !encounter_available.blank?
+				@has_diabetes_history = true			
+			elsif encounter == 'PAST_DIABETES_MEDICAL_HISTORY' && !encounter_available.blank?
+				@past_diabetes_medical_history = true			
+			end
+
+		end
 
 		if (params[:encounter_type].upcase rescue '') == 'HIV_STAGING'
 			if @patient_bean.age > 14 
