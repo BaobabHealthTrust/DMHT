@@ -1,6 +1,91 @@
 module PatientService
 	include CoreService
 	require 'bean'
+	require 'json'
+	require 'rest_client'
+	
+    def self.create_patient_from_dde(params)
+	  address_params = params["person"]["addresses"]
+		names_params = params["person"]["names"]
+		patient_params = params["person"]["patient"]
+    birthday_params = params["person"]
+		params_to_process = params.reject{|key,value| 
+      key.match(/addresses|patient|names|relation|cell_phone_number|home_phone_number|office_phone_number|agrees_to_be_visited_for_TB_therapy|agrees_phone_text_for_TB_therapy/) 
+    }
+		birthday_params = params_to_process["person"].reject{|key,value| key.match(/gender/) }
+		person_params = params_to_process["person"].reject{|key,value| key.match(/birth_|age_estimate|occupation/) }
+
+
+		if person_params["gender"].to_s == "Female"
+		   person_params["gender"] = 'F'
+		elsif person_params["gender"].to_s == "Male"
+		   person_params["gender"] = 'M'
+		end
+    
+		unless birthday_params.empty?
+		  if birthday_params["birth_year"] == "Unknown"
+			  birthdate = Date.new(Date.today.year - birthday_params["age_estimate"].to_i, 7, 1) 
+        birthdate_estimated = 1
+		  else
+			  year = birthday_params["birth_year"]
+        month = birthday_params["birth_month"]
+        day = birthday_params["birth_day"]
+
+        month_i = (month || 0).to_i                                                 
+        month_i = Date::MONTHNAMES.index(month) if month_i == 0 || month_i.blank?   
+        month_i = Date::ABBR_MONTHNAMES.index(month) if month_i == 0 || month_i.blank?
+                                                                                    
+        if month_i == 0 || month == "Unknown"                                       
+          birthdate = Date.new(year.to_i,7,1)                                
+          birthdate_estimated = 1
+        elsif day.blank? || day == "Unknown" || day == 0                            
+          birthdate = Date.new(year.to_i,month_i,15)                         
+          birthdate_estimated = 1
+        else                                                                        
+          birthdate = Date.new(year.to_i,month_i,day.to_i)                   
+          birthdate_estimated = 0
+        end
+		  end
+    else
+      birthdate_estimated = 0
+		end
+
+    passed_params = {"person"=> 
+      {"data" => 
+        {"addresses"=> 
+        {"state_province"=> address_params["address2"], 
+         "address2"=> address_params["address1"], 
+         "city_village"=> address_params["city_village"],
+         "county_district"=> address_params["county_district"]
+        }, 
+         "attributes"=> 
+        {"occupation"=> params["person"]["occupation"], 
+         "cell_phone_number" => params["person"]["cell_phone_number"] },
+         "patient"=> 
+        {"identifiers"=> 
+        {"diabetes_number"=>""}}, 
+        "gender"=> person_params["gender"], 
+        "birthdate"=> birthdate, 
+        "birthdate_estimated"=> birthdate_estimated , 
+        "names"=>{"family_name"=> names_params["family_name"], 
+        "given_name"=> names_params["given_name"]
+    }}}}
+    
+    dde_user = CoreService.get_global_property_value('dde.user') rescue nil
+    dde_password = CoreService.get_global_property_value('dde.password') rescue nil
+    dde_server = CoreService.get_global_property_value('dde.server') rescue 'localhost'
+    dde_server_port = CoreService.get_global_property_value('dde.server.port') rescue 80
+
+    uri = "http://#{dde_user}:#{dde_password}@#{dde_server}:#{dde_server_port}/people.json/"     
+    recieved_params = RestClient.post(uri,passed_params)      
+                                          
+    national_id = JSON.parse(recieved_params)["npid"]["value"]
+	  person = self.create_from_form(params[:person])
+    identifier_type = PatientIdentifierType.find_by_name("National id") || PatientIdentifierType.find_by_name("Unknown id")
+    person.patient.patient_identifiers.create("identifier" => national_id, 
+      "identifier_type" => identifier_type.patient_identifier_type_id) unless national_id.blank?
+    return person
+  end	
 
   def self.remote_demographics(person_obj)
     demo = demographics(person_obj)
@@ -633,6 +718,8 @@ EOF
     patient.national_id = get_patient_identifier(person.patient, 'National id')    
 	  patient.national_id_with_dashes = get_national_id_with_dashes(person.patient)
     patient.name = person.names.first.given_name + ' ' + person.names.first.family_name rescue nil
+    patient.first_name = person.names.first.given_name rescue nil
+    patient.last_name = person.names.first.family_name rescue nil
     patient.sex = sex(person)
     patient.age = age(person)
     patient.age_in_months = age_in_months(person)
@@ -703,70 +790,75 @@ EOF
     self.next_filing_number_to_be_archived(patient, next_filing_number)
   end
 
-  def self.next_filing_number_to_be_archived(current_patient , next_filing_number)
-    ActiveRecord::Base.transaction do
-      global_property_value = CoreService.get_global_property_value("filing.number.limit").to_s rescue '10000'
-      active_filing_number_identifier_type = PatientIdentifierType.find_by_name("Filing Number")
-      dormant_filing_number_identifier_type = PatientIdentifierType.find_by_name('Archived filing number')
+	def self.next_filing_number_to_be_archived(current_patient , next_filing_number)
+		ActiveRecord::Base.transaction do
+			global_property_value = CoreService.get_global_property_value("filing.number.limit")
 
-      if (next_filing_number[5..-1].to_i >= global_property_value.to_i)
-        encounter_type_name = ['REGISTRATION','VITALS','ART_INITIAL','ART VISIT',
-          'TREATMENT','HIV RECEPTION','HIV STAGING','DISPENSING','APPOINTMENT']
-        encounter_type_ids = EncounterType.find(:all,:conditions => ["name IN (?)",encounter_type_name]).map{|n|n.id}
+			if global_property_value.blank?
+				global_property_value = '10000'
+			end
 
-        all_filing_numbers = PatientIdentifier.find(:all, :conditions =>["identifier_type = ?",
-            PatientIdentifierType.find_by_name("Filing Number").id],:group=>"patient_id")
-        patient_ids = all_filing_numbers.collect{|i|i.patient_id}
-        patient_to_be_archived = Encounter.find_by_sql(["
-          SELECT patient_id, MAX(encounter_datetime) AS last_encounter_id
-          FROM encounter
-          WHERE patient_id IN (?)
-          AND encounter_type IN (?)
-          GROUP BY patient_id
-          ORDER BY last_encounter_id
-          LIMIT 1",patient_ids,encounter_type_ids]).first.patient rescue nil
-        if patient_to_be_archived.blank?
-          patient_to_be_archived = PatientIdentifier.find(:last,:conditions =>["identifier_type = ?",
-              PatientIdentifierType.find_by_name("Filing Number").id],
-            :group=>"patient_id",:order => "identifier DESC").patient rescue nil
-        end
-      end
+			active_filing_number_identifier_type = PatientIdentifierType.find_by_name("Filing Number")
+			dormant_filing_number_identifier_type = PatientIdentifierType.find_by_name('Archived filing number')
 
-      if patient_to_be_archived
-        filing_number = PatientIdentifier.new()
-        filing_number.patient_id = patient_to_be_archived.id
-        filing_number.identifier_type = dormant_filing_number_identifier_type.id
-        filing_number.identifier = PatientIdentifier.next_filing_number("Archived filing number")
-        filing_number.save
+			if (next_filing_number[5..-1].to_i >= global_property_value.to_i)
+				encounter_type_name = ['REGISTRATION','VITALS','ART_INITIAL','ART VISIT',
+				  'TREATMENT','HIV RECEPTION','HIV STAGING','DISPENSING','APPOINTMENT']
+				encounter_type_ids = EncounterType.find(:all,:conditions => ["name IN (?)",encounter_type_name]).map{|n|n.id}
 
-        #assigning "patient_to_be_archived" filing number to the new patient
-        filing_number= PatientIdentifier.new()
-        filing_number.patient_id = current_patient.id
-        filing_number.identifier_type = active_filing_number_identifier_type.id
-        filing_number.identifier = self.get_patient_identifier(patient_to_be_archived, 'Filing Number')
-        filing_number.save
+				all_filing_numbers = PatientIdentifier.find(:all, :conditions =>["identifier_type = ?",
+					PatientIdentifierType.find_by_name("Filing Number").id],:group=>"patient_id")
+				patient_ids = all_filing_numbers.collect{|i|i.patient_id}
+				patient_to_be_archived = Encounter.find_by_sql(["
+					SELECT patient_id, MAX(encounter_datetime) AS last_encounter_id
+					FROM encounter
+					WHERE patient_id IN (?)
+					AND encounter_type IN (?)
+					GROUP BY patient_id
+					ORDER BY last_encounter_id
+					LIMIT 1",patient_ids,encounter_type_ids]).first.patient rescue nil
+				if patient_to_be_archived.blank?
+					patient_to_be_archived = PatientIdentifier.find(:last,:conditions =>["identifier_type = ?",
+					  PatientIdentifierType.find_by_name("Filing Number").id],
+					:group=>"patient_id",:order => "identifier DESC").patient rescue nil
+				end
+			end
 
-        #void current filing number
-        current_filing_numbers =  PatientIdentifier.find(:all,:conditions=>["patient_id=? AND identifier_type = ?",
-            patient_to_be_archived.id,PatientIdentifierType.find_by_name("Filing Number").id])
-        current_filing_numbers.each do | filing_number |
-          filing_number.voided = 1
-          filing_number.voided_by = User.current_user.id
-          filing_number.void_reason = "Archived - filing number given to:#{current_patient.id}"
-          filing_number.date_voided = Time.now()
-          filing_number.save
-        end
-      else
-        filing_number = PatientIdentifier.new()
-        filing_number.patient_id = current_patient.id
-        filing_number.identifier_type = active_filing_number_identifier_type.id
-        filing_number.identifier = next_filing_number
-        filing_number.save
-      end
-    end
+			if patient_to_be_archived
+				filing_number = PatientIdentifier.new()
+				filing_number.patient_id = patient_to_be_archived.id
+				filing_number.identifier_type = dormant_filing_number_identifier_type.id
+				filing_number.identifier = PatientIdentifier.next_filing_number("Archived filing number")
+				filing_number.save
 
-    true
-  end
+				#assigning "patient_to_be_archived" filing number to the new patient
+				filing_number= PatientIdentifier.new()
+				filing_number.patient_id = current_patient.id
+				filing_number.identifier_type = active_filing_number_identifier_type.id
+				filing_number.identifier = self.get_patient_identifier(patient_to_be_archived, 'Filing Number')
+				filing_number.save
+
+				#void current filing number
+				current_filing_numbers =  PatientIdentifier.find(:all,:conditions=>["patient_id=? AND identifier_type = ?",
+				patient_to_be_archived.id,PatientIdentifierType.find_by_name("Filing Number").id])
+				current_filing_numbers.each do | filing_number |
+					filing_number.voided = 1
+					filing_number.voided_by = User.current_user.id
+					filing_number.void_reason = "Archived - filing number given to:#{current_patient.id}"
+					filing_number.date_voided = Time.now()
+					filing_number.save
+				end
+			else
+				filing_number = PatientIdentifier.new()
+				filing_number.patient_id = current_patient.id
+				filing_number.identifier_type = active_filing_number_identifier_type.id
+				filing_number.identifier = next_filing_number
+				filing_number.save
+			end
+		end
+
+		return true
+	end
 
 	def self.patient_printing_filing_number_label(number=nil)
 		return number[5..5] + " " + number[6..7] + " " + number[8..-1] unless number.nil?
@@ -878,6 +970,14 @@ EOF
     ]) if people.blank?
 
     return people
+  end
+  
+  def self.person_search_from_dde(params)
+    search_string = "given_name=#{params[:given_name]}"
+    search_string += "&family_name=#{params[:family_name]}"
+    search_string += "&gender=#{params[:gender]}"
+    uri = "http://admin:admin@localhost:3001/people/find.json?#{search_string}"                          
+    JSON.parse(RestClient.get(uri)) rescue []
   end
   
   def self.search_by_identifier(identifier)

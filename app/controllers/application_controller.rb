@@ -76,7 +76,7 @@ class ApplicationController < ActionController::Base
           FROM location
           WHERE location_id IN (SELECT location_id
                          FROM location_tag_map
-                          WHERE location_tag_id = (SELECT location_tag_id
+                          WHERE location_tag_id IN (SELECT location_tag_id
                                  FROM location_tag
                                  WHERE name = 'Workstation Location'))
              ORDER BY name ASC").collect{|name| name.send(field_name)} rescue []
@@ -1192,4 +1192,7 @@ private
     @patient = Patient.find(params[:patient_id] || session[:patient_id] || params[:id]) rescue nil
   end
 
+  def create_from_dde                      
+    CoreService.get_global_property_value('create.from.dde').to_s == "true" rescue false
+  end
 end

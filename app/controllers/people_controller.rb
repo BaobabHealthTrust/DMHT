@@ -194,6 +194,9 @@ class PeopleController < ApplicationController
         success = true
         person.patient.remote_national_id
       end
+    elsif create_from_dde
+       person = PatientService.create_patient_from_dde(params)
+       success = true if person
     else
       success = true
       person = PatientService.create_from_form(params[:person])
@@ -275,7 +278,7 @@ class PeopleController < ApplicationController
     traditional_authorities = traditional_authorities.map do |t_a|
       "<li value='#{t_a.name}'>#{t_a.name}</li>"
     end
-    render :text => traditional_authorities.join('') and return
+    render :text => traditional_authorities.join('') + "<li value='Other'>Other</li>" and return
   end
 
     # Regions containing the string given in params[:value]
@@ -298,7 +301,7 @@ class PeopleController < ApplicationController
     districts = districts.map do |d|
       "<li value='#{d.name}'>#{d.name}</li>"
     end
-    render :text => districts.join('') and return
+    render :text => districts.join('') + "<li value='Other'>Other</li>" and return
   end
 
   def tb_initialization_district
@@ -306,7 +309,7 @@ class PeopleController < ApplicationController
     districts = districts.map do |d|
       "<li value='#{d.name}'>#{d.name}</li>"
     end
-    render :text => districts.join('') and return
+    render :text => districts.join('') + "<li value='Other'>Other</li>" and return
   end
 
     # Villages containing the string given in params[:value]
@@ -318,7 +321,7 @@ class PeopleController < ApplicationController
     villages = villages.map do |v|
       "<li value='#{v.name}'>#{v.name}</li>"
     end
-    render :text => villages.join('') and return
+    render :text => villages.join('') + "<li value='Other'>Other</li>" and return
   end
   
   # Landmark containing the string given in params[:value]
