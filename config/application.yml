@@ -11,6 +11,11 @@ development:
  vitals.blood_pressure: true
  advanced.prescription.interface: true
  auto_set_appointment: true
+ create.from.dde: true
+ dde.user: admin     
+ dde.password: admin
+ dde.server: localhost
+ dde.server.port: 3001
 
 test: &TEST
  create_from_remote: no
