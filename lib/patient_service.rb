@@ -78,12 +78,20 @@ module PatientService
 
     uri = "http://#{dde_user}:#{dde_password}@#{dde_server}:#{dde_server_port}/people.json/"     
     recieved_params = RestClient.post(uri,passed_params)      
-                                          
+     
     national_id = JSON.parse(recieved_params)["npid"]["value"]
+    old_identification_number = JSON.parse(recieved_params)["person"]["data"]["patient"]["identifiers"]["old_identification_number"] 
+
 	  person = self.create_from_form(params[:person])
+
     identifier_type = PatientIdentifierType.find_by_name("National id") || PatientIdentifierType.find_by_name("Unknown id")
     person.patient.patient_identifiers.create("identifier" => national_id, 
       "identifier_type" => identifier_type.patient_identifier_type_id) unless national_id.blank?
+    
+    identifier_type = PatientIdentifierType.find_by_name("Old Identification Number") || PatientIdentifierType.find_by_name("Unknown id")
+    person.patient.patient_identifiers.create("identifier" => old_identification_number, 
+      "identifier_type" => identifier_type.patient_identifier_type_id) unless old_identification_number.blank?
+
     return person
   end	
 
