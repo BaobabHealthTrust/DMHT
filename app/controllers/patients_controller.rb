@@ -1216,8 +1216,8 @@ class PatientsController < ApplicationController
         label3.draw_text(condition,25,line+=30,0,2,1,1,false)
       } rescue []
     end
-    return "#{label.print(1)} #{label2.print(1)} #{label3.print(1)}" if !extra_lines.blank?
-    return "#{label.print(1)} #{label2.print(1)}"
+    return "#{label.print(1)}" if !extra_lines.blank?
+    return "#{label.print(1)}"
   end
 
   def patient_transfer_out_label(patient_id)
