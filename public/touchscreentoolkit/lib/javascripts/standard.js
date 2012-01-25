@@ -63,8 +63,16 @@ var tstMessageBoxType = {
     YesNoCancel:{}
 }
 
+var touchscreenInterfaceEnabled = 0;
+var contentContainer = null;
+
 var tstTimerHandle = null;
 var tstTimerFunctionCall = "";
+
+var ajaxGeneralRequestResult;
+
+var tstInternalCurrentDate = (new Date().getFullYear()) + "-" + padZeros((new Date().getMonth() + 1),2) + "-" + 
+padZeros((new Date().getDate()), 2);
 
 //--------------------------------------
 // Default method in module to access element id changed to __$ to avoid
@@ -105,10 +113,6 @@ function elementSelectedValue(element){
     }
     return null;
 }
-
-
-var touchscreenInterfaceEnabled = 0;
-var contentContainer = null;
 
 function loadTouchscreenToolkit() {
     if(document.getElementById("loadingProgressMessage")){
@@ -786,7 +790,7 @@ function loadSelectOptions(selectOptions, options, dualViewOptions) {
         // ' onmousedown="'+ mouseDownAction +'"';
     
         optionsList += (j % 2 == 0 ? " class='odd' tag='odd' " : " class='even' tag='even'") + 
-            ' onclick="' + mouseDownAction + '" ';
+        ' onclick="' + mouseDownAction + '" ';
         
         // njih
         optionsList += ">" + (tstFormElements[tstCurrentPage].getAttribute("multiple") ? 
@@ -1456,10 +1460,14 @@ function navigateToPage(destPage, validate, navback){
     }
     else{
 
+    /*
         var popupBox = __$("popupBox");
         if (popupBox) {
             popupBox.style.visibility = "visible";
         }
+    */
+   
+        showStatus();
 
         document.forms[0].submit();
     }
@@ -1508,9 +1516,9 @@ function confirmValue() {
     confirmationBar.appendChild(username);
 
     confirmationBar.innerHTML += "<div style='display: block; margin-top: 15px;'><input type='submit'" +
-        " value='OK' class='btn' style='float: left;' onclick='validateConfirmUsername()'" + 
-        " onmousedown='validateConfirmUsername()'/><input type='submit' value='Cancel' " + 
-        " class='btn' style='float: right; right: 3px;' onmousedown='cancelConfirmValue()' />";
+    " value='OK' class='btn' style='float: left;' onclick='validateConfirmUsername()'" + 
+    " onmousedown='validateConfirmUsername()'/><input type='submit' value='Cancel' " + 
+    " class='btn' style='float: right; right: 3px;' onmousedown='cancelConfirmValue()' />";
 
     confirmationBar.style.display = "block";
     tstInputTarget = __$("confirmUsername");
@@ -1929,13 +1937,15 @@ function getTimePicker() {
             hour: arrDate[0],
             minute: arrDate[1],
             second: arrDate[2],
-            format: "H:M:S"
+            format: "H:M:S",
+            maxNow: (tstInputTarget.getAttribute("maxNow") ? true : false)
         });
     } else {
         ds = new TimeSelector({
             element: keyboardDiv,
             target: tstInputTarget,
-            format: "H:M:S"
+            format: "H:M:S",
+            maxNow: (tstInputTarget.getAttribute("maxNow") ? true : false)
         });
     }
 
@@ -3108,7 +3118,9 @@ DateSelector.prototype = {
 				<button id="dateselector_preDay" onmousedown="ds.decrementDay();"><span>-</span></button> \
 			</div> \
 			</td><td> \
-                        <button id="today" onmousedown="setToday()" style="width: 150px;"><span>Today</span></button> \
+                        <button id="today" ' + (tstCurrentDate ? (tstCurrentDate == tstInternalCurrentDate ? 
+            'class="blue" ' : 'class="red" ') : 'class="blue" ') + 
+        ' onmousedown="setToday()" style="width: 150px;"><span>Today</span></button> \
 			<!--button id="num" onmousedown="updateKeyColor(this);press(this.id);" style="width: 150px;"><span>Num</span></button--> \
 			<button id="Unknown" onmousedown="updateKeyColor(this);press(this.id);" style="width: 150px;"><span>Unknown</span></button> \
 			</tr></table> \
@@ -3321,6 +3333,12 @@ var DateUtil = {
 
 function setToday(){
     var d = new Date();
+    if (tstCurrentDate) {
+        if(tstCurrentDate.match(/\d{4}\-\d{2}\-\d{2}/)){
+            d = new Date(tstCurrentDate);
+        }
+    }
+    
     var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     document.getElementById("touchscreenInput" + tstCurrentPage).value =
@@ -3348,7 +3366,8 @@ var TimeSelector = function() {
         second: arguments[0].second || this.time[2],
         format: "H:M:S",
         element: arguments[0].element || document.body,
-        target: arguments[0].target
+        target: arguments[0].target,
+        maxNow: arguments[0].maxNow
     };
 
     if (typeof(tstCurrentTime) != "undefined" && tstCurrentTime) {
@@ -3384,14 +3403,18 @@ TimeSelector.prototype = {
 			<td valign="top"> \
 			<div style="display: inline;" > \
                                 <div style="text-align:center; width:100%; font-size:1.8em;">Hr</div>\
-				<button id="timeselector_nextHour" onmousedown="ds.incrementHour();"><span>+</span></button> \
+				<button id="timeselector_nextHour" onmousedown="ds.incrementHour();" ' + 
+        (this.options["maxNow"] == true ? 'class="blue" ' : 'class="red" ') + 
+        ' ><span>+</span></button> \
 				<input id="timeselector_hour" type="text" > \
 				<button id="timeselector_preHour" onmousedown="ds.decrementHour();"><span>-</span></button> \
 			</div> \
 			</td><td> \
 			<div style="display: inline;"> \
                                 <div style="text-align:center; width:100%; font-size:1.8em;">Min</div>\
-				<button id="timeselector_nextMinute" onmousedown="ds.incrementMinute();"><span>+</span></button> \
+				<button id="timeselector_nextMinute" onmousedown="ds.incrementMinute();"' + 
+        (this.options["maxNow"] == true ? 'class="blue" ' : 'class="red" ') + 
+        ' ><span>+</span></button> \
 				<input id="timeselector_minute" type="text"> \
 				<button id="timeselector_preMinute" onmousedown="ds.decrementMinute();"><span>-</span></button> \
 			</div> \
@@ -3417,35 +3440,20 @@ TimeSelector.prototype = {
 
 
     incrementHour: function() {
+        if(this.options["maxNow"] == true){       
+            if(this.currentHour.value >= (new Date().getHours())){
 
-        var maxHour
-        var maxMinute
-
-        try{
-            maxHour = tstInputTarget.getAttribute("maxTime").split(':')[0] || new Date().getHours();
-        }
-        catch(err){
-            maxHour = new Date().getHours();
-        }
-
-        try{
-            maxMinute = tstInputTarget.getAttribute("maxTime").split(':')[1] || new Date().getMinutes();
-        }
-        catch(err){
-            maxMinute = new Date().getMinutes();
-        }
-
-        if(parseInt(this.currentHour.value) >= parseInt(maxHour)){
-            if(this.currentHour.value == 23){
+            } else if(this.currentHour.value == 23){
                 this.currentHour.value = 0;
+            } else {
+                this.currentHour.value++;
             }
+        } else if(this.currentHour.value == 23){
+            this.currentHour.value = 0;
         } else {
             this.currentHour.value++;
-            if(parseInt(this.currentHour.value) == parseInt(maxHour) ){
-                this.currentMinute.value = maxMinute;
-            }
         }
-
+        
         this.time[0] = this.currentHour.value;
         this.update(this.target);
     },
@@ -3462,29 +3470,14 @@ TimeSelector.prototype = {
     },
 
     incrementMinute: function() {
-
-        var maxHour
-        var maxMinute
-
-        try{
-            maxHour = tstInputTarget.getAttribute("maxTime").split(':')[0] || new Date().getHours();
-        }catch(err){
-            maxHour = new Date().getHours();
-        }
-
-        try{
-            maxMinute = tstInputTarget.getAttribute("maxTime").split(':')[1] || new Date().getMinutes();
-        }catch(err){
-            maxMinute = new Date().getMinutes();
-        }
-
-
-        if ((this.currentHour.value == maxHour) && (this.currentMinute.value == maxMinute)){
-
-        }else if(this.currentMinute.value == 59){
-            this.currentMinute.value = 0;
-        //} else if(this.currentMinute.value >= (new Date().getMinutes())){
-        //  this.currentMinute.value++;
+        if(this.options["maxNow"] == true){        
+            if(this.currentMinute.value == 59){
+                this.currentMinute.value = 0;
+            } else if(this.currentMinute.value >= (new Date().getMinutes())){
+                this.currentMinute.value = 0;
+            } else  {
+                this.currentMinute.value++;
+            }
         } else  {
             this.currentMinute.value++;
         }
@@ -3505,8 +3498,12 @@ TimeSelector.prototype = {
     },
 
     incrementSecond: function() {
-        if(this.currentSecond.value == 59){
-            this.currentSecond.value = 0;
+        if(this.options["maxNow"] == true){        
+            if(this.currentSecond.value == 59){
+                this.currentSecond.value = 0;
+            } else {
+                this.currentSecond.value++;
+            }
         } else {
             this.currentSecond.value++;
         }
@@ -3840,4 +3837,81 @@ function showKeyboard(full_keyboard){
     
     __$("keyboard").appendChild(div);
     
+}
+
+function padZeros(number, positions){
+    var zeros = parseInt(positions) - String(number).length;
+    var padded = "";
+    
+    for(var i = 0; i < zeros; i++){
+        padded += "0";
+    }
+    
+    padded += String(number);
+    
+    return padded;
+}
+
+function ajaxGeneralRequest(aUrl, method) {
+    var httpRequest = new XMLHttpRequest();
+    httpRequest.onreadystatechange = function() {
+        handleGeneralResult(httpRequest, method);
+    };
+    try {        
+        showProgress();
+        
+        httpRequest.open('GET', aUrl, true);
+        httpRequest.send(null);
+    } catch(e){
+    }
+}
+
+function handleGeneralResult(aXMLHttpRequest, method) {    
+    if (!aXMLHttpRequest) return "error";
+
+    if (aXMLHttpRequest.readyState == 4 && (aXMLHttpRequest.status == 200 || aXMLHttpRequest.status == 304)) {
+        var result = aXMLHttpRequest.responseText;
+        
+        ajaxGeneralRequestResult = result;
+        
+        __$("progress_bar").style.display = "none";        
+        
+        eval(method);
+        
+        return ajaxGeneralRequestResult;
+    }  
+    return "";
+}
+
+function showProgress(){
+    if(!__$("progress_bar")){
+        var div = document.createElement("div");
+        div.id = "progress_bar";
+        div.className = "messageBar";
+        div.innerHTML = "Fetching data. Please wait...";
+        //div.style.top = "200px";
+        //div.style.left = "280px";
+        
+        __$("page" + tstCurrentPage).appendChild(div);
+    }
+    
+    __$("progress_bar").style.display = "block";
+}
+
+function hideProgress(){
+    __$("progress_bar").style.display = "none";
+}
+
+function showStatus(){
+    if(!__$("popupBox")){
+       var  popupBox = document.createElement("div");
+       popupBox.id = "popupBox";
+       popupBox.style.display = "none";
+       
+       popupBox.innerHTML = "<p>Processing. Please Wait ...</p>"
+       
+       __$("content").appendChild(popupBox);
+    }
+    
+    __$("popupBox").style.display = "block";
 }
