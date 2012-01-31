@@ -184,9 +184,9 @@ class PatientsController < ApplicationController
     patient = Patient.find(params[:id])
 
     @links << ["Demographics (Print)","/patients/print_demographics/#{patient.id}"]
-    @links << ["Visit Summary (Print)","/patients/dashboard_print_visit/#{patient.id}"]
+    #@links << ["Visit Summary (Print)","/patients/dashboard_print_visit/#{patient.id}"]
     @links << ["National ID (Print)","/patients/dashboard_print_national_id/#{patient.id}"]
-
+	
     if use_filing_number and not PatientService.get_patient_identifier(patient, 'Filing Number').blank?
       @links << ["Filing Number (Print)","/patients/print_filing_number/#{patient.id}"]
     end 
@@ -198,14 +198,11 @@ class PatientsController < ApplicationController
     if use_user_selected_activities
       @links << ["Change User Activities","/user/activities/#{User.current_user.id}?patient_id=#{patient.id}"]
     end
-    
-    if true
-    	@links << ["DM visit (Print)", "/patients/dm_visit_label/#{patient.id}"]
-    end
 
     @links << ["Recent Lab Orders Label","/patients/recent_lab_orders?patient_id=#{patient.id}"]
     @links << ["Transfer out label (Print)","/patients/print_transfer_out_label/#{patient.id}"]
-
+	@links << ["DM visit (Print)", "/patients/dm_visit_label/#{patient.id}"]
+	
     render :template => 'dashboards/personal_tab', :layout => false
   end
 
@@ -239,7 +236,7 @@ class PatientsController < ApplicationController
       end
     }
     user    = User.find(user_id)
-    facility = "QECH"
+    facility = site_prefix
     label.draw_multi_text("Seen by: #{user.name.titleize} at #{facility} DM Clinic", :font_reverse => true)    
     label.print(1)
   end
