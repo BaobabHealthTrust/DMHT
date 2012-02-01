@@ -15,6 +15,11 @@
   }
 </script>
 
+<style>
+  .tt_controls_weight_kg #Unknown { display:block; }
+  .tt_controls_height_cm #Unknown { display:block; }
+</style>
+
   <%=render :partial=> "vitals_graphs", :locals=>{:fields=>@patient} %>
   <%=render :partial=> "blood_pressure", :locals=>{:fields=>@patient} %>
 
