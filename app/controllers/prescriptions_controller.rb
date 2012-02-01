@@ -269,9 +269,9 @@ class PrescriptionsController < ApplicationController
       unless @drug
         flash[:notice] = "No matching drugs found for formulation #{prescription[:formulation]}"
         @patient = Patient.find(prescription[:patient_id] || session[:patient_id]) rescue nil
-        @generics = Drug.generic
-        @frequencies = Drug.frequencies
-        @diagnosis = @patient.current_diagnoses["DIAGNOSIS"] rescue []
+		@generics = MedicationService.generic
+		@frequencies = MedicationService.frequencies
+		@diagnosis = @patient.current_diagnoses["DIAGNOSIS"] rescue []
         
         render :treatment
         return
