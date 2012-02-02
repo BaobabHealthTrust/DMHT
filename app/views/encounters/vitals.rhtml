@@ -101,7 +101,7 @@
 			:absoluteMin => 0,
 			:max => 180 } %>
 
-	<%= touch_text_field_tag "WEIGHT (KG)", @patient, nil,
+	<%= touch_numeric_tag "WEIGHT (KG)", @patient, nil,
 		{	:id => "pulse",
 			:helptext => 'Pulse Rate (Beats per Minute)',
 			:field_type => 'number',
@@ -113,7 +113,7 @@
 			:validationMessage => "You must enter a number between 0 and 9 (for example: 54)",
 			:tt_pageStyleClass => "Numeric NumbersWithUnknownAndDecimal" } %>
 
-	<%= touch_text_field_tag "WEIGHT (KG)", @patient, nil,
+	<%= touch_numeric_tag "WEIGHT (KG)", @patient, nil,
 		{	:id => "weight",
 			:field_type => 'number',
 			:helptext => 'Weight (KG)',
@@ -127,7 +127,7 @@
 			:validationMessage => "You must enter a number between 0 and 9 (for example: 54<b>.6</b>)",
 			:tt_pageStyleClass => "Numeric NumbersWithUnknownAndDecimal" } %>
 
-	<%= touch_text_field_tag "HEIGHT (CM)", @patient, nil,
+	<%= touch_numeric_tag "HEIGHT (CM)", @patient, nil,
 		{	:id => "height",
 			:helptext => "Height (CM)",
 			:field_type => 'number',
