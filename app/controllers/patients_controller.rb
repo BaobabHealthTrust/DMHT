@@ -2496,6 +2496,18 @@ class PatientsController < ApplicationController
     ((((Date.today - diabetes_test.to_date).to_f/365.0)>1.0) ? true: false) rescue false
   end
 
+  def dashboard_display_number_of_booked_patients                                                
+    date = (params[:date].sub("Next appointment:","").sub(/\((.*)/,"")).to_date                                                
+    encounter_type = EncounterType.find_by_name('APPOINTMENT')
+    concept_id = ConceptName.find_by_name('APPOINTMENT DATE').concept_id
+    count = Observation.count(:all,
+            :joins => "INNER JOIN encounter e USING(encounter_id)",:group => "value_datetime",
+            :conditions =>["concept_id = ? AND encounter_type = ? AND value_datetime >= ? AND value_datetime <= ?",
+            concept_id,encounter_type.id,date.strftime('%Y-%m-%d 00:00:00'),date.strftime('%Y-%m-%d 23:59:59')])
+    count = count.values unless count.blank?
+    count = '0' if count.blank?
+    render :text => "Next appointment: #{date.strftime('%d %B %Y')} (#{count})"
+  end 
   private
 
 end
