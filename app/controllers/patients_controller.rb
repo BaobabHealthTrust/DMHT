@@ -225,16 +225,30 @@ class PatientsController < ApplicationController
     return nil if encs.blank?
     
     label.draw_multi_text("Visit: #{encs.first.encounter_datetime.strftime("%d/%b/%Y %H:%M")}", :font_reverse => true)    
-    encs.each {|encounter|
+    encs.each do |encounter|
       # next if encounter.name.humanize == "Registration"
       if encounter.name.upcase == "TREATMENT" || encounter.name.upcase == "APPOINTMENT" ||
           encounter.name.upcase == "LAB RESULTS" || encounter.name.upcase == "VITALS" ||
           encounter.name.upcase == "UPDATE HIV STATUS" || 
           (encounter.name.upcase == "DIABETES TEST" && (encounter.to_s.include?("URINE") || 
-            encounter.to_s.include?("CR"))) 
-        label.draw_multi_text("#{encounter.name.humanize}: #{encounter.to_s}", :font_reverse => false)
-      end
-    }
+            encounter.to_s.include?("CR")))
+
+		      encounter.to_s.split("<b>").each do |string|
+		        concept_name = string.split("</b>:")[0].strip rescue nil
+		        obs_value = string.split("</b>:")[1].strip rescue nil
+
+		        next if string.match(/Workstation location/i)
+
+						if encounter.name.upcase == "TREATMENT"
+							label.draw_multi_text("#{encounter.name.humanize} - #{string}", :font_reverse => false)
+						end
+
+		        next if obs_value.blank?
+		        label.draw_multi_text("#{encounter.name.humanize} - #{concept_name}: #{obs_value}", :font_reverse => false)
+		      end
+		    end
+    end
+
     user    = User.find(user_id)
     facility = site_prefix
     label.draw_multi_text("Seen by: #{user.name.titleize} at #{facility} DM Clinic", :font_reverse => true)    
@@ -2480,7 +2494,7 @@ class PatientsController < ApplicationController
   end
   
   def complications_label
-    print_string = DiabetesService.complications_label(@patient, session[:user_id]) #rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a visit label for that patient")
+    print_string = DiabetesService.complications_label(@patient, session[:user_id], site_prefix) rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a visit label for that patient")
     send_data(print_string,:type=>"application/label; charset=utf-8", :stream=> false, :filename=>"#{params[:patient_id]}#{rand(10000)}.lbl", :disposition => "inline")
   end
   
