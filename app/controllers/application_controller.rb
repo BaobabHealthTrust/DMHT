@@ -99,6 +99,10 @@ class ApplicationController < ActionController::Base
     CoreService.get_global_property_value('create.from.remote').to_s == "true" rescue false
   end
 
+  def create_from_dde_server                                                    
+    CoreService.get_global_property_value('create.from.dde.server').to_s == "true" rescue false
+  end
+
   def concept_set(concept_name)
     concept_id = ConceptName.find(:first,:joins =>"INNER JOIN concept USING (concept_id)",
                                   :conditions =>["voided = 0 AND concept.retired = 0 AND name = ?",concept_name]).concept_id
