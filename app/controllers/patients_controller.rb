@@ -222,6 +222,8 @@ class PatientsController < ApplicationController
     label.font_vertical_multiplier = 1
     label.left_margin = 50
     encs = patient.encounters.current.find(:all)
+    units = {"WEIGHT"=>"kg", "HT"=>"cm"}
+
     return nil if encs.blank?
     
     label.draw_multi_text("Visit: #{encs.first.encounter_datetime.strftime("%d/%b/%Y %H:%M")}", :font_reverse => true)    
@@ -232,6 +234,18 @@ class PatientsController < ApplicationController
           encounter.name.upcase == "UPDATE HIV STATUS" || 
           (encounter.name.upcase == "DIABETES TEST" && (encounter.to_s.include?("URINE") || 
             encounter.to_s.include?("CR")))
+
+					if encounter.name.upcase == "VITALS"
+						string = []
+						encounter.observations.each do |observation|
+							concept_name = observation.concept.concept_names.last.name rescue ''
+							next if concept_name.match(/Workstation location/i)
+							string << observation.to_s(["short", "order"]).squish + units[concept_name.upcase].to_s
+						end
+						label.draw_multi_text("Vitals - " + string.join(', '), :font_reverse => false)
+					end
+
+					next if encounter.name.upcase == "VITALS"
 
 		      encounter.to_s.split("<b>").each do |string|
 		        concept_name = string.split("</b>:")[0].strip rescue nil
