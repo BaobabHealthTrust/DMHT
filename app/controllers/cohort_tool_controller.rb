@@ -1098,7 +1098,7 @@ class CohortToolController < ApplicationController
     @start_date = params[:start_date] rescue nil
     @end_date = params[:end_date] rescue nil
 
-    report = Reports::Cohort.new(@start_date, @end_date)
+    report = Reports::CohortDm.new(@start_date, @end_date)
 
     @specified_period = report.specified_period
 
