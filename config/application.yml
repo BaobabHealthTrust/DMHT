@@ -9,6 +9,7 @@ development:
  create_from_remote: false
  use.user.selected.activities: false
  vitals.blood_pressure: true
+ show.patient.confirmation: true
  advanced.prescription.interface: true
  auto_set_appointment: true
  create.from.dde: false
