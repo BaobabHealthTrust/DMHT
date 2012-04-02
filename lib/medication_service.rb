@@ -50,7 +50,7 @@ module MedicationService
 			end
 
 			#[opt[0], "#{opt_reg.regimen_index}#{suffix} - #{opt[1]}"]
-			if opt_reg.regimen_index > -1
+			if opt_reg.regimen_index.to_i > -1
 				["#{opt_reg.regimen_index}#{suffix} - #{opt[1]}", opt[0], opt_reg.regimen_index.to_i]
 			else
 				["#{opt[1]}", opt[0], opt_reg.regimen_index.to_i]
