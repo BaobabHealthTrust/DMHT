@@ -1099,6 +1099,7 @@ class CohortToolController < ApplicationController
     @end_date = params[:end_date] rescue nil
 
     report = Reports::CohortDm.new(@start_date, @end_date)
+    @facility = Location.current_health_center.name rescue ''
 
     @specified_period = report.specified_period
 
