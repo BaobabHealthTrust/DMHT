@@ -108,24 +108,9 @@ class ClinicController < ApplicationController
 
   def reports_tab
     @reports = [
-      ["Cohort","/cohort_tool/cohort_menu"],
-      ["Supervision","/clinic/supervision_tab"],
-      ["Data Cleaning Tools", "/clinic/data_cleaning_tab"],
       ["DM Report", "/cohort_tool/dm_cohort_report_options"]
     ]
 
-    @reports = [
-      ["Diagnosis","/drug/date_select?goto=/report/age_group_select?type=diagnosis"],
-     # ["Patient Level Data","/drug/date_select?goto=/report/age_group_select?type=patient_level_data"],
-      ["Disaggregated Diagnosis","/drug/date_select?goto=/report/age_group_select?type=disaggregated_diagnosis"],
-      ["Referrals","/drug/date_select?goto=/report/opd?type=referrals"],
-      #["Total Visits","/drug/date_select?goto=/report/age_group_select?type=total_visits"],
-      #["User Stats","/drug/date_select?goto=/report/age_group_select?type=user_stats"],
-      ["User Stats","/"],
-     # ["Total registered","/drug/date_select?goto=/report/age_group_select?type=total_registered"],
-      ["Diagnosis (By address)","/drug/date_select?goto=/report/age_group_select?type=diagnosis_by_address"],
-      ["Diagnosis + demographics","/drug/date_select?goto=/report/age_group_select?type=diagnosis_by_demographics"]
-    ] if Location.current_location.name.match(/Outpatient/i)
     render :layout => false
   end
 
