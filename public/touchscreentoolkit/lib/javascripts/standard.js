@@ -126,6 +126,9 @@ function loadTouchscreenToolkit() {
     if (document.forms.length>0) {
         tstFormElements = getFormElements();
         tstFormLabels = document.forms[0].getElementsByTagName("label");
+        for(var i = 0; i < tstFormElements.length; i++){
+            tstMultipleSelected[i] = {};
+        }
     }
     if (window.location.href.search(/\/patient\/patient_search_names/) != -1) {
         tstSearchPage = true;
@@ -759,16 +762,21 @@ function toggleShowProgress() {
     }
 }
 
-function loadSelectOptions(selectOptions, options, dualViewOptions) {
-    
-    if(dualViewOptions != undefined) {
+function loadSelectOptions(selectOptions, options, dualViewOptions) {    
+    if(dualViewOptions != undefined || dualViewOptions != null) {
         tstDualViewOptions = eval(dualViewOptions);
         setTimeout("addSummary(" + selected + ")", 0);
     }
 
+    if(tstFormElements[tstCurrentPage].getAttribute("selectAll")){         
+        setTimeout("addSelectAllButton()", 0);     
+    }
+    
     var optionsList = "<ul id='tt_currentUnorderedListOptions'>";  // <li id='default'> </li>";
     var selectOptionCount = selectOptions.length;
     var selected = -1;
+
+    options.innerHTML = "";
 
     for(var j=0;j<selectOptionCount;j++){
         // njih
@@ -779,12 +787,13 @@ function loadSelectOptions(selectOptions, options, dualViewOptions) {
         // inherit mouse down options
         mouseDownAction = selectOptions[j].getAttribute("onmousedown")
         mouseDownAction += '; updateTouchscreenInputForSelect(' +
-        (tstFormElements[tstCurrentPage].getAttribute("multiple") ? '__$(\'optionValue\' + this.id), this' : 'this') + '); ' + 
+        (tstFormElements[tstCurrentPage].getAttribute("multiple") ? '__$(\'optionValue\' + this.id), this' : 'this') + 
+        '); ' + 
         (dualViewOptions ? 'changeSummary(this.id);' : '');
         
         optionsList += '<li id=\'' + (j-1) + '\' ';
         if (selectOptions[j].value) {
-            optionsList += " id='option"+selectOptions[j].value +"' tstValue='"+selectOptions[j].value +"'";
+            optionsList += " id=\"option"+selectOptions[j].value +"\" tstValue=\""+selectOptions[j].value +"\"";
             selected = j;
         } 
         
@@ -794,16 +803,17 @@ function loadSelectOptions(selectOptions, options, dualViewOptions) {
             } catch(e){}
         }
         
-        // optionsList += (j % 2 == 0 ? " class='odd' tag='odd' " : " class='even' tag='even'") + 
-        // ' onmousedown="'+ mouseDownAction +'"';
-    
+        optionsList += (j % 2 == 0 ? " class='odd' tag='odd' " : " class='even' tag='even'") + 
+        ' onmousedown="'+ (tstFormElements[tstCurrentPage].getAttribute("tt_requirenextclick") != null ? 
+            (tstFormElements[tstCurrentPage].getAttribute("tt_requirenextclick") == "false" ? "checkRequireNextClick();" : "") : "") +'"';
+
         optionsList += (j % 2 == 0 ? " class='odd' tag='odd' " : " class='even' tag='even'") + 
         ' onclick="' + mouseDownAction + '" ';
         
         // njih
         optionsList += ">" + (tstFormElements[tstCurrentPage].getAttribute("multiple") ? 
             "<div style='display: table; border-spacing: 0px;'><div style='display: table-row'>" + 
-            "<div style='display: table-cell;'><img id='img" + (j-1) + "' src='/touchscreentoolkit/lib/images/unticked.jpg' alt='[ ]' />" + 
+            "<div style='display: table-cell;'><img id='img" + (j-1) + "' src='lib/images/unticked.jpg' alt='[ ]' />" + 
             "</div><div style='display: table-cell; vertical-align: middle; " + 
             "text-align: left; padding-left: 15px;' id='optionValue"  + (j-1) + "'>" : "") + 
         selectOptions[j].text + "</div></div></div></li>\n";
@@ -927,8 +937,7 @@ function unhighlight(element){
 }
 
 //TODO make these into 1 function
-function updateTouchscreenInputForSelect(element, parentElement){
-    
+function updateTouchscreenInputForSelect(element){ 
     var inputTarget = tstInputTarget;
     var multiple = inputTarget.getAttribute("multiple") == "multiple";
 
@@ -944,13 +953,13 @@ function updateTouchscreenInputForSelect(element, parentElement){
         
         // Check if the item is already included
         // var idx = val_arr.toString().indexOf(val);
-        if (!tstMultipleSelected[val]){ //(idx == -1){
+        if (!tstMultipleSelected[tstCurrentPage][val]){ //(idx == -1){
             val_arr.push(val);
-            tstMultipleSelected[val] = true;
+            tstMultipleSelected[tstCurrentPage][val] = true;
         } else {
             // val_arr.splice(idx, 1);
             val_arr = removeFromArray(val_arr, val);
-            delete(tstMultipleSelected[val]);
+            delete(tstMultipleSelected[tstCurrentPage][val]);
         }
         inputTarget.value = val_arr.join(tstMultipleSplitChar);
         if (inputTarget.value.indexOf(tstMultipleSplitChar) == 0)
@@ -964,11 +973,9 @@ function updateTouchscreenInputForSelect(element, parentElement){
         }
     }
 
-    highlightSelection(element.parentNode.childNodes, inputTarget, 
-        (parentElement ? parentElement.childNodes : null))
+    highlightSelection(element.parentNode.childNodes, inputTarget)
             
     tt_update(inputTarget);
-    checkRequireNextClick();
 }
 
 function updateTouchscreenInput(element){
@@ -1133,7 +1140,8 @@ function tt_update(sourceElement, navback){
         } else {
             sourceValue = sourceElement.getAttribute("tstValue");
         }                
-    } else {
+    }
+    else {
         if (condition && navback == true) {
             sourceValue = "";            
         } else {
@@ -1178,7 +1186,8 @@ function tt_update(sourceElement, navback){
                         for(i=0;i<targetElement.options.length;i++){
                             if(optionIncludedInValue(targetElement.options[i].text, val_arr)) {
                                 targetElement.options[i].selected = true;
-                            } else
+                            }
+                            else
                                 targetElement.options[i].selected = false;
 
                         }
@@ -1298,8 +1307,10 @@ function gotoPage(destPage, validate, navback){
     var currentPage = tstCurrentPage;
     var currentInput = __$("touchscreenInput"+currentPage);
 
-    var navback = (navback ? navback : false);    
+    var navback = (navback ? navback : false);       
 
+    tstMultipleSelected[tstCurrentPage] = {}; 
+    
     //	tt_BeforeUnload
     var unloadElementId = 'touchscreenInput';
     if (currentPage < destPage) {
@@ -1598,13 +1609,19 @@ function clearInput(){
 }
 
 function showMessage(aMessage, withCancel, timed) {
+    if(typeof(tstMessageBar) == "undefined"){
+        __$("content").innerHTML += "<div id='messageBar' class='messageBar'></div>";
+        
+        tstMessageBar = __$('messageBar');
+    }
+    
     var messageBar = tstMessageBar;
     messageBar.innerHTML = aMessage +
     "<br />" + (typeof(withCancel) != "undefined" ? (withCancel == true ?
         "<button onmousedown='tstMessageBar.style.display = \"none\"; " +
         "clearTimeout(tstTimerHandle);'><span>Cancel</span></button>" : "") : "") +
     "<button style='width: 200px;' onmousedown='tstMessageBar.style.display = \"none\"; " +
-    "clearTimeout(tstTimerHandle); eval(tstTimerFunctionCall);'><span>Ok</span></button>";
+    "clearTimeout(tstTimerHandle); eval(tstTimerFunctionCall);'><span>OK</span></button>";
     if (aMessage.length > 0) {
         messageBar.style.display = 'block'
         if((typeof(timed) == "undefined" ? true : timed) == true){
@@ -1694,7 +1711,8 @@ function showBestKeyboard(aPageNum) {
     switch (inputElement.getAttribute("field_type")) {
         case "password":
         case "full_keyboard":
-            showKeyboard(true, (tstUserKeyboardPref.toLowerCase() == "qwerty" ? true : false));
+            showKeyboard(true, (typeof(tstUserKeyboardPref) != 'undefined' && 
+                tstUserKeyboardPref.toLowerCase() == "qwerty" ? true : false));
             break;
         case "alpha":
             __$("keyboard").innerHTML = getPreferredKeyboard();
@@ -1708,8 +1726,37 @@ function showBestKeyboard(aPageNum) {
         case "time":
             getTimePicker();
             break;
+        case "advancedTime":
+            getAdvancedTimePicker();
+            break;
         case "boolean":
             __$("keyboard").innerHTML = "";
+            break;
+        case "calendar":
+            __$("keyboard").innerHTML = "";
+            __$("page" + aPageNum).innerHTML = "";
+            
+            var selected = {};
+            var selecteddate = null;
+            var start_date_week = null;
+            var end_date_week = null;
+            
+            if(inputElement.getAttribute("selecteddays")){
+                selected = eval(inputElement.getAttribute("selecteddays"));
+            }
+            
+            if(inputElement.getAttribute("startweekdate")){
+                start_date_week = inputElement.getAttribute("startweekdate");
+            }
+            
+            if(inputElement.getAttribute("endweekdate")){
+                end_date_week = inputElement.getAttribute("endweekdate");
+            }
+            
+            selecteddate = inputElement.value;
+            
+            createCalendar("page" + aPageNum, inputElement.id, selecteddate, 
+                selected, start_date_week, end_date_week);                  
             break;
         default:
             __$("keyboard").innerHTML = getPreferredKeyboard();
@@ -1763,7 +1810,9 @@ function getDatePart(aElementName) {
 
 
 function gotoNextPage() {
-    tstMultipleSelected = {};
+    if(__$("category")){
+        document.body.removeChild(__$("category"));
+    }
     gotoPage(tstCurrentPage+1, true);
 }
 
@@ -2797,7 +2846,8 @@ RailsDate.prototype = {
                     (this.element.name == str[1]+'['+str[2]+'(1i)]')) {
                     monthElement = document.getElementsByName(str[1]+'['+str[2]+'(2i)]')[0];
 
-                } else if (this.isDayOfMonthElement() &&
+                }
+                else if (this.isDayOfMonthElement() &&
                     (this.element.name == str[1]+'['+str[2]+'(3i)]')) {
                     monthElement = document.getElementsByName(str[1]+'['+str[2]+'(2i)]')[0];
                 }
@@ -2857,7 +2907,8 @@ RailsDate.prototype = {
             if (!yearElement) {
                 if (str[1].search(/month$/) != -1 ) {
                     elementName = str[1].replace(/month$/, "year")+'['+str[2]+'(1i)]';
-                } else if (str[1].search(/date$/) != -1 ) {
+                }
+                else if (str[1].search(/date$/) != -1 ) {
                     elementName = str[1].replace(/date$/, "year")+'['+str[2]+'(1i)]';
                 }
                 yearElement = document.getElementsByName(elementName)[0];
@@ -3486,13 +3537,19 @@ TimeSelector.prototype = {
         if(this.options["maxNow"] == true){        
             if(this.currentMinute.value == 59){
                 this.currentMinute.value = 0;
+                this.incrementHour();
             } else if(this.currentMinute.value >= (new Date().getMinutes())){
                 this.currentMinute.value = 0;
             } else  {
                 this.currentMinute.value++;
             }
         } else  {
-            this.currentMinute.value++;
+            if(this.currentMinute.value == 59){
+                this.currentMinute.value = 0;
+                this.incrementHour();
+            } else {
+                this.currentMinute.value++;
+            }
         }
 
         this.time[1] = this.currentMinute.value;
@@ -3928,3 +3985,503 @@ function showStatus(){
     
     __$("popupBox").style.display = "block";
 }
+
+function checkCtrl(obj){
+    var o = obj;
+    var t = o.offsetTop;
+    var l = o.offsetLeft + 1;
+    var w = o.offsetWidth;
+    var h = o.offsetHeight;
+
+    while((o ? (o.offsetParent != document.body) : false)){
+        o = o.offsetParent;
+        t += (o ? o.offsetTop : 0);
+        l += (o ? o.offsetLeft : 0);
+    }
+    return [w, h, t, l];
+}
+     
+function showCategory(category){
+    var pos = checkCtrl(__$("content"));
+    
+    if(__$("category")){
+        document.body.removeChild(__$("category"));
+    }
+    
+    var cat = document.createElement("div");
+    cat.id = "category";
+    cat.style.position = "absolute";
+    cat.style.left = (pos[3] + (pos[0] - 378)) + "px";
+    cat.style.top = (pos[2] + 5) + "px";
+    cat.style.width = "350px";
+    cat.style.height = "45px";
+    cat.style.fontSize = "36px";
+    cat.style.padding = "10px";
+    cat.style.backgroundColor = "#9e9";
+    cat.style.color = "#000";
+    cat.style.opacity = "0.95";
+    cat.style.zIndex = 100;
+    cat.style.textAlign = "center";
+    cat.innerHTML = category;
+    
+    document.body.appendChild(cat);
+}  
+
+function getAdvancedTimePicker() {
+    if (typeof(AdvancedTimeSelector) == "undefined")
+        return;
+
+    var inputElement = tstFormElements[tstPages[tstCurrentPage]];
+    var keyboardDiv = __$('keyboard');
+    keyboardDiv.innerHTML = "";
+
+    var railsDate = new RailsDate(inputElement);
+    if (railsDate.isDayOfMonthElement()) {
+        getDayOfMonthPicker(railsDate.getYearElement().value, railsDate.getMonthElement().value);
+        return;
+    }
+
+    var defaultDate = joinDateValues(inputElement);
+    //defaultDate = defaultDate.replace("-", "/", "g");
+    var arrDate = defaultDate.split(':');
+    __$("touchscreenInput"+tstCurrentPage).value = defaultDate;
+
+    if (arrDate.length == 3) {
+        ds = new AdvancedTimeSelector({
+            element: keyboardDiv,
+            target: tstInputTarget,
+            hour: arrDate[0],
+            minute: arrDate[1],
+            second: arrDate[2],
+            format: "H:M:S",
+            maxNow: (tstInputTarget.getAttribute("maxNow") ? true : false)
+        });
+    } else {
+        ds = new AdvancedTimeSelector({
+            element: keyboardDiv,
+            target: tstInputTarget,
+            format: "H:M:S",
+            maxNow: (tstInputTarget.getAttribute("maxNow") ? true : false)
+        });
+    }
+
+// __$("options" + tstCurrentPage).innerHTML = "";
+}
+
+var AdvancedTimeSelector = function() {
+    this.time = [new Date().getHours(), new Date().getMinutes(), new Date().getSeconds()];
+
+    if (! arguments[0])
+        arguments[0] = {};
+
+    this.options = {
+        hour: arguments[0].hour || this.time[0],
+        minute: arguments[0].minute || this.time[1],
+        second: arguments[0].second || this.time[2],
+        format: "H:M:S",
+        element: arguments[0].element || document.body,
+        target: arguments[0].target,
+        maxNow: arguments[0].maxNow
+    };
+
+    if (typeof(tstCurrentTime) != "undefined" && tstCurrentTime) {
+        var splitTime = tstCurrentTime.split(":");
+        if (splitTime.length == 3) {
+            this.time = [splitTime[0], splitTime[1], splitTime[2]];
+        }
+    }	else {
+        this.time = [this.options.hour, this.options.minute, this.options.second];
+    }
+    this.element = this.options.element;
+    this.format = this.options.format;
+    this.target = this.options.target;
+
+    this.element.appendChild(this.build());
+
+    this.currentHour = $('timeselector_hour');
+    this.currentMinute = $('timeselector_minute');
+    //this.currentSecond = $('timeselector_second');
+
+    this.currentHour.value = this.time[0];
+    this.currentMinute.value = this.time[1];
+//this.currentSecond.value = this.time[2];
+};
+
+AdvancedTimeSelector.prototype = {
+    build: function() {
+        var hr = (new Date()).getHours();
+        var node = document.createElement('div');
+        // TODO: move style stuff to a css file
+        node.innerHTML = ' \
+			<div id="timeselector" class="dateselector" style="min-height: 477px;"> \
+                            <div class="table" style="width: 100%;"><div class="row"><div class="cell" \
+                                        style="text-align: center; font-size: 36px;">\
+                                        Hour</div><div class="cell">&nbsp;</div><div class="cell" \
+                                        style="text-align: center; font-size: 36px;">Minute</div></div>\
+                                        <div class="row"><div class="cell" \
+                                        style="text-align: center;"><object type="image/svg+xml" \
+                                        data="/touchscreentoolkit/examples/lib/images/hour.svg" wmode="transparent" \
+                                        style="padding:5px; overflow:hidden;" \
+                                        id="hour" >\
+                                    <param id="et1" name="t1" value="" />\
+                                    <param id="et2" name="t2" value="" />\
+                                    <param id="et3" name="t3" value="" />\
+                                    <param id="et4" name="t4" value="" />\
+                                    <param id="et5" name="t5" value="" />\
+                                    <param id="et6" name="t6" value="" />\
+                                    <param id="et7" name="t7" value="" />\
+                                    <param id="et8" name="t8" value="" />\
+                                    <param id="et9" name="t9" value="" />\
+                                    <param id="et10" name="t10" value="" />\
+                                    <param id="et11" name="t11" value="" />\
+                                    <param id="et12" name="t12" value="" /></object></div><div class="cell"></div>\
+                              <div class="cell" style="text-align: center;"><object type="image/svg+xml" \
+                                data="/touchscreentoolkit/examples/lib/images/minute.svg" \
+                                   wmode="transparent" \
+                                style="padding:5px; overflow:hidden;" id="minute" >\
+                                    <param id="etm5" name="tm5" value="" />\
+                                    <param id="etm10" name="tm10" value="" />\
+                                    <param id="etm15" name="tm15" value="" />\
+                                    <param id="etm20" name="tm20" value="" />\
+                                    <param id="etm25" name="tm25" value="" />\
+                                    <param id="etm30" name="tm30" value="" />\
+                                    <param id="etm35" name="tm35" value="" />\
+                                    <param id="etm40" name="tm40" value="" />\
+                                    <param id="etm45" name="tm45" value="" />\
+                                    <param id="etm50" name="tm50" value="" />\
+                                    <param id="etm55" name="tm55" value="" />\
+                                    <param id="etm0" name="tm0" value="" /></object> \
+                                </div></div><div class="row"><div class="cell"><div class="table" \
+                                style="margin-left: 20px;"><div class="row"><div class="cell">\
+                                <button id="timeselector_preHour" style="width: 100px;" onmousedown="ds.decrementHour();">\
+                                <span>-</span></button></div><div class="cell" style="vertical-align: middle; text-align: center;">\
+                                <input id="timeselector_hour" type="text" style="margin-left: 10px;" />\
+                                </div><div class="cell"><button id="timeselector_nextHour" onmousedown="ds.incrementHour();" ' + 
+        (this.options["maxNow"] == true ? 'class="blue" ' : 'class="red" ') + 
+        ' style="width: 100px;" ><span>+</span></button></div></div></div> </div>\
+                                <div class="cell"><button id="ampm" style="width: 150px;" \
+                                onmousedown="ds.changeScope();"><span>' + (hr >= 12 ? 'PM' : 'AM') + 
+        '</span></button></div><div class="cell"> \
+                                <div class="table" \
+                                style="margin-right: 25px; float: right;"><div class="row"><div class="cell"> \
+                                <button id="timeselector_preMinute" onmousedown="ds.decrementMinute();" style="width: 100px;"> \
+                                <span>-</span></button>\
+                                </div><div class="cell" style="vertical-align: middle; text-align: center;">\
+                                <input id="timeselector_minute" type="text" style="margin-left: 10px;"/>\
+                                </div><div class="cell"><button id="timeselector_nextMinute" style="width: 100px;"\
+                                 onmousedown="ds.incrementMinute();"' + 
+        (this.options["maxNow"] == true ? 'class="blue" ' : 'class="red" ') + 
+        ' ><span>+</span></button></div></div></div>\
+                                </div></div></div></div></div>	';
+
+        return node;
+    },
+
+    init: function() {
+        this.update(this.target);
+    },
+
+    changeScope: function(){
+        if(this.currentHour.value > 12){
+            this.currentHour.value = parseInt(this.currentHour.value) - 12;
+            __$("ampm").innerHTML = "<span>AM</span>";
+        } else if(this.currentHour.value <= 12){
+            this.currentHour.value = parseInt(this.currentHour.value) + 12;
+            __$("ampm").innerHTML = "<span>PM</span>";
+        }
+        this.time[0] = this.currentHour.value;
+        this.update(this.target);
+    },
+
+    incrementHour: function() {
+        if(this.options["maxNow"] == true){       
+            if(this.currentHour.value >= (new Date().getHours())){
+
+            } else if(this.currentHour.value == 23){
+                this.currentHour.value = 0;
+            } else {
+                this.currentHour.value++;
+            }
+        } else if(this.currentHour.value == 23){
+            this.currentHour.value = 0;
+        } else {
+            this.currentHour.value++;
+        }
+        
+        this.time[0] = this.currentHour.value;
+        this.update(this.target);
+    },
+
+    decrementHour: function() {
+        if(this.currentHour.value == 0){
+            this.currentHour.value = 0;
+        } else {
+            this.currentHour.value--;
+        }
+
+        this.time[0] = this.currentHour.value;
+        this.update(this.target);
+    },
+
+    incrementMinute: function() {
+        if(this.options["maxNow"] == true){        
+            if(this.currentMinute.value == 59){
+                this.currentMinute.value = 0;
+                this.incrementHour();
+            } else if(this.currentMinute.value >= (new Date().getMinutes())){
+                this.currentMinute.value = 0;
+            } else  {
+                this.currentMinute.value++;
+            }
+        } else  {
+            if(this.currentMinute.value == 59){
+                this.currentMinute.value = 0;
+                this.incrementHour();
+            } else {
+                this.currentMinute.value++;
+            }
+        }
+
+        this.time[1] = this.currentMinute.value;
+        this.update(this.target);
+    },
+
+    decrementMinute: function() {
+        if(this.currentMinute.value == 0){
+            this.currentMinute.value = 0;
+        } else {
+            this.currentMinute.value--;
+        }
+
+        this.time[1] = this.currentMinute.value;
+        this.update(this.target);
+    },
+
+    incrementSecond: function() {
+        if(this.options["maxNow"] == true){        
+            if(this.currentSecond.value == 59){
+                this.currentSecond.value = 0;
+            } else {
+                this.currentSecond.value++;
+            }
+        } else {
+            this.currentSecond.value++;
+        }
+
+        this.time[2] = this.currentSecond.value;
+        this.update(this.target);
+    },
+
+    decrementSecond: function() {
+        if(this.currentSecond.value == 0){
+            this.currentSecond.value = 0;
+        } else {
+            this.currentSecond.value--;
+        }
+
+        this.time[2] = this.currentSecond.value;
+        this.update(this.target);
+    },
+
+    invokeHourUpdate: function(pos){
+        var hr = pos;
+            
+        if(hr != null){
+            if(__$("ampm").innerHTML.toLowerCase() == "<span>pm</span>"){
+                if(hr == 12){
+                    this.currentHour.value = hr;
+                } else {
+                    this.currentHour.value = (hr == 12 ? 0 : (hr + 12));
+                }
+            } else {
+                if(hr == 12){
+                    this.currentHour.value = 0;
+                } else {
+                    this.currentHour.value = hr;
+                }
+            }
+        }
+        
+        this.time[0] = this.currentHour.value;
+        this.update(this.target);
+    },
+    
+    updateHourDisk: function(){
+        var params = __$("hour").getElementsByTagName("param");
+        var hr = (parseInt(this.currentHour.value) == 0 ? 12 : (parseInt(this.currentHour.value) > 12 ? 
+            (parseInt(this.currentHour.value) - 12) : this.currentHour.value));
+       
+        for(var i = 0; i < params.length; i++){
+            if(params[i]){
+                if(params[i].id == "et" + hr){
+                    params[i].value = "selected";
+                } else {
+                    params[i].value = "";
+                }
+            }
+        } 
+       
+        if(parseInt(this.currentHour.value) >= 12){
+            __$("ampm").innerHTML = "<span>PM</span>";
+        } else {
+            __$("ampm").innerHTML = "<span>AM</span>";
+        }
+    },
+
+    invokeMinuteUpdate: function(pos){
+        var min = pos;
+            
+        if(min != null){
+            this.currentMinute.value = min;
+        }
+        
+        this.time[1] = this.currentMinute.value;
+        this.update(this.target);
+    },
+    
+    updateMinuteDisk: function(){
+        var params = __$("minute").getElementsByTagName("param");
+        var time = parseInt(this.currentMinute.value);
+       
+        var range = "";
+
+        if(time >= 1 && time <= 5){
+            range = 5;
+        } else if(time >= 6 && time <= 10){
+            range = 10;
+        } else if(time >= 11 && time <= 15){
+            range = 15;
+        } else if(time >= 16 && time <= 20){
+            range = 20;
+        } else if(time >= 21 && time <= 25){
+            range = 25;
+        } else if(time >= 26 && time <= 30){
+            range = 30;
+        } else if(time >= 31 && time <= 35){
+            range = 35;
+        } else if(time >= 36 && time <= 40){
+            range = 40;
+        } else if(time >= 41 && time <= 45){
+            range = 45;
+        } else if(time >= 46 && time <= 50){
+            range = 50;
+        } else if(time >= 51 && time <= 55){
+            range = 55;
+        } else if(time >= 56 && time <= 59){
+            range = 0;
+        } 
+       
+        for(var i = 0; i < params.length; i++){
+            if(params[i]){
+                if(params[i].id == "etm" + range){
+                    params[i].value = "selected";
+                } else {
+                    params[i].value = "";
+                }
+            }
+        }        
+    },
+    
+    update: function(aDateElement) {
+        var aTargetElement = aDateElement || this.target;
+
+        if (!aTargetElement)
+            return;
+
+        aTargetElement.value = TimeUtil.zerofill((this.time[0]).toString(),2) + ":" +
+        TimeUtil.zerofill((this.time[1]).toString(),2) + ":" +
+        TimeUtil.zerofill((this.time[2]).toString(),2);
+    
+        this.updateHourDisk();
+        this.updateMinuteDisk();
+    }
+
+};
+
+function addSelectAllButton(){
+    var holder = document.createElement("div");
+    holder.id = "holder";
+    holder.style.margin = "5px";
+    holder.style.display = "table";
+    holder.style.cursor = "pointer";
+
+    __$("keyboard").appendChild(holder);
+    
+    var row = document.createElement("div");
+    row.style.display = "table-row";
+    
+    holder.appendChild(row);  
+    
+    var cell1 = document.createElement("div");
+    cell1.style.display = "table-cell";
+    cell1.style.verticalAlign = "middle";
+    
+    row.appendChild(cell1);  
+    
+    var cell2 = document.createElement("div");
+    cell2.style.display = "table-cell";
+    cell2.id = "lblSelectAll";
+    cell2.innerHTML = "Select All";
+    cell2.style.verticalAlign = "middle";
+    cell2.style.fontSize = "36px";
+    cell2.style.paddingLeft = "10px";
+    cell2.onclick = function(){
+        __$("chkSelectAll").click();
+    }
+    
+    row.appendChild(cell2);  
+    
+    var checkbox = document.createElement("img");
+    checkbox.src = "/touchscreentoolkit/lib/images/unticked.jpg";
+    checkbox.id = "chkSelectAll";
+    checkbox.setAttribute("checked", "false")
+    
+    checkbox.onclick = function(){
+        if(this.getAttribute("checked") == "false"){
+            toggleState("uncheck");
+            this.setAttribute("checked", "true");
+            this.src = "/touchscreentoolkit/lib/images/ticked.jpg";
+            __$("lblSelectAll").innerHTML = "Deselect All";
+        } else {
+            toggleState("check");
+            this.setAttribute("checked", "false");
+            this.src = "/touchscreentoolkit/lib/images/unticked.jpg";
+            __$("lblSelectAll").innerHTML = "Select All";
+        }
+    }
+    
+    cell1.appendChild(checkbox);  
+    
+}
+     
+function toggleState(state){
+    switch(state.toLowerCase()){
+        case "check":
+            checkAll();
+            break;
+        case "uncheck":
+            unCheckAll()
+            break;
+    }
+}
+    
+function checkAll(){
+    var elements = __$("tt_currentUnorderedListOptions").getElementsByTagName("li");
+    
+    for(var i = 0; i < elements.length; i++){
+        if(__$("img" + elements[i].id).src.match(/\/touchscreentoolkit\/lib\/images\/ticked.jpg/)){
+            elements[i].click();
+        }
+    }
+}
+    
+function unCheckAll(){
+    var elements = __$("tt_currentUnorderedListOptions").getElementsByTagName("li");
+    
+    for(var i = 0; i < elements.length; i++){
+        if(__$("img" + elements[i].id).src.match(/\/touchscreentoolkit\/lib\/images\/unticked.jpg/)){
+            elements[i].click();
+        }
+    }
+}
+   
