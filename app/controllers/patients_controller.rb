@@ -1380,7 +1380,13 @@ class PatientsController < ApplicationController
       label.draw_multi_text("Visit: #{encs.first.encounter_datetime.strftime("%d/%b/%Y %H:%M")}", :font_reverse => true)
       encs.each {|encounter|
         next if encounter.name.humanize == "Registration"
-        label.draw_multi_text("#{encounter.name.humanize}: #{encounter.to_s}", :font_reverse => false)
+        encounter.to_s.split("<b>").each do |string|
+          concept_name = string.split("</b>:")[0].strip rescue nil
+          obs_value = string.split("</b>:")[1].strip rescue nil
+          next if string.match(/Workstation location/i)
+          next if obs_value.blank?
+          label.draw_multi_text("#{encounter.name.humanize} - #{concept_name}: #{obs_value}", :font_reverse => false)
+        end
       }
       label.print(1)
     end
