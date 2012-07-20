@@ -85,7 +85,7 @@
 @obs.sort_by{|obs| obs.obs_datetime}.each do |obs|
   @min = obs.obs_datetime if obs.obs_datetime < @min %>
         [<%= (obs.obs_datetime.to_i * 1000) -%>, /* multiply 1000 to convert time stamp to javascript mode*/
-  <%= obs.value_numeric -%>],<% end %>
+  <%= obs.answer_string -%>],<% end %>
       ];
 
       var patient_height = [
@@ -95,7 +95,7 @@
 @obs.sort_by{|obs| obs.obs_datetime}.each do |obs|
   @min = obs.obs_datetime if obs.obs_datetime < @min %>
           [<%= (obs.obs_datetime.to_i * 1000) -%>, /* multiply 1000 to convert time stamp to javascript mode*/
-  <%= obs.value_numeric -%>],<% end %>
+  <%= obs.answer_string -%>],<% end %>
         ];
 
         var currentWeight = null;
@@ -131,7 +131,7 @@
 @obs.sort_by{|obs| obs.obs_datetime}.each do |obs|
   @min = obs.obs_datetime if obs.obs_datetime < @min %>
             [<%= (obs.obs_datetime.to_i * 1000) -%>, /* multiply 1000 to convert time stamp to javascript mode*/
-  <%= obs.value_numeric -%>],<% end %>
+  <%= obs.answer_string -%>],<% end %>
           ];
 
           var diastolic = [
@@ -141,7 +141,7 @@
 @obs.sort_by{|obs| obs.obs_datetime}.each do |obs|
   @min = obs.obs_datetime if obs.obs_datetime < @min %>
               [<%= (obs.obs_datetime.to_i * 1000) -%>, /* multiply 1000 to convert time stamp to javascript mode*/
-  <%= obs.value_numeric -%>],<% end %>
+  <%= obs.answer_string -%>],<% end %>
             ];
 
             var fasting = [
@@ -151,7 +151,7 @@
 @obs.sort_by{|obs| obs.obs_datetime}.each do |obs|
   @min = obs.obs_datetime if obs.obs_datetime < @min %>
                 [<%= (obs.obs_datetime.to_i * 1000) -%>, /* multiply 1000 to convert time stamp to javascript mode*/
-  <%= obs.value_numeric -%>],<% end %>
+  <%= obs.answer_string -%>],<% end %>
               ];
 
               var random = [
@@ -161,7 +161,7 @@
 @obs.sort_by{|obs| obs.obs_datetime}.each do |obs|
   @min = obs.obs_datetime if obs.obs_datetime < @min %>
                   [<%= (obs.obs_datetime.to_i * 1000) -%>, /* multiply 1000 to convert time stamp to javascript mode*/
-  <%= obs.value_numeric -%>],<% end %>
+  <%= obs.answer_string -%>],<% end %>
                 ];
 
                 var glycated = [
@@ -171,7 +171,7 @@
 @obs.sort_by{|obs| obs.obs_datetime}.each do |obs|
   @min = obs.obs_datetime if obs.obs_datetime < @min %>
                     [<%= (obs.obs_datetime.to_i * 1000) -%>, /* multiply 1000 to convert time stamp to javascript mode*/
-  <%= obs.value_numeric -%>],<% end %>
+  <%= obs.answer_string -%>],<% end %>
                   ];
 
                   var bpGraphData = [
