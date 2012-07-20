@@ -17,6 +17,11 @@ class PatientsController < ApplicationController
       @prescriptions = restriction.filter_orders(@prescriptions)
       @programs = restriction.filter_programs(@programs)
     end
+    
+    if params[:void] == "true"
+    	encounter = Encounter.find(params[:encounter_id])
+    	encounter.void
+    end
 
     @date = (session[:datetime].to_date rescue Date.today).strftime("%Y-%m-%d")
 
@@ -880,8 +885,17 @@ class PatientsController < ApplicationController
 
     hiv_status = PatientService.patient_hiv_status(patient)
     alerts << "HIV Status : #{hiv_status} more than 3 months" if ("#{hiv_status.strip}" == 'Negative' && PatientService.months_since_last_hiv_test(patient.id) > 3)
-    alerts << "Patient not on ART" if (("#{hiv_status.strip}" == 'Positive') && !patient.patient_programs.current.local.map(&:program).map(&:name).include?('HIV PROGRAM')) ||
+    
+    on_art_concept_id = ConceptName.find_by_name("On ART").concept_id
+    answer_value = Observation.find(:last, :conditions=>["person_id = ? AND concept_id = ?", patient.id, on_art_concept_id]).answer_string.squish.upcase rescue ""
+    
+    if (("#{hiv_status.strip}" == 'Positive') &&  answer_value == "YES")
+    	alerts << "Patient on ART"
+    else
+    	alerts << "Patient not on ART" if (("#{hiv_status.strip}" == 'Positive') && !patient.patient_programs.current.local.map(&:program).map(&:name).include?('HIV PROGRAM')) ||
                                                           ((patient.patient_programs.current.local.map(&:program).map(&:name).include?('HIV PROGRAM')) && (ProgramWorkflowState.find_state(patient_hiv_program.last.patient_states.last.state).concept.fullname != "On antiretrovirals"))
+    end
+    
     alerts << "HIV Status : #{hiv_status}" if "#{hiv_status.strip}" == 'Unknown'
     alerts << "Lab: Expecting submission of sputum" unless PatientService.sputum_orders_without_submission(patient.id).empty?
     alerts << "Lab: Waiting for sputum results" if PatientService.recent_sputum_results(patient.id).empty? && !PatientService.recent_sputum_submissions(patient.id).empty?

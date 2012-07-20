@@ -42,7 +42,8 @@
                 <% header = false%>
                 <tr>
                   <td class="visit-summary">
-                    <b><%= ( encounter.name.to_s + ": " ).humanize.titleize.upcase rescue nil %></b><br /> <%= encounter.to_s  rescue nil %> <br />
+                   <% # raise encounter.to_s %>
+                    <b><%= ( encounter.name.to_s + ": " ).humanize.titleize.upcase rescue nil %></b><br /> <%= encounter.to_s%> <br />
                   </td>
                   <td>
                   </td>

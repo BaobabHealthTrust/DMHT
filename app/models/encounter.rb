@@ -54,13 +54,32 @@ EOF
       o = "No prescriptions have been made" if o.blank?
       o
     elsif name == 'VITALS'
-      temp = observations.select {|obs| obs.concept.concept_names.map(&:name).include?("TEMPERATURE (C)") && "#{obs.answer_string}".upcase != 'UNKNOWN' }
+      temp = observations.select {|obs| obs.concept.concept_names.map{|n|n.name.upcase}.include?("TEMPERATURE (C)") && "#{obs.answer_string}".upcase != 'UNKNOWN' }
+      resp_rate = observations.select {|obs| obs.concept.concept_names.map{|n|n.name.upcase}.include?("RESPIRATORY RATE") && "#{obs.answer_string}".upcase != 'UNKNOWN' }
+      systolic_BP = observations.select {|obs| obs.concept.concept_names.map{|n|n.name.upcase}.include?("SYSTOLIC BLOOD PRESSURE") && "#{obs.answer_string}".upcase != 'UNKNOWN' }
+      diastolic_BP = observations.select {|obs| obs.concept.concept_names.map{|n|n.name.upcase}.include?("DIASTOLIC BLOOD PRESSURE") && "#{obs.answer_string}".upcase != 'UNKNOWN' }
+      hr = observations.select {|obs| obs.concept.concept_names.map{|n|n.name.upcase}.include?("HR") && "#{obs.answer_string}".upcase != 'UNKNOWN' }
+      oxygen = observations.select {|obs| obs.concept.concept_names.map{|n|n.name.upcase}.include?("BLOOD OXYGEN SATURATION") && "#{obs.answer_string}".upcase != 'UNKNOWN' }
+
       weight = observations.select {|obs| obs.concept.concept_names.map(&:name).include?("WEIGHT (KG)") || obs.concept.concept_names.map(&:name).include?("Weight (kg)") && "#{obs.answer_string}".upcase != '0.0' }
       height = observations.select {|obs| obs.concept.concept_names.map(&:name).include?("HEIGHT (CM)") || obs.concept.concept_names.map(&:name).include?("Height (cm)") && "#{obs.answer_string}".upcase != '0.0' }
       vitals = [weight_str = weight.first.answer_string + 'KG' rescue 'UNKNOWN WEIGHT',
                 height_str = height.first.answer_string + 'CM' rescue 'UNKNOWN HEIGHT']
       temp_str = temp.first.answer_string + '°C' rescue nil
-      vitals << temp_str if temp_str                          
+      
+      resp_rate = 'Respiratory rate: ' + resp_rate.first.answer_string rescue nil
+      systolic_BP = systolic_BP.first.answer_string + 'SBP' rescue nil
+      diastolic_BP = diastolic_BP.first.answer_string + 'DBP' rescue nil
+      hr = 'Heart Rate: ' + hr.first.answer_string rescue nil
+      oxygen = 'Blood oxygen saturation(%):' + oxygen.first.answer_string rescue nil
+      
+      vitals << temp_str if temp_str
+      vitals << resp_rate if resp_rate
+      vitals << systolic_BP if systolic_BP
+      vitals << diastolic_BP if diastolic_BP
+      vitals << hr if hr
+      vitals << oxygen if oxygen
+                               
       vitals.join(', ')
     else  
       observations.collect{|observation| "<b>#{(observation.concept.concept_names.last.name) rescue ""}</b>: #{observation.answer_string}"}.join(", ")

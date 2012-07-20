@@ -11,12 +11,13 @@
     <%
     status = 'UNKNOWN'
     if @arv_number && !@arv_number.empty?
-      status = 'REACTIVE'
+      status = 'POSITIVE'
     elsif @status
       status = @status.to_s
     end
     %>
-    <%if((status != 'REACTIVE'))
+
+    <%if((status.upcase != 'POSITIVE'))
           if((@hiv_test_date.to_s.upcase == "UNKNOWN") || ( (@hiv_test_date.to_s.upcase != "UNKNOWN") && (((((Time.now().to_f - (@hiv_test_date.to_datetime.to_f rescue 0))/ 31536000).to_i) > 0))))%>
 							<table cellpadding="2" cellspacing="0" width="90%" align ="center">
 								 <tr> <td style="background: red; color: white;" align ="center">
