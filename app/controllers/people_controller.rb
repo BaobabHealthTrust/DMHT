@@ -366,7 +366,12 @@ class PeopleController < ApplicationController
     landmarks = landmarks.map do |v|
       "<li value='#{v.address1}'>#{v.address1}</li>"
     end
-    render :text => landmarks.join('') + "<li value='Other'>Other</li>" and return
+    landmarks = landmarks.join('')
+    
+    if !landmarks.include?("Other")
+    	landmarks += "<li value='Other'>Other</li>"
+    end
+    render :text => landmarks and return
   end
 
 =begin
