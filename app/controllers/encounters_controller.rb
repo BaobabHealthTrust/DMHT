@@ -532,7 +532,15 @@ class EncountersController < ApplicationController
 		@tb_patient = is_tb_patient(@patient)
 		@art_patient = PatientService.art_patient?(@patient)
 		@recent_lab_results = patient_recent_lab_results(@patient.id)
-		@number_of_days_to_add_to_next_appointment_date = number_of_days_to_add_to_next_appointment_date(@patient, session[:datetime] || Date.today)
+
+		if (params[:encounter_type].upcase rescue '') == 'APPOINTMENT'
+			@todays_date = session_date
+			logger.info('========================== Suggesting appointment date =================================== @ '  + Time.now.to_s)
+			@suggested_appointment_date = suggest_appointment_date
+			logger.info('========================== Completed suggesting appointment date =================================== @ '  + Time.now.to_s)
+		end
+    
+		#@number_of_days_to_add_to_next_appointment_date = number_of_days_to_add_to_next_appointment_date(@patient, session[:datetime] || Date.today)
 		@drug_given_before = PatientService.drug_given_before(@patient, session[:datetime])
 
 		use_regimen_short_names = CoreService.get_global_property_value("use_regimen_short_names") rescue "false"
@@ -1609,5 +1617,200 @@ class EncountersController < ApplicationController
 		observation.delete(:value_coded_or_text)
 		return observation
 	end
+	
+ def is_holiday(suggest_date, holidays)
+    holiday = false;
+    holidays.each do |h|
+      if (h.to_date.strftime('%A %d') == suggest_date.strftime('%A %d'))
+        holiday = true;
+      end
+    end
+    return holiday
+ end
+
+def return_original_suggested_date(suggested_date, booked_dates)
+  suggest_original_date = nil
+  #second_biggest_date_available = nil
+  
+  booked_dates.each do |booked_date|
+    sdate = booked_date.to_s.split(":")[0].to_date
+    
+    if(sdate.to_date >= suggested_date.to_date)
+      #second_biggest_date_available = suggested_date
+      suggest_original_date = sdate
+      suggested_date = sdate
+    end
+  end if booked_dates.to_s.size > 0
+  
+  @massage="All available days this calender week are fully booked"
+
+  return suggest_original_date
+end
+
+  def is_below_limit(recommended_date, bookings)
+    clinic_appointment_limit = CoreService.get_global_property_value('clinic.appointment.limit').to_i rescue 0
+		clinic_appointment_limit = 0 if clinic_appointment_limit.blank?
+		within_limit = true
+		
+    if (bookings.blank? || clinic_appointment_limit <= 0)
+      within_limit = true;
+    else
+      recommended_date_limit = bookings[recommended_date] rescue 0
+
+		  if (recommended_date_limit >= clinic_appointment_limit)
+		    within_limit = false
+		  end
+    end
+
+	return within_limit
+ end
+
+	def suggested_date(expiry_date, holidays, bookings, clinic_days)
+		number_of_suggested_booked_dates_tried = 0
+
+		skip = true
+		recommended_date = expiry_date
+		nearest_clinic_day = nil
+    
+		while skip
+			clinic_days.each do |d|
+			if (d.to_s.upcase == recommended_date.strftime('%A').to_s.upcase)
+				nearest_clinic_day = recommended_date if nearest_clinic_day.blank?
+				skip = is_holiday(recommended_date, holidays)
+				break
+			end
+		end
+
+
+		if (skip)
+			recommended_date = recommended_date - 1.day
+		else
+			below_limit = is_below_limit(recommended_date, bookings)
+			if (below_limit == false)
+				recommended_date = recommended_date - 1.day
+				skip = true
+			end
+		end
+
+		number_of_suggested_booked_dates_tried += 1
+		total_booked_dates = booked_dates.length rescue 0
+
+		test = (number_of_suggested_booked_dates_tried > 4 && total_booked_dates > 0)
+		if test
+			recommended_date = nearest_clinic_day
+		end
+    end
+
+    return recommended_date
+   
+ end
+
+  def assign_close_to_expire_date(set_date,auto_expire_date)
+    if (set_date < auto_expire_date)
+      while (set_date < auto_expire_date)
+        set_date = set_date + 1.day
+      end
+        #Give the patient a 2 day buffer*/
+        set_date = set_date - 1.day
+    end
+    return set_date
+  end
+
+	def suggest_appointment_date
+		#for now we disable this because we are already checking for this
+		#in the browser - the method is suggested_return_date
+		#@number_of_days_to_add_to_next_appointment_date = number_of_days_to_add_to_next_appointment_date(@patient, session[:datetime] || Date.today)
+
+		dispensed_date = session[:datetime].to_date rescue Date.today
+		expiry_date = prescription_expiry_date(@patient, dispensed_date)
+		
+		#if the patient is a child (age 14 or less) and the peads clinic days are set - we
+		#use the peads clinic days to set the next appointment date		
+		peads_clinic_days = CoreService.get_global_property_value('peads.clinic.days')
+				
+		if (@patient_bean.age <= 14 && !peads_clinic_days.blank?)
+			clinic_days = peads_clinic_days
+		else
+			clinic_days = CoreService.get_global_property_value('clinic.days') || 'Monday,Tuesday,Wednesday,Thursday,Friday'		
+		end
+		clinic_days = clinic_days.split(',')		
+
+		bookings = bookings_within_range(expiry_date)
+		clinic_holidays = CoreService.get_global_property_value('clinic.holidays') || '1900-12-25,1900-03-03'
+		clinic_holidays = clinic_holidays.split(',').map{|day|day.to_date}.join(',').split(',') rescue []
+		
+		limit = CoreService.get_global_property_value('clinic.appointment.limit') rescue 0
+
+		return suggested_date(expiry_date ,clinic_holidays, bookings, clinic_days)
+	end
+	
+	def prescription_expiry_date(patient, dispensed_date)
+    	session_date = dispensed_date.to_date
+    
+		orders_made = PatientService.drugs_given_on(patient, session_date).reject{|o| !MedicationService.arv(o.drug_order.drug) }
+
+		auto_expire_date = Date.today + 2.days
+		
+		if orders_made.blank?
+			orders_made = PatientService.drugs_given_on(patient, session_date)
+			auto_expire_date = orders_made.sort_by(&:auto_expire_date).first.auto_expire_date.to_date if !orders_made.blank?
+		else
+			auto_expire_date = orders_made.sort_by(&:auto_expire_date).first.auto_expire_date.to_date
+		end
+
+		orders_made.each do |order|
+			amounts_dispensed = Observation.all(:conditions => ['concept_id = ? AND order_id = ?', 
+						     ConceptName.find_by_name("AMOUNT DISPENSED").concept_id , order.id])
+			total_dispensed = amounts_dispensed.sum{|amount| amount.value_numeric}
+			
+			amounts_brought_to_clinic = Observation.all(:joins => 'INNER JOIN drug_order USING (order_id)', 
+				:conditions => ['obs.concept_id = ? AND drug_order.drug_inventory_id = ? 
+        AND obs.obs_datetime >= ? AND obs.obs_datetime <= ? AND person_id = ?', 
+				ConceptName.find_by_name("AMOUNT OF DRUG BROUGHT TO CLINIC").concept_id , 
+        order.drug_order.drug_inventory_id, session_date.to_date, 
+        session_date.to_date.to_s + ' 23:59:59',patient.person.id])
+
+			total_brought_to_clinic = amounts_brought_to_clinic.sum{|amount| amount.value_numeric}
+
+			total_brought_to_clinic = total_brought_to_clinic + amounts_brought_to_clinic.sum{|amount| (amount.value_text.to_f rescue 0)}
+
+			prescription_duration = ((total_dispensed + total_brought_to_clinic)/order.drug_order.equivalent_daily_dose).to_i
+			expire_date = order.start_date.to_date + prescription_duration.days
+
+			auto_expire_date = expire_date  if expire_date  > auto_expire_date
+		end
+		
+		return auto_expire_date - 2.days
+	end
+	
+  def bookings_within_range(end_date = nil)
+    encounter_type = EncounterType.find_by_name('APPOINTMENT')
+    booked_dates = Hash.new(0)
+   
+    clinic_days = GlobalProperty.find_by_property("clinic.days")
+    clinic_days = clinic_days.property_value.split(',') rescue 'Monday,Tuesday,Wednesday,Thursday,Friday'.split(',')
+
+    count = 0
+    start_date = end_date 
+    while (count < 4)
+      if clinic_days.include?(start_date.strftime("%A"))
+        start_date -= 1.day
+        count+=1
+      else
+        start_date -= 1.day
+      end
+    end
+
+    Observation.find(:all,:order => "value_datetime DESC",
+    :joins => "INNER JOIN encounter e USING(encounter_id)",
+    :conditions => ["encounter_type = ? AND value_datetime IS NOT NULL
+    AND (DATE(value_datetime) >= ? AND DATE(value_datetime) <= ?)",
+    encounter_type.id,start_date,end_date]).map do | obs |
+      next unless clinic_days.include?(obs.value_datetime.to_date.strftime("%A"))
+      booked_dates[obs.value_datetime.to_date]+=1
+    end  
+
+    return booked_dates
+  end
 
 end

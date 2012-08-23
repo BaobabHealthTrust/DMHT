@@ -59,7 +59,7 @@
              <% else %>
                 <select id="links">
                   <option value='/patients/treatment_dashboard?patient_id=<%= @patient.id -%>'>Treatment</option>
-				  <option value='/patients/generate_booking?patient_id=<%= @patient.id -%>'>Bookings</option>
+                    <option value="/encounter_types/show?encounter_type=Appointment&id=show&patient_id=<%=@patient.id -%>">Set appointment</option>
                   <!--%if User.current_user.activities.include?('Manage Patient Programs')%-->
                     <option value='/patients/programs_dashboard/<%= @patient.id -%>'>Outcomes</option>
                   <!--%end%-->
@@ -74,6 +74,9 @@
                   <% if show_lab_results %>
                     <option link="/lab/results/<%=@patient.id -%>">Lab results</option>
                   <%end%>
+                    <% if @show_change_app_date %>
+                    	<option link="/encounter_types/show?encounter_type=Appointment&change_app=true&id=show&patient_id=<%=@patient.id -%>">Change appointment</option>
+                    <%end%>
                     <option link='<%= ((session[:datetime].to_date rescue '') != '' ?
                           "/people/reset_datetime/#{@patient.id}" : "/people/set_datetime/#{@patient.id}") %>'  ttSize="160px">
                      <%= ((session[:datetime].to_date rescue '') != '' ? "Reset Date" : "Set Date") %></option>
