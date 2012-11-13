@@ -110,7 +110,7 @@
 
   function go() {
     submit_form = $('confirm');
-    submit_form.action = "<%= task.url %>"
+    submit_form.action = "<%= task.first.url %>"
     submit_form.submit();
   }
 
