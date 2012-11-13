@@ -2000,7 +2000,7 @@ class PatientsController < GenericPatientsController
     @doctor     = false
     @registration_clerk  = false
 
-    @user = User.find(session[:user_id])
+    @user = current_user 
     @user_privilege = @user.user_roles.collect{|x|x.role}
 
     if @user_privilege.first.downcase.include?("superuser")
@@ -2090,7 +2090,7 @@ class PatientsController < GenericPatientsController
     @doctor     = false
     @registration_clerk  = false
 
-    @user = User.find(session[:user_id])
+    @user = current_user
     @user_privilege = @user.user_roles.collect{|x|x.role}
 
     if @user_privilege.first.downcase.include?("superuser")
