@@ -60,7 +60,7 @@
                 <select id="links">
                   <option value='/patients/treatment_dashboard?patient_id=<%= @patient.id -%>'>Treatment</option>
                     <option value="/encounter_types/show?encounter_type=Appointment&id=show&patient_id=<%=@patient.id -%>">Set appointment</option>
-                  <!--%if User.current_user.activities.include?('Manage Patient Programs')%-->
+                  <!--%if current_user.activities.include?('Manage Patient Programs')%-->
                     <option value='/patients/programs_dashboard/<%= @patient.id -%>'>Outcomes</option>
                   <!--%end%-->
                   <!-- option value='/patients/print_visit?patient_id=<%= @patient.id -%>'>Print Visit</option -->

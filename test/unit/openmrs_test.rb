@@ -13,7 +13,7 @@ class OpenmrsTest < ActiveSupport::TestCase
       p = person(:evan)
       p.gender = "U"
       p.save!
-      assert_equal p.changed_by, User.current_user.id
+      assert_equal p.changed_by, current_user.id
       assert_equal p.date_changed, Time.now
     end
     
@@ -21,7 +21,7 @@ class OpenmrsTest < ActiveSupport::TestCase
       p = PatientIdentifier.create(:identifier => 'foo', 
         :identifier_type => PatientIdentifierType[:unknown_id])
       assert_equal p.location_id, Location.current_location.id
-      assert_equal p.creator, User.current_user.id
+      assert_equal p.creator, current_user.id
       assert_equal p.date_created, Time.now
     end
     

@@ -1,4 +1,4 @@
-class RelationshipsController < ApplicationController
+class RelationshipsController < GenericRelationshipsController
   before_filter :find_patient, :except => [:void]
   
   def new

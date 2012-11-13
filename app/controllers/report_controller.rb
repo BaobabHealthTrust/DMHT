@@ -1,4 +1,4 @@
-class ReportController < ApplicationController
+class ReportController < GenericReportController
 
   include PdfHelper
 

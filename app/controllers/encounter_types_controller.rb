@@ -1,7 +1,7 @@
-class EncounterTypesController < ApplicationController
+class EncounterTypesController < GenericEncounterTypesController
 
   def index
-        user_roles = UserRole.find(:all,:conditions =>["user_id = ?", User.current_user.id]).collect{|r|r.role}
+        user_roles = UserRole.find(:all,:conditions =>["user_id = ?", current_user.id]).collect{|r|r.role}
     
 		inherited_roles = RoleRole.find(:all,:conditions => ["child_role IN (?)", user_roles]).collect{|r|r.parent_role}
 

@@ -1,5 +1,5 @@
 # Run this with script runner: script/runner script/fake_concept [name] [id]
-User.current_user = User.find_by_username("admin")
+current_user = User.find_by_username("admin")
 Location.current_location = Location.current_health_center
 
 names = ["YES",

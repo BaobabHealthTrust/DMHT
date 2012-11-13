@@ -14,6 +14,7 @@ module TouchscreenHelper
     content << hidden_field_tag("observations[][value_drug]", nil)  unless kind == 'value_drug'
     content << hidden_field_tag("observations[][accession_number]", options[:accession_number], :id => "#{options[:id]}_#{options[:accession_number]}") if options[:accession_number] 
     content << hidden_field_tag("observations[][obs_group_id]", options[:obs_group_id])
+    content << hidden_field_tag("observations[][parent_concept_name]", options[:parent_concept_name])
     content << hidden_field_tag("observations[][order_id]", options[:order_id])
     content << hidden_field_tag("observations[][concept_name]", concept) 
     content << hidden_field_tag("observations[][patient_id]", patient.id) 
@@ -29,6 +30,26 @@ module TouchscreenHelper
     content = ""
     content << text_field_tag("observations[][value_datetime]", value, options) 
     content << touch_meta_tag(concept, patient, time, 'value_datetime', options)
+    content
+  end
+
+  def touch_cd4_count_numeric_tag(concept, patient, value, options={}, time=DateTime.now())
+    # Try to find an associated concept_numeric for limits
+    concept_name = ConceptName.first(:conditions => {:name => concept},
+      :include => {:concept => [:concept_numeric]})
+    precision = concept_name.concept.concept_numeric.precision rescue {}
+    options = precision.merge(options)
+    options = {
+      :field_type => 'number',
+      :validationRule => "^(>|<|=)([0-9\.]+)$|Unknown$",
+      :validationMessage => "You must enter a modifier plus numbers only (for example =90)",
+      :tt_pageStyleClass => "Numeric NumbersOnly"
+    }.merge(options)                 
+    limits = concept_name.concept.concept_numeric.options rescue {}
+    options = limits.merge(options)
+    content = ""
+    content << text_field_tag("observations[][value_numeric]", value, options) 
+    content << touch_meta_tag(concept, patient, time, 'value_numeric', options)
     content
   end
 
@@ -67,10 +88,8 @@ module TouchscreenHelper
     options = {
       :field_type => 'alpha',
       :ajaxURL => '/programs/locations?q=', 
-      #:ajaxURL => '/person_addresses/health_facility?search_string=', 
       :allowFreeText => true
     }.merge(options)                 
-    #touch_text_field_tag(concept, patient, value, options, time)
     touch_select_tag(concept, patient, value, options, time)
   end
 
@@ -123,9 +142,14 @@ module TouchscreenHelper
   def touch_hidden_tag(concept, patient, value, options={}, time=DateTime.now())
     options = {  
      :allowFreeText => false 
-    }.merge(options)      
+    }.merge(options)
     
-    kind = "value_coded_or_text"
+    if !options[:kind].blank?
+			kind = options[:kind]
+    else
+			kind = "value_coded_or_text"   
+    end
+    
     if options[:value_datetime] 
       kind = "value_datetime"
     elsif options[:multiple]

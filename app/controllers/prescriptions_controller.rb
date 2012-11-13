@@ -1,4 +1,4 @@
-class PrescriptionsController < ApplicationController
+class PrescriptionsController < GenericPrescriptionsController
   # Is this used?
   def index
     @patient = Patient.find(params[:patient_id] || session[:patient_id]) rescue nil

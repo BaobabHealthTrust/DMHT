@@ -4,7 +4,7 @@
     <script type="text/javascript" language="javascript" src="/touchscreentoolkit/lib/javascripts/touchScreenToolkit.js" defer ></script>
     <meta http-equiv='content-type' content='text/html;charset=UTF-8' />
     <script language="javascript">
-      tstUsername = "<%= User.current_user rescue "" %>";
+      tstUsername = "<%= current_user.user_name rescue "" %>";
       tstCurrentDate = "<%= @date %>";
       tt_cancel_destination = '/logout';
       tt_cancel_show = '/people/search';
@@ -20,10 +20,10 @@
             <h1 id='project_name'>
               <div style="font-size: 0.8em; margin-top: 28px;">
                 <%location_name = (@location.downcase == "outpatient" ? "OPD" : "DM") 
-                  if User.current_user.activities.include?('Manage Lab Orders') or User.current_user.activities.include?('Manage Lab Results') or
-                  User.current_user.activities.include?('Manage Sputum Submissions') or User.current_user.activities.include?('Manage TB Clinic Visits') or
-                  User.current_user.activities.include?('Manage TB Reception Visits') or User.current_user.activities.include?('Manage TB Registration Visits') or
-                  User.current_user.activities.include?('Manage HIV Status Visits') %>
+                  if current_user.activities.include?('Manage Lab Orders') or current_user.activities.include?('Manage Lab Results') or
+                  current_user.activities.include?('Manage Sputum Submissions') or current_user.activities.include?('Manage TB Clinic Visits') or
+                  current_user.activities.include?('Manage TB Reception Visits') or current_user.activities.include?('Manage TB Registration Visits') or
+                  current_user.activities.include?('Manage HIV Status Visits') %>
                     <span style="font-size: 55px;">DM</span>
                 <%else%>
                   <%= location_name %>
@@ -45,7 +45,7 @@
               <%if @location == 'Chronic Cough'%>
                 <option value='/clinic/lab_tab'>Laboratory</option>
               <%end%>
-              <% if User.current_user.admin? %>
+              <% if current_user.admin? %>
                 <option value='/clinic/properties_tab'>Properties</option>
               <%end%>
               <option value='/clinic/administration_tab'>Administration</option>

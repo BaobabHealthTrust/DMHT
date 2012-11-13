@@ -1,4 +1,4 @@
-class DispensationsController < ApplicationController
+class DispensationsController < GenericDispensationsController
   def new
     @patient = Patient.find(params[:patient_id] || session[:patient_id]) rescue nil
 

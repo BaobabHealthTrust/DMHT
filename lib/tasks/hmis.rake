@@ -15,7 +15,7 @@ namespace :openmrs do
     task :create do
       setup_openmrs
       puts "Loading Values File (#{Time.now.to_s})"
-      User.current_user = User.find_by_username("ewaters")
+      current_user = User.find_by_username("ewaters")
       class_id = ConceptClass.find_by_name("Misc").concept_class_id      
       na_datatype_id = ConceptDatatype.find_by_name("N/A").concept_datatype_id
       coded_datatype_id = ConceptDatatype.find_by_name("Coded").concept_datatype_id

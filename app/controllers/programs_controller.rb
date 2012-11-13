@@ -1,4 +1,4 @@
-class ProgramsController < ApplicationController
+class ProgramsController < GenericProgramsController
   before_filter :find_patient, :except => [:void, :states]
   
   def new

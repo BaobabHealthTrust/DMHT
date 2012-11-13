@@ -128,7 +128,11 @@ module ZebraPrinter #:nodoc:
     def draw_barcode(x,y,r,barcode_kind,narrow_bar_width,wide_bar_width,h,print_code,data)      
       @output << "B#{x},#{y},#{r},#{barcode_kind},#{narrow_bar_width},#{wide_bar_width},#{h},#{print_code ? 'B' : 'N'},\"#{data}\"\n"
     end
-    
+   
+   def draw_2D_barcode(x,y,p,a,b,e,i,l,r,f,s,data)
+     @output << "b#{x},#{y},#{p},#{a},#{b},#{e},#{i},#{l},#{r},#{f},#{s},\"#{data}\"\n"
+   end 
+
     # Draw line
     # +color+ 0=black, 1=white, 2=xor
     def draw_line(x,y,w,h,color = 0)

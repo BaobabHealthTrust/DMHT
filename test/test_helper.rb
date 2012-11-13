@@ -48,7 +48,7 @@ class ActiveSupport::TestCase
   fixtures :users, :location
 
   setup do    
-    User.current_user = User.find_by_username('registration')
+    current_user = User.find_by_username('registration')
     Location.current_location = Location.find_by_name('Neno District Hospital - Registration')
   end
 

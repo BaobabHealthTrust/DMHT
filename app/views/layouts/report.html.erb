@@ -5,7 +5,7 @@
     <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
     <title><%= @title = "#{controller.controller_name.humanize} #{controller.action_name.humanize}" rescue ""  %></title>
     <script language="javascript">
-      tstUsername = "<%= User.current_user.username unless User.current_user.nil? %>";
+      tstUsername = "<%= current_user.username unless current_user.nil? %>";
       tstCurrentDate = "<%= Time.now.strftime("%Y/%m/%d") %>";
       var tt_cancel_destination = null;
     </script>
@@ -115,7 +115,7 @@
           <div id="buttons" class="buttons" style="top:0px">
             <button id="logout" class="red left" style="position :relative; float:right;"><span>Finish</span></button>
             <button id="find" class="green" style="width:200px;" style="position :relative; float:right;"><span>Mastercards</span></button>
-            <% if User.current_user.admin? %>
+            <% if current_user.admin? %>
             <!--button id="staging" class="yellow"><span>Staging</span></button-->
             <% end %>
           </div>          

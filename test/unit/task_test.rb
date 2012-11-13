@@ -73,7 +73,7 @@ class TaskTest < ActiveSupport::TestCase
       Order.create(
         :order_type_id => 1, 
         :concept_id => 1, 
-        :orderer => User.current_user.user_id, 
+        :orderer => current_user.user_id, 
         :patient_id => @patient.id,
         :start_date => Date.today,
         :auto_expire_date => Time.now+3.days)        
@@ -152,7 +152,7 @@ class TaskTest < ActiveSupport::TestCase
         Order.create(
           :order_type_id => 1, 
           :concept_id => 1, 
-          :orderer => User.current_user.user_id, 
+          :orderer => current_user.user_id, 
           :patient_id => @patient.id,
           :start_date => Date.today,
           :auto_expire_date => Time.now+3.days)        

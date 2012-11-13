@@ -5,7 +5,7 @@ namespace :openmrs do
 =begin
     require File.join(RAILS_ROOT, 'config', 'environment')
     require File.join(RAILS_ROOT, 'app', 'models', 'openmrs')
-    User.current_user = User.first
+    current_user = User.first
     Location.current_location = Location.first
     u = User.new(:username => 'user', :plain_password => 'demo')
     u.save!

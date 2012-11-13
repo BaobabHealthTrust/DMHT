@@ -303,7 +303,7 @@
       <%if @fundoscopy_obs.blank?%>
         <tr class ="data <%= cycle('even', 'odd')%>" >
           <td id ="header_row_font" class="tableborder">
-            <% if User.current_user.user_roles.map(&:role).map(&:downcase).include? 'nurse' %>
+            <% if current_user.user_roles.map(&:role).map(&:downcase).include? 'nurse' %>
               <%=header ? h('') : h("#{row_heading}")%>
             <% else %>
               <a href='/encounters/new/diabetes_test?patient_id=<%= @patient.id %> &diabetes_test_type=FUNDOSCOPY'> <%=header ? h('') : h("#{row_heading}")%> </a>
@@ -342,7 +342,7 @@
 
                   <tr class ="data <%= cycle('even', 'odd')%>" >
                     <td id ="header_row_font" valign="top" class="tableborder">
-                      <% if User.current_user.user_roles.map(&:role).include? 'Nurse' %>
+                      <% if current_user.user_roles.map(&:role).include? 'Nurse' %>
                         <%=header ? h('') : h("#{row_heading}")%>
                       <% else %>
                         <a href='/encounters/new/diabetes_test?patient_id=<%= @patient.id %> &diabetes_test_type=FUNDOSCOPY'> <%=header ? h('') : h("#{row_heading}")%> </a>
@@ -478,7 +478,7 @@
       <%if @urea_obs.blank?%>
         <tr class ="data <%= cycle('even', 'odd')%>" >
           <td id ="header_row_font" class="tableborder">
-            <% if User.current_user.user_roles.map(&:role).include? 'Nurse' %>
+            <% if current_user.user_roles.map(&:role).include? 'Nurse' %>
               <%=header ? h('') : h("#{row_heading}")%>
             <% else %>
               <a href='/encounters/new/diabetes_test?patient_id=<%= @patient.id %> &diabetes_test_type=UREA'> <%=header ? h('') : h("#{row_heading}")%> </a>
@@ -516,7 +516,7 @@
 
                   <tr class ="data <%= cycle('even', 'odd')%>" >
                     <td id ="header_row_font" class="tableborder">
-                      <% if User.current_user.user_roles.map(&:role).include? 'Nurse' %>
+                      <% if current_user.user_roles.map(&:role).include? 'Nurse' %>
                         <%=header ? h('') : h("#{row_heading}")%>
                       <% else %>
                         <a href='/encounters/new/diabetes_test?patient_id=<%= @patient.id %> &diabetes_test_type=UREA'> <%=header ? h('') : h("#{row_heading}")%> </a>
@@ -564,7 +564,7 @@
       <%if @macrovascular_obs.blank?%>
         <tr class ="data <%= cycle('even', 'odd')%>" >
           <td id ="header_row_font" class="tableborder">
-            <% if User.current_user.user_roles.map(&:role).include? 'Nurse' %>
+            <% if current_user.user_roles.map(&:role).include? 'Nurse' %>
               <%=header ? h('') : h("#{row_heading}")%>
             <% else %>
               <a href='/encounters/new/diabetes_test?patient_id=<%= @patient.id %> &diabetes_test_type=MACROVASCULAR'> 
@@ -604,7 +604,7 @@
 
                   <tr class ="data <%= cycle('even', 'odd')%>" >
                     <td id ="header_row_font" class="tableborder">
-                      <% if User.current_user.user_roles.map(&:role).include? 'Nurse' %>
+                      <% if current_user.user_roles.map(&:role).include? 'Nurse' %>
                         <%=header ? h('') : h("#{row_heading}")%>
                       <% else %>
                         <a href='/encounters/new/diabetes_test?patient_id=<%= @patient.id %> &diabetes_test_type=MACROVASCULAR'> <%=header ? h('') : h("#{row_heading}")%> </a>

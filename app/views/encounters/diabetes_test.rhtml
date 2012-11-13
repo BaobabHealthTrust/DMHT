@@ -716,7 +716,7 @@ $('infoBar'+tstCurrentPage).innerHTML = 'Urea (' + $('urea_unit').value + ')';
   <!--  AUTO GENERATED CODE ENDS FROM HERE  -->
 
 
-  <% if User.current_user.user_roles.map(&:role).map { |each_role| each_role.downcase}.include?('superuser') %>
+  <% if current_user.user_roles.map(&:role).map { |each_role| each_role.downcase}.include?('superuser') %>
 
     <% options=default.merge(
       {:helpText => 'Test Year',
