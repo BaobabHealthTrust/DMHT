@@ -13,6 +13,7 @@ class DispensationsController < GenericDispensationsController
   end
 
   def create
+   
     if (params[:identifier])
       params[:drug_id] = params[:identifier].match(/^\d+/).to_s
       params[:quantity] = params[:identifier].match(/\d+$/).to_s
@@ -35,7 +36,7 @@ class DispensationsController < GenericDispensationsController
     Location.current_location = Location.find(params[:location]) if params[:location]
 
     if params[:filter] and !params[:filter][:provider].blank?
-      user_person_id = User.find_by_username(params[:filter][:provider]).person_id
+      user_person_id = User.find_by_user_id(params[:filter][:provider]).person_id
     elsif params[:location]
       user_person_id = params[:provider_id]
     else
@@ -94,11 +95,12 @@ class DispensationsController < GenericDispensationsController
           unless params[:location]
           	if (CoreService.get_global_property_value('auto_set_appointment') rescue false) 
 		          start_date , end_date = DrugOrder.prescription_dates(@patient,session_date.to_date)
-		          redirect_to :controller => 'encounters',:action => 'new',
+		          redirect_to :controller => 'patients',:action => 'generate_booking',
 		            :start_date => start_date,
-		            :patient_id => @patient.id,:id =>"show",:encounter_type => "appointment" ,
+		            :patient_id => @patient.id,
 		            :end_date => end_date
 		        else
+              
             	redirect_to "/patients/treatment_dashboard?id=#{@patient.patient_id}&dispensed_order_id=#{@order_id}"	        	
 						end
           else
@@ -204,7 +206,31 @@ EOF
     if complete
       dispension_completed = set_received_regimen(patient, encounter,prescription)
     end
-    return DrugOrder.all_orders_complete(patient,encounter.encounter_datetime.to_date)
+    return all_orders_complete(patient,encounter.encounter_datetime.to_date)
   end
+
+
+  def all_orders_complete(patient, encounter_date)
+			type = EncounterType.find_by_name('TREATMENT').id
+
+			current_treatment_encounters = Encounter.find(:all,
+				:conditions =>["patient_id = ? AND encounter_datetime BETWEEN ? AND ?
+				AND encounter_type = ?",patient.id ,
+				encounter_date.to_date.strftime('%Y-%m-%d 00:00:00'),
+				encounter_date.to_date.strftime('%Y-%m-%d 23:59:59'),
+				type])
+
+			complete = true
+			(current_treatment_encounters || []).each do | encounter |
+				encounter.drug_orders.each do | drug_order |
+					if drug_order.amount_needed > 0
+						complete = false
+					end
+					break if complete == false
+				end
+				break if complete == false
+			end
+			return complete
+		end
 
 end
