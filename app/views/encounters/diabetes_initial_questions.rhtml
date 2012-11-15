@@ -47,7 +47,7 @@
 
 		<%= select_tag "month_of_initial_diagnosis", month_name_options(""),
 			{	:helpText => 'Month of Diagnosis',
-				:tt_pageStyleClass => 'longSelectList',
+				:tt_pageStyleClass => 'NoKeyboard',
 				:id => "month_of_initial_diagnosis",
 				:condition => '$("year_of_initial_diagnosis").value.toLowerCase() != "unknown" && (year - $("year_of_initial_diagnosis").value <= 2)',
 				:tt_onUnLoad => "onMonthUpdateDateTime('initial_diagnosis_date', 'month_of_initial_diagnosis', 'diagnosis_date_value_modifier');" } %>
