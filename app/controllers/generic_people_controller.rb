@@ -294,7 +294,6 @@ class GenericPeopleController < ApplicationController
 
       if !person.blank?
         success = true
-        person.patient.remote_national_id
       end
     else
       success = true
