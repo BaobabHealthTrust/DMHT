@@ -42,7 +42,7 @@ class PrescriptionsController < GenericPrescriptionsController
     elsif params[:location] # migration
       user_person_id = params[:provider_id]
     else
-      user_person_id = User.find_by_user_id(session[:user_id]).person_id
+      user_person_id = current_user.person.id
     end
 
     @encounter = PatientService.current_treatment_encounter( @patient, session_date, user_person_id)
