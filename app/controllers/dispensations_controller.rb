@@ -36,11 +36,11 @@ class DispensationsController < GenericDispensationsController
     Location.current_location = Location.find(params[:location]) if params[:location]
 
     if params[:filter] and !params[:filter][:provider].blank?
-      user_person_id = User.find_by_user_id(params[:filter][:provider]).person_id
+      user_person_id = User.find_by_username(params[:filter][:provider]).person_id
     elsif params[:location]
       user_person_id = params[:provider_id]
     else
-      user_person_id = User.find_by_user_id(session[:user_id]).person_id
+      user_person_id = current_user.person_id
     end
 
     @encounter = current_dispensation_encounter(@patient, session_date, user_person_id)
