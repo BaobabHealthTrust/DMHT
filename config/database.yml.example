@@ -1,7 +1,7 @@
 production:
   adapter: mysql2
   username: root
-  database: openmrs_kch_dmht
+  database: dmht_test
   password: password
   host: localhost
   pool: 500
@@ -9,7 +9,7 @@ production:
 development:
   adapter: mysql2
   username: root
-  database: openmrs_kch_dmht
+  database: dmht_test
   password: password
   host: localhost
   pool: 500
