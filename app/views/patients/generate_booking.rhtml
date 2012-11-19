@@ -32,13 +32,9 @@
   <%= hidden_field_tag "encounter[provider_id]", session[:user_id] %>
 
   <%= hidden_field_tag("observations[][concept_name]", "RETURN VISIT DATE") %>
-  <%#= hidden_field_tag("observations[][value_datetime]", DateTime.now()) %>
   <%= hidden_field_tag("observations[][patient_id]", @patient.id) %>
   <%= hidden_field_tag("observations[][obs_datetime]", DateTime.now()) %>
-
-<%#= hidden_field_tag("next_url", "/patients/generate_booking?patient_id=#{@patient.id}") %>
-<%#= text_field_tag :summary, nil, { :tt_onLoad => "summary();", :optional => "true", :tt_pageStyleClass => "NoControls" } %>
-
+  <%= hidden_field_tag("change_appointment_date", "true")%>
   <%= text_field_tag("observations[][value_datetime]", (session[:datetime] ? session[:datetime].to_date : Date.today).strftime("%Y-%m-%d"),
     {
       :field_type => 'calendar',

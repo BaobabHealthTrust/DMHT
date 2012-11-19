@@ -216,7 +216,7 @@ class PatientsController < GenericPatientsController
 	end
 	
   def dm_label
-    print_string = generate_dm_visit_label(@patient, current_user.user_id) #rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a DM visit label for that patient")
+    print_string = generate_dm_visit_label(@patient, current_user.user_id) rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a DM visit label for that patient")
     send_data(print_string,:type=>"application/label; charset=utf-8", :stream=> false, :filename=>"#{params[:patient_id]}#{rand(10000)}.lbl", :disposition => "inline")
   end
 	
