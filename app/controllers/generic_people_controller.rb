@@ -258,7 +258,7 @@ class GenericPeopleController < ApplicationController
 	end
  
   def create
-   
+  
     hiv_session = false
     if current_program_location == "HIV program"
       hiv_session = true
@@ -299,6 +299,11 @@ class GenericPeopleController < ApplicationController
       success = true
       person = PatientService.create_from_form(params[:person])
     end
+    
+    encounter = Encounter.new(params[:encounter])
+    encounter.patient_id = person.id
+    encounter.encounter_datetime = session[:datetime] unless session[:datetime].blank?
+    encounter.save
 
     if params[:person][:patient] && success
 		  	if !params[:identifier].empty?	
