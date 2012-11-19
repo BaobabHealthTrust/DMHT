@@ -59,7 +59,7 @@
              <% else %>
                 <select id="links">
                   <option value='/patients/treatment_dashboard?patient_id=<%= @patient.id -%>'>Treatment</option>
-                    <option value='/patients/appointment?patient_id=<%= @patient.id -%>'>Appointment</option>
+                    <option value='/patients/generate_booking?patient_id=<%= @patient.id -%>'>Appointment</option>
                   <!--%if current_user.activities.include?('Manage Patient Programs')%-->
                     <option value='/patients/programs_dashboard/<%= @patient.id -%>'>Outcomes</option>
                   <!--%end%-->
