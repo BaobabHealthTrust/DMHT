@@ -212,7 +212,6 @@ module PatientService
   
   def self.create_remote_person(received_params)
     #raise known_demographics.to_yaml
-
     #Format params for BART
     new_params = received_params[:person]
     known_demographics = Hash.new()
@@ -250,7 +249,9 @@ module PatientService
         "identifier"=>""
       },
       "current_ta"=>{
-        "identifier"=>"#{new_params[:addresses][:county_district]}"}
+        "identifier"=>"#{new_params[:addresses][:county_district]}"},
+      "old_national_id" => "#{received_params[:identifier]}"
+      
     }
 
 
