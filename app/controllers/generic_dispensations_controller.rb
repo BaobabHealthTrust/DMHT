@@ -158,7 +158,7 @@ class GenericDispensationsController < ApplicationController
     complete = dispensation_complete(@patient, @encounter, PatientService.current_treatment_encounter(@patient, session_date, user_person_id))
     if complete
       unless params[:location]
-        if (CoreService.get_global_property_value('auto_set_appointment') rescue false)
+        if (CoreService.get_global_property_value('auto_set_appointment').to_s == 'true' rescue false)
           start_date, end_date = DrugOrder.prescription_dates(@patient,session_date.to_date)
           redirect_to :controller => 'encounters',:action => 'new',
             :patient_id => @patient.id,:id =>"show",:encounter_type => "appointment" ,
