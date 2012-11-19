@@ -22,7 +22,7 @@ class GenericClinicController < ApplicationController
       ["Stock report","/drug/date_select"]
     ]
 
-    render :template => 'clinic/reports', :layout => 'clinic' 
+    render :template => 'clinic/reports', :layout => 'clinic'
   end
 
   def supervision
@@ -33,7 +33,7 @@ class GenericClinicController < ApplicationController
 
     @landing_dashboard = 'clinic_supervision'
 
-    render :template => 'clinic/supervision', :layout => 'clinic' 
+    render :template => 'clinic/supervision', :layout => 'clinic'
   end
 
   def properties
@@ -44,7 +44,7 @@ class GenericClinicController < ApplicationController
       ["Set site code", "/properties/site_code"],
       ["Set appointment limit", "/properties/set_appointment_limit"]
     ]
-    render :template => 'clinic/properties', :layout => 'clinic' 
+    render :template => 'clinic/properties', :layout => 'clinic'
   end
 
   def management
@@ -56,30 +56,29 @@ class GenericClinicController < ApplicationController
       ["Removed from shelves","date_select"],
       ["Stock report","date_select"]
     ]
-    render :template => 'clinic/management', :layout => 'clinic' 
+    render :template => 'clinic/management', :layout => 'clinic'
   end
 
   def printing
-    render :template => 'clinic/printing', :layout => 'clinic' 
+    render :template => 'clinic/printing', :layout => 'clinic'
   end
 
   def users
-    render :template => 'clinic/users', :layout => 'clinic' 
+    render :template => 'clinic/users', :layout => 'clinic'
   end
 
   def administration
     @reports =  [
                   ['/clinic/users','User accounts/settings'],
-                  ['/clinic/management','Drug Management'], 
+                  ['/clinic/management','Drug Management'],
                   ['/clinic/location_management','Location Management']
                 ]
     @landing_dashboard = 'clinic_administration'
-    render :template => 'clinic/administration', :layout => 'clinic' 
+    render :template => 'clinic/administration', :layout => 'clinic'
   end
 
   def overview_tab
     simple_overview_property = CoreService.get_global_property_value("simple_application_dashboard") rescue nil
-
     simple_overview = false
     if simple_overview_property != nil
       if simple_overview_property == 'true'
@@ -108,7 +107,7 @@ class GenericClinicController < ApplicationController
       @ever = Encounter.statistics(@types)
     end
 
-    @user = current_user.name  rescue "Me"
+    @user = User.find(current_user.user_id).person.name rescue "Me"
 
     if simple_overview
         render :template => 'clinic/overview_simple.rhtml' , :layout => false
@@ -147,7 +146,7 @@ class GenericClinicController < ApplicationController
                  ['Multiple Start Reasons' , '/cohort_tool/select?report_type=patients_with_multiple_start_reasons'],
                  ['Out of range ARV number' , '/cohort_tool/select?report_type=out_of_range_arv_number'],
                  ['Data Consistency Check' , '/cohort_tool/select?report_type=data_consistency_check']
-               ] 
+               ]
     render :layout => false
   end
 
@@ -176,7 +175,7 @@ class GenericClinicController < ApplicationController
     @reports =  [
                   ['/clinic/users_tab','User Accounts/Settings'],
                   ['/clinic/location_management_tab','Location Management'],
-                  #['/people/tranfer_patient_in','Transfer Patient in']
+                  ['/people/tranfer_patient_in','Transfer Patient in']
                 ]
     if current_user.admin?
       @reports << ['/clinic/management_tab','Drug Management']
@@ -203,10 +202,10 @@ class GenericClinicController < ApplicationController
   def location_management
     @reports =  [
                   ['/location/new?act=create','Add location'],
-                  ['/location.new?act=delete','Delete location'], 
+                  ['/location.new?act=delete','Delete location'],
                   ['/location/new?act=print','Print location']
                 ]
-    render :template => 'clinic/location_management', :layout => 'clinic' 
+    render :template => 'clinic/location_management', :layout => 'clinic'
   end
 
   def location_management_tab
@@ -231,7 +230,7 @@ class GenericClinicController < ApplicationController
     ]
     render :layout => false
   end
-  
+
   def lab_tab
     #only applicable in the sputum submission area
     enc_date = session[:datetime].to_date rescue Date.today
