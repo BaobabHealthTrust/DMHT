@@ -1,4 +1,10 @@
 <%= javascript_include_tag "utils" %>
+<style>
+  .tt_controls_touchscreenInput2 .keyboard{display:none;}
+    #tt_page_touchscreenInput2 .options{height:500px;}
+    #tt_page_touchscreenInput2 .options li{font-size:30px;}
+    #space {display:inline;}
+</style>
 <%= @destination_page =  "/people" %>
 
 <script type="text/javascript">
@@ -46,11 +52,11 @@
 				:helpText => "Year of Diabetes Diagnosis" } %>      
 
 		<%= select_tag "month_of_initial_diagnosis", month_name_options(""),
-			{	:helpText => 'Month of Diagnosis',
+				:helpText => 'Month of Diagnosis',
 				:tt_pageStyleClass => 'NoKeyboard',
 				:id => "month_of_initial_diagnosis",
 				:condition => '$("year_of_initial_diagnosis").value.toLowerCase() != "unknown" && (year - $("year_of_initial_diagnosis").value <= 2)',
-				:tt_onUnLoad => "onMonthUpdateDateTime('initial_diagnosis_date', 'month_of_initial_diagnosis', 'diagnosis_date_value_modifier');" } %>
+				:tt_onUnLoad => "onMonthUpdateDateTime('initial_diagnosis_date', 'month_of_initial_diagnosis', 'diagnosis_date_value_modifier');" %>
 
 		<%= touch_hidden_tag("DIABETES DIAGNOSIS DATE", @patient, nil, {:id => 'initial_diagnosis_date'}) %>				
 		<%= hidden_field_tag("dummy_date",      "", {:id => 'diagnosis_date_value_modifier'} ) %>
