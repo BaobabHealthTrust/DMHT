@@ -11,6 +11,7 @@ production:
  auto_set_appointment: false
  create.from.dde.server: false
  use.filing.number: false
+ show.dispense.button: true
  valid_roles: System Developer,Registration Clerk,Vitals Clerk,Nurse,Clinician,Pharmacist,Provider,Superuser,General Registration Clerk,Data Assistant,Doctor
 
 development:
@@ -26,6 +27,7 @@ development:
  auto_set_appointment: false
  create.from.dde.server: false
  use.filing.number: false
+ show.dispense.button: true
  valid_roles: System Developer,Registration Clerk,Vitals Clerk,Nurse,Clinician,Pharmacist,Provider,Superuser,General Registration Clerk,Data Assistant,Doctor
 
 test: &TEST
