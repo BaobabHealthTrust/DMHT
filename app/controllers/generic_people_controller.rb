@@ -308,7 +308,11 @@ class GenericPeopleController < ApplicationController
     if params[:person][:patient] && success
 		  	if !params[:identifier].empty?	
 					patient_identifier = PatientIdentifier.new
-					patient_identifier.type = PatientIdentifierType.find_by_name("National id")
+          if params[:identifier].strip.length != 6
+            patient_identifier.type = PatientIdentifierType.find_by_name("Old Identification Number")
+          else
+            patient_identifier.type = PatientIdentifierType.find_by_name("National id")
+          end
 					patient_identifier.identifier = params[:identifier]
 					patient_identifier.patient = person.patient
 					patient_identifier.save!
