@@ -1,15 +1,15 @@
-production:
-  adapter: mysql2
-  username: root
-  database: dmht_test
-  password: password
-  host: localhost
-  pool: 500
+#production:
+  #adapter: mysql2
+  #username: root
+  #database: dm_development
+  #password: password
+  #host: localhost
+  #pool: 500
 
 development:
   adapter: mysql2
   username: root
-  database: dmht_test
+  database: dm_development
   password: password
   host: localhost
   pool: 500
@@ -17,7 +17,7 @@ development:
 test: &TEST
   adapter: mysql
   database: root
-  username: bart2_db
+  username: dm_development
   password: your_password
   host: localhost
 
