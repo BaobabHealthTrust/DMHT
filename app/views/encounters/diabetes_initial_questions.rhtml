@@ -1,10 +1,4 @@
 <%= javascript_include_tag "utils" %>
-<style>
-  .tt_controls_touchscreenInput2 .keyboard{display:none;}
-    #tt_page_touchscreenInput2 .options{height:500px;}
-    #tt_page_touchscreenInput2 .options li{font-size:30px;}
-    #space {display:inline;}
-</style>
 <%= @destination_page =  "/people" %>
 
 <script type="text/javascript">
@@ -21,6 +15,12 @@
    }
 
 </script>
+<style>
+  .tt_controls_month_of_diagnosis .keyboard { display:none; }
+  #tt_page_month_of_diagnosis .options{height:538px;}
+  #tt_page_month_of_diagnosis .options li{font-size:28px;}
+  #space {display:inline;}
+</style>
 <form id='complications' action="/encounters/create" method='post'>
 
 	<%
@@ -53,7 +53,6 @@
 
 		<%= select_tag "month_of_initial_diagnosis", month_name_options(""),
 				:helpText => 'Month of Diagnosis',
-				:tt_pageStyleClass => 'NoKeyboard',
 				:id => "month_of_initial_diagnosis",
 				:condition => '$("year_of_initial_diagnosis").value.toLowerCase() != "unknown" && (year - $("year_of_initial_diagnosis").value <= 2)',
 				:tt_onUnLoad => "onMonthUpdateDateTime('initial_diagnosis_date', 'month_of_initial_diagnosis', 'diagnosis_date_value_modifier');" %>
