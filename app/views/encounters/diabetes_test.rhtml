@@ -1,8 +1,4 @@
-<style type="text/css">
-  #space { display: inline;}
-  #Unknown { display: none;}
 
-</style>
 
 
 <script src="/javascripts/cascade.js" type="text/javascript" language="javascript"></script>
@@ -33,7 +29,14 @@
     }
   }
 </script>
+<style type="text/css">
+  .tt_controls_test_year .keyboard,.tt_controls_test_month .keyboard { display:none; }
+  #tt_page_test_year .options, #tt_page_test_month .options{height:538px;}
+  #tt_page_test_year .options li,#tt_page_test_month .options li{font-size:28px;}
+  #space {display:inline;}
+  #Unknown { display: none;}
 
+</style>
 
 <form action="/encounters/create/diabetes_test" method="post">
 
@@ -729,8 +732,7 @@ $('infoBar'+tstCurrentPage).innerHTML = 'Urea (' + $('urea_unit').value + ')';
         :tt_onUnLoad => "if($('diabetes_test_year').value != 'Unknown'){
       my_date = formatDate($('encounter_encounter_datetime').value, $('diabetes_test_year').value,0);
       $('encounter_encounter_datetime').value = my_date['value_datetime'];
-      }",
-        :tt_pageStyleClass => "NoKeyboard"
+      }"
       } ) %>
 
     <%= select_tag "diabetes[test_year]", options_for_select(@select_years),options %>
@@ -738,7 +740,6 @@ $('infoBar'+tstCurrentPage).innerHTML = 'Urea (' + $('urea_unit').value + ')';
     <%= select_tag "diabetes[test_month]", month_name_options, {
       :helpText => 'Test Month',
       :tt_requireNextClick => false,
-      :tt_pageStyleClass => "NoKeyboard",
       :tt_onLoad => "addOnMouseDownAction(['Unknown'])",
       :tt_onUnLoad => "my_date = formatDate($('encounter_encounter_datetime').value, $('diabetes_test_month').value,1);
     $('encounter_encounter_datetime').value = my_date['value_datetime'];",
