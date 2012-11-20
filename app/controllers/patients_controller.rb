@@ -2119,7 +2119,6 @@ class PatientsController < GenericPatientsController
     @observations = Observation.find(:all, :order => 'obs_datetime DESC', 
       :limit => 50, :conditions => ["person_id= ? AND obs_datetime < ? AND value_coded != ?",
         @patient.patient_id, Time.now.to_date, ignored_concept_id])
-
     @observations.delete_if { |obs| obs.value_text.downcase == "no" rescue nil }
 
     # delete encounters that are not required for display on patient's summary
@@ -2154,7 +2153,7 @@ class PatientsController < GenericPatientsController
     
     #@status =Concept.find(Observation.find(:first,  :conditions => ["voided = 0 AND person_id= ? AND concept_id = ?",@patient.person.id, Concept.find_by_name('HIV STATUS').id], :order => 'obs_datetime DESC').value_coded).name.name rescue 'UNKNOWN'
     @hiv_test_date    = PatientService.hiv_test_date(@patient.id).strftime("%d/%b/%Y") rescue "UNKNOWN"
-    @hiv_test_date = "Unkown" if @hiv_test_date.blank?
+    @hiv_test_date = "Unknown" if @hiv_test_date.blank?
     @remote_art_info  = Patient.remote_art_info(@patient.national_id) rescue nil
 
     @recents = DiabetesService.patient_recent_screen_complications(@patient.patient_id)
