@@ -340,7 +340,8 @@ end
     label.draw_multi_text("Diabetes Tests (Printed on: #{Date.today.strftime('%d/%b/%Y')})", :font_reverse => true)
 
     recent_complications.map{|key, complication|
-      label.draw_multi_text("* #{complication.to_s.titleize}\t", :font_reverse => false) rescue nil
+      next if key.match(/max/)
+      label.draw_multi_text("*#{complication.to_s.titleize}\t", :font_reverse => false) rescue nil
     } 
     label.print(1)
   end
