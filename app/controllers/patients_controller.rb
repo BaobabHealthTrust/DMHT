@@ -2450,7 +2450,7 @@ class PatientsController < GenericPatientsController
   end
   
   def complications_label
-    print_string = DiabetesService.complications_label(@patient, session[:user_id], site_prefix) rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a visit label for that patient")
+    print_string = DiabetesService.complications_label(@patient, current_user.id, site_prefix) rescue (raise "Unable to find patient (#{params[:patient_id]}) or generate a visit label for that patient")
     send_data(print_string,:type=>"application/label; charset=utf-8", :stream=> false, :filename=>"#{params[:patient_id]}#{rand(10000)}.lbl", :disposition => "inline")
   end
   
