@@ -1400,16 +1400,17 @@ class PatientsController < GenericPatientsController
       label.left_margin = 50
       encs = patient.encounters.find(:all,:conditions =>["DATE(encounter_datetime) = ?",date])
       return nil if encs.blank?
-
       label.draw_multi_text("Visit: #{encs.first.encounter_datetime.strftime("%d/%b/%Y %H:%M")}", :font_reverse => true)
       encs.each {|encounter|
         next if encounter.name.humanize == "Registration"
+        next if encounter.name.humanize == "Treatment"
+        label.draw_multi_text("#{encounter.name.humanize}:", :font_reverse => false)
         encounter.to_s.split("<b>").each do |string|
           concept_name = string.split("</b>:")[0].strip rescue nil
           obs_value = string.split("</b>:")[1].strip rescue nil
           next if string.match(/Workstation location/i)
           next if obs_value.blank?
-          label.draw_multi_text("#{encounter.name.humanize} - #{concept_name}: #{obs_value}", :font_reverse => false)
+          label.draw_multi_text("#{concept_name}: #{obs_value}", :font_reverse => false)
         end
       }
       label.print(1)
