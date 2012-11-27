@@ -71,6 +71,25 @@ class GenericPeopleController < ApplicationController
 				@people = PatientService.person_search(params)
 			elsif local_results.length == 1
 				found_person = local_results.first
+        
+        if create_from_remote
+          found_person_name = PersonName.find(found_person.person_id)
+					found_person_data = PatientService.find_remote_person_by_identifier(params[:identifier]) rescue nil
+          birth_day = found_person_data['person']['birth_year'].to_s + "-" + found_person_data['person']['birth_month'].to_s + "-" + found_person_data['person']['birth_day'].to_s
+          unless found_person_data.blank?
+            if found_person_data['person']['names']['given_name'].upcase == found_person_name.attributes['given_name'].upcase and
+              found_person_data['person']['names']['family_name'].upcase == found_person_name.attributes['family_name'].upcase and
+              birth_day = found_person.attributes['birthdate']
+              if found_person_data['person']['patient']['identifiers']['National id'].length == 6 and  params[:identifier].length > 6
+                patient = DDEService::Patient.new(found_person.patient)
+                current_national_id = patient.get_full_identifier("National id")
+                patient.set_identifier("Old Identification Number", current_national_id.identifier)
+                patient.set_identifier("National id", found_person_data['person']['patient']['identifiers']['National id'])
+                current_national_id.void("National ID version change")
+              end
+            end
+          end
+				end
 			else
 				# TODO - figure out how to write a test for this
 				# This is sloppy - creating something as the result of a GET
