@@ -1,21 +1,31 @@
 production:
- create.from.remote: false
+ encounter_privilege_map: Diabetes history:Manage diabetes history,Diabetes initial questions:Manage diabetes initial questions,General health:Manage General health,Past diabetes medical history:Manage past diabetes medical history,Update hiv status:Manage HIV Status Visits,Lab results:Manage Lab Results,Vitals:Manage Vitals,Give drugs:Manage Give Drugs,Lab orders:Manage Lab Orders
+ dc.number.prefix: DMPC
+ statistics.show_encounter_types: REGISTRATION,VITALS,OUTPATIENT DIAGNOSIS,TREATMENT,APPOINTMENT
+ application_generic_medication: Diabetes medication
+ create.from.remote: true
+ use.user.selected.activities: false
+ vitals.blood_pressure: true
+ show.patient.confirmation: true
+ advanced.prescription.interface: true
+ auto_set_appointment: false
  create.from.dde.server: false
- use.user.selected.activities: yes
- filing.number.prefix: FN101,FN102
- auto_set_appointment: true
- records_per_page: 15
- debugger_sorting_attribute: arv_number
+ valid_roles: System Developer,Registration Clerk,Vitals Clerk,Nurse,Clinician,Pharmacist,Provider,Superuser,General Registration Clerk,Data Assistant,Doctor
 
 development:
+ encounter_privilege_map: Diabetes history:Manage diabetes history,Diabetes initial questions:Manage diabetes initial questions,General health:Manage General health,Past diabetes medical history:Manage past diabetes medical history,Update hiv status:Manage HIV Status Visits,Lab results:Manage Lab Results,Vitals:Manage Vitals,Give drugs:Manage Give Drugs,Lab orders:Manage Lab Orders
+ dc.number.prefix: DMPC
+ statistics.show_encounter_types: REGISTRATION,VITALS,OUTPATIENT DIAGNOSIS,TREATMENT,APPOINTMENT
+ application_generic_medication: Diabetes medication
  create.from.remote: false
+ use.user.selected.activities: false
+ vitals.blood_pressure: true
+ show.patient.confirmation: true
+ advanced.prescription.interface: false
+ auto_set_appointment: false
+ show.dispense.button: true
  create.from.dde.server: false
- use.user.selected.activities: yes
- filing.number.prefix: FN101,FN102
- auto_set_appointment: true
- show.patient.confirmation: false
- records_per_page: 15
- debugger_sorting_attribute: arv_number
+ valid_roles: System Developer,Registration Clerk,Vitals Clerk,Nurse,Clinician,Pharmacist,Provider,Superuser,General Registration Clerk,Data Assistant,Doctor
 
 test: &TEST
  create_from_remote: no

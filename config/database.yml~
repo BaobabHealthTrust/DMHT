@@ -1,17 +1,17 @@
 production:
   adapter: mysql2
   username: root
-  database: bart2_development
-  password: password
-  host: localhost
+  database: dmht_test #openmrs_kch
+  password: password #root
+  host: localhost #192.168.11.147
   pool: 500
 
 development:
   adapter: mysql2
   username: root
-  database: bart2_development
-  password: password
-  host: localhost
+  database: openmrs_dmht_live #openmrs_kch
+  password: password #root
+  host: localhost #192.168.11.147
   pool: 500
 
 test: &TEST
