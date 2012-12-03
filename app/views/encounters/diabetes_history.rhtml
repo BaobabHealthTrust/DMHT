@@ -1,3 +1,13 @@
+<style>
+  .tt_controls_year_of_initial_diagnosis .keyboard{display:none;}
+  #tt_page_year_of_initial_diagnosis .options{height:538px;}
+  #tt_page_year_of_initial_diagnosis .options li{font-size:28px;}
+
+  .tt_controls_month_of_diagnosis .keyboard{display:none;}
+  #tt_page_month_of_diagnosis .options{height:538px;}
+  #tt_page_month_of_diagnosis .options li{font-size:28px;}
+</style>
+
 <%= javascript_include_tag "utils" %>
 
 <%
@@ -75,8 +85,8 @@
 		     :field_type => 'text',  :id => "year_of_initial_diagnosis",
 		     :optional => true,  :multiple => false,
 		     :absoluteMin => "1950", :min => "1940", :absoluteMax => Date.today.year,
-		     :tt_onUnLoad => "onYearUpdateDateTime('initial_diagnosis_date', 'year_of_initial_diagnosis', 'diagnosis_date_value_modifier');",
-		     :tt_pageStyleClass => "LongSelectList"
+		     :tt_onUnLoad => "onYearUpdateDateTime('initial_diagnosis_date', 'year_of_initial_diagnosis', 'diagnosis_date_value_modifier');"
+		  
 		    }) %>
 
 		  <%
@@ -91,7 +101,6 @@
 		  <%= select_tag "month_of_initial_diagnosis", month_name_options((@encounter_obs)?(@encounter_obs["month_of_diagnosis"]):""),
 		    {:tt_requireNextClick => false,
 		      :helpText => 'Month of Diagnosis',
-		      :tt_pageStyleClass => 'LongSelectList',
 		      :id => "month_of_initial_diagnosis",
 		      :condition => '$("year_of_initial_diagnosis").value.toLowerCase() != "unknown" && (year - $("year_of_initial_diagnosis").value <= 2)',
 		      :tt_onUnLoad => "onMonthUpdateDateTime('initial_diagnosis_date', 'month_of_initial_diagnosis', 'diagnosis_date_value_modifier');"}%>
