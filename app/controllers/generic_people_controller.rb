@@ -86,6 +86,7 @@ class GenericPeopleController < ApplicationController
                 patient.set_identifier("Old Identification Number", current_national_id.identifier)
                 patient.set_identifier("National id", found_person_data['person']['patient']['identifiers']['National id'])
                 current_national_id.void("National ID version change")
+                print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient)) and return
               end
             end
           end
@@ -101,7 +102,6 @@ class GenericPeopleController < ApplicationController
 			if found_person
 
         patient = DDEService::Patient.new(found_person.patient)
-
         patient.check_old_national_id(params[:identifier])
 
 				if params[:relation]
