@@ -79,7 +79,7 @@ class GenericPeopleController < ApplicationController
           unless found_person_data.blank?
             if found_person_data['person']['names']['given_name'].upcase == found_person_name.attributes['given_name'].upcase and
               found_person_data['person']['names']['family_name'].upcase == found_person_name.attributes['family_name'].upcase and
-              birth_day = found_person.attributes['birthdate']
+              birth_day.to_date == found_person.attributes['birthdate']
               if found_person_data['person']['patient']['identifiers']['National id'].length == 6 and  params[:identifier].length > 6
                 patient = DDEService::Patient.new(found_person.patient)
                 current_national_id = patient.get_full_identifier("National id")
@@ -97,6 +97,9 @@ class GenericPeopleController < ApplicationController
 				if create_from_remote
 					found_person_data = PatientService.find_remote_person_by_identifier(params[:identifier])
 					found_person = PatientService.create_from_form(found_person_data['person']) unless found_person_data.blank?
+          patient = DDEService::Patient.new(found_person.patient)
+          patient.set_identifier("Old Identification Number", params[:identifier])
+          print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient)) and return 
 				end
 			end
 			if found_person
