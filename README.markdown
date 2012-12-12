@@ -19,7 +19,7 @@ Getting Started:
 2. Use your terminal to get into the applications root directory
 3. Make sure you have bundler installed
 4. Run bundle install to install all application dependencies
-5. Edit application.yml and database.yml to configure application
+5. Edit application.yml.example and database.yml.example to configure application
    and database settings
 6. Run script/initial_database_setup.sh [environment=development] [site=MPC]
 7. Run passenger start if you are using passenger as your server or
