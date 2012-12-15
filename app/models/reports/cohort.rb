@@ -738,21 +738,22 @@ class Reports::Cohort
         "' AND DATE_FORMAT(patient.date_created, '%Y-%m-%d') <= '" + @end_date + "' \
                                     AND patient.voided = 0").collect{|o| o.person_id}.compact.delete_if{|x| x == ""}.join(", ")
 
-    @orders = Order.find_by_sql("SELECT DISTINCT patient_id FROM patient WHERE NOT patient_id IN \
-                                (" + (bgretinopathy.length > 0 ? bgretinopathy : "0") +  ") AND NOT patient_id IN (" +
-        (plretinopathy.length > 0 ? plretinopathy : "0") + ")  AND NOT patient_id IN (" +
-        (esretinopathy.length > 0 ? esretinopathy : "0") + ") AND NOT patient_id IN (" +
-        (cataract.length > 0 ? cataract : "0") + ") AND NOT patient_id IN (" +
-        (pvd.length > 0 ? pvd : "0") + ") AND NOT patient_id IN (" +
-        (maculopathy.length > 0 ? maculopathy : "0") + ") AND NOT patient_id IN (" +
-        (numbness.length > 0 ? numbness : "0") + ") AND NOT patient_id IN (" +
-        (amputation.length > 0 ? amputation : "0") + ") AND NOT patient_id IN (" +
-        (ulcers.length > 0 ? ulcers : "0") + ") AND NOT patient_id IN (" +
-        (creatinine.length > 0 ? creatinine : "0") + ") AND NOT patient_id IN (" +
+    @orders = Order.find_by_sql("SELECT DISTINCT p.patient_id FROM patient p INNER JOIN encounter e ON e.patient_id = p.patient_id \
+                                  WHERE NOT p.patient_id IN \
+                                (" + (bgretinopathy.length > 0 ? bgretinopathy : "0") +  ") AND NOT p.patient_id IN (" +
+        (plretinopathy.length > 0 ? plretinopathy : "0") + ")  AND NOT p.patient_id IN (" +
+        (esretinopathy.length > 0 ? esretinopathy : "0") + ") AND NOT p.patient_id IN (" +
+        (cataract.length > 0 ? cataract : "0") + ") AND NOT p.patient_id IN (" +
+        (pvd.length > 0 ? pvd : "0") + ") AND NOT p.patient_id IN (" +
+        (maculopathy.length > 0 ? maculopathy : "0") + ") AND NOT p.patient_id IN (" +
+        (numbness.length > 0 ? numbness : "0") + ") AND NOT p.patient_id IN (" +
+        (amputation.length > 0 ? amputation : "0") + ") AND NOT p.patient_id IN (" +
+        (ulcers.length > 0 ? ulcers : "0") + ") AND NOT p.patient_id IN (" +
+        (creatinine.length > 0 ? creatinine : "0") + ") AND NOT p.patient_id IN (" +
         (urine.length > 0 ? urine : "0") + ")
-                                    AND DATE_FORMAT(patient.date_created, '%Y-%m-%d') >= '" + @start_date +
-        "' AND DATE_FORMAT(patient.date_created, '%Y-%m-%d') <= '" + @end_date + "' \
-                                    AND patient.voided = 0").length
+                                    AND DATE_FORMAT(p.date_created, '%Y-%m-%d') >= '" + @start_date +
+        "' AND DATE_FORMAT(p.date_created, '%Y-%m-%d') <= '" + @end_date + "' \
+                                    AND p.voided = 0").length
   end
 
   # Nephropathy: Urine Protein
