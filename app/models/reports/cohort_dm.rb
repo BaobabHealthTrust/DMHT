@@ -11,7 +11,7 @@ class Reports::CohortDm
 		@diabetes_id                   = Concept.find_by_name("DIABETES MEDICATION").id
 		@hypertensition_id             = Concept.find_by_name("HYPERTENSION").id
 
-
+=begin
 # Metformin And Glibenclamide
 		# Patients on metformin and glibenclamide: up to end date
   	@ids_for_patients_on_metformin_and_glibenclamide_ever = Patient.find(:all,
@@ -30,7 +30,7 @@ class Reports::CohortDm
 													 									"%metformin%", "%glibenclamide%",
 													 									@start_date, @end_date]
   							 					).map{|patient| patient.patient_id}.uniq
-
+=end
 
 # Insulin
   	@ids_for_patients_on_insulin_ever = ids_for_patient_on_drug_upto_end_date(@end_date, 'insulin')							 			 
@@ -39,11 +39,15 @@ class Reports::CohortDm
 # Metformin
   	@ids_for_patients_on_metformin_ever = ids_for_patient_on_drug_upto_end_date(@end_date, 'metformin')  							 			 
   	@ids_for_patients_on_metformin = ids_for_patient_on_drug_btn_dates(@start_date, @end_date, 'metformin')
-  	
+    
 # Glibenclamide
   	@ids_for_patients_on_glibenclamide_ever = ids_for_patient_on_drug_upto_end_date(@end_date, 'glibenclamide')  							 			 
   	@ids_for_patients_on_glibenclamide = ids_for_patient_on_drug_btn_dates(@start_date, @end_date, 'glibenclamide')
-
+# Metformin And Glibenclamide
+		# Patients on metformin and glibenclamide: up to end date
+  	@ids_for_patients_on_metformin_and_glibenclamide_ever = @ids_for_patients_on_metformin_ever + @ids_for_patients_on_glibenclamide_ever
+   # Patients on metformin and glibenclamide: between @start_date and @end_date
+  	@ids_for_patients_on_metformin_and_glibenclamide = @ids_for_patients_on_metformin + @ids_for_patients_on_glibenclamide
 # Lente_insulin
   	@ids_for_patients_on_lente_insulin_ever = ids_for_patient_on_drug_upto_end_date(@end_date, 'lente', 'insulin')  							 			 
   	@ids_for_patients_on_lente_insulin = ids_for_patient_on_drug_btn_dates(@start_date, @end_date, 'lente', 'insulin')
