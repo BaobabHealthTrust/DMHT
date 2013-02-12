@@ -1,319 +1,429 @@
-
-// Array of max days in month in a year and in a leap year
-monthMaxDays	= [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-monthMaxDaysLeap= [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-hideSelectTags = [];
-
-function getRealYear(dateObj)
-{
-    return (dateObj.getYear() % 100) + (((dateObj.getYear() % 100) < 39) ? 2000 : 1900);
+var selecteddays = {};            
+            
+var active_cell = null;
+var selected_color = "#9e9";
+var default_color = "#fff";
+var default_weekend_color = "#fff";
+var initial_selected_color = "#ccc";
+var selected_date = null;
+var targetControl = null;
+var initial_date = null;
+var start_week_date = null;
+var end_week_date = null;
+            
+var monthNames = ["January", "February", "March", "April", "May", "June", 
+"July", "August", "September", "October", "November", "December"];
+            
+var current_month = monthNames[(new Date()).getMonth()];
+var current_year = 2012;
+var months = {
+    "January":[0, 31],
+    "February":[1, 28],
+    "March":[2, 31],
+    "April":[3, 30],
+    "May":[4,31],
+    "June":[5,30],
+    "July":[6, 31],
+    "August":[7, 31],
+    "September":[8, 30],
+    "October":[9, 31],
+    "November":[10, 30],
+    "December":[11, 31]
+};
+            
+var calendar = {
+    0:[0,0,0,0,0],
+    1:[0,0,0,0,0],
+    2:[0,0,0,0,0],
+    3:[0,0,0,0,0],
+    4:[0,0,0,0,0],
+    5:[0,0,0,0,0],
+    6:[0,0,0,0,0]
+}
+                
+function __$(id){
+    return document.getElementById(id);
 }
 
-function getDaysPerMonth(month, year)
-{
-    /*
-	Check for leap year. These are some conditions to check year is leap year or not...
-	1.Years evenly divisible by four are normally leap years, except for... 
-	2.Years also evenly divisible by 100 are not leap years, except for... 
-	3.Years also evenly divisible by 400 are leap years. 
-	*/
-    if ((year % 4) == 0)
-    {
-        if ((year % 100) == 0 && (year % 400) != 0)
-            return monthMaxDays[month];
-	
-        return monthMaxDaysLeap[month];
-    }
-    else
-        return monthMaxDays[month];
-}
-
-function createCalender(year, month, day)
-{
-    // current Date
-    var curDate = new Date();
-    var curDay = curDate.getDate();
-    var curMonth = curDate.getMonth();
-    var curYear = getRealYear(curDate)
-
-    // if a date already exists, we calculate some values here
-    if (!year)
-    {
-        var year = curYear;
-        var month = curMonth;
-    }
-
-    var yearFound = 0;
-    for (var i=0; i<document.getElementById('selectYear').options.length; i++)
-    {
-        if (document.getElementById('selectYear').options[i].value == year)
-        {
-            document.getElementById('selectYear').selectedIndex = i;
-            yearFound = true;
-            break;
-        }
-    }
-    if (!yearFound)
-    {
-        document.getElementById('selectYear').selectedIndex = 0;
-        year = document.getElementById('selectYear').options[0].value;
-    }
-    document.getElementById('selectMonth').selectedIndex = month;
-
-    // first day of the month.
-    var fristDayOfMonthObj = new Date(year, month, 1);
-    var firstDayOfMonth = fristDayOfMonthObj.getDay();
-
-    continu		= true;
-    firstRow	= true;
-    var x	= 0;
-    var d	= 0;
-    var trs = []
-    var ti = 0;
-    while (d <= getDaysPerMonth(month, year))
-    {
-        if (firstRow)
-        {
-            trs[ti] = document.createElement("TR");
-            if (firstDayOfMonth > 0)
-            {
-                while (x < firstDayOfMonth)
-                {
-                    trs[ti].appendChild(document.createElement("TD"));
-                    x++;
-                }
-            }
-            firstRow = false;
-            var d = 1;
-        }
-        if (x % 7 == 0)
-        {
-            ti++;
-            trs[ti] = document.createElement("TR");
-        }
-        if (day && d == day)
-        {
-            var setID = 'calenderChoosenDay';
-            var styleClass = 'choosenDay';
-            var setTitle = 'this day is currently selected';
-        }
-        else if (d == curDay && month == curMonth && year == curYear)
-        {
-            var setID = 'calenderToDay';
-            var styleClass = 'toDay';
-            var setTitle = 'this day today';
-        }
-        else
-        {
-            var setID = false;
-            var styleClass = 'normalDay';
-            var setTitle = false;
-        }
-        var td = document.createElement("TD");
-        td.className = styleClass;
-        if (setID)
-        {
-            td.id = setID;
-        }
-        if (setTitle)
-        {
-            td.title = setTitle;
-        }
-        td.onmouseover = new Function('highLiteDay(this)');
-        td.onmouseout = new Function('deHighLiteDay(this)');
-        if (targetEl)
-            td.onclick = new Function('pickDate('+year+', '+month+', '+d+')');
-        else
-            td.style.cursor = 'default';
-        td.appendChild(document.createTextNode(d));
-        trs[ti].appendChild(td);
-        x++;
-        d++;
-    }
-    return trs;
-}
-
-function showCalender(elPos, tgtEl)
-{
-    if(document.getElementById("calenderTable").style.display == "block"){
-        closeCalender();
-        return;
+function padZeros(number, positions){
+    var zeros = parseInt(positions) - String(number).length;
+    var padded = "";
+    
+    for(var i = 0; i < zeros; i++){
+        padded += "0";
     }
     
-    targetEl = false;
-
-    if (document.getElementById(tgtEl))
-    {
-        targetEl = document.getElementById(tgtEl);
-    }
-    else
-    {
-        if (document.forms[0].elements[tgtEl])
-        {
-            targetEl = document.forms[0].elements[tgtEl];
-        }
-    }
-    var calTable = document.getElementById('calenderTable');
-
-    var positions = [0,0];
-    var positions = getParentOffset(elPos, positions);
-    //calTable.style.left = positions[0]+'px';
-    //calTable.style.top = (positions[1]+elPos.offsetHeight)+'px';
-
-    calTable.style.display='block';
-
-    var matchDate = new RegExp('^([0-9]{2})-([0-9]{2})-([0-9]{4})$');
-    var m = matchDate.exec(targetEl.value);
-    if (m == null)
-    {
-        trs = createCalender(false, false, false);
-        showCalenderBody(trs);
-    }
-    else
-    {
-        if (m[1].substr(0, 1) == 0)
-            m[1] = m[1].substr(1, 1);
-        if (m[2].substr(0, 1) == 0)
-            m[2] = m[2].substr(1, 1);
-        m[2] = m[2] - 1;
-        trs = createCalender(m[3], m[2], m[1]);
-        showCalenderBody(trs);
-    }
-
-    calTable.style.left = (positions[0] + elPos.offsetWidth - calTable.offsetWidth)+'px';
-    calTable.style.top = (positions[1]-calTable.offsetHeight)+'px';
+    padded += String(number);
     
-    hideSelect(document.body, 1);
+    return padded;
 }
-function showCalenderBody(trs)
-{
-    var calTBody = document.getElementById('calender');
-    while (calTBody.childNodes[0])
-    {
-        calTBody.removeChild(calTBody.childNodes[0]);
-    }
-    for (var i in trs)
-    {
-        calTBody.appendChild(trs[i]);
-    }
-}
-function setYears(sy, ey)
-{
-    // current Date
-    var curDate = new Date();
-    var curYear = getRealYear(curDate);
-    if (sy)
-        startYear = curYear;
-    if (ey)
-        endYear = curYear;
-    document.getElementById('selectYear').options.length = 0;
-    var j = 0;
-    for (y=ey; y>=sy; y--)
-    {
-        document.getElementById('selectYear')[j++] = new Option(y, y);
-    }
-}
-function hideSelect(el, superTotal)
-{
-    if (superTotal >= 100)
-    {
-        return;
-    }
 
-    var totalChilds = el.childNodes.length;
-    for (var c=0; c<totalChilds; c++)
-    {
-        var thisTag = el.childNodes[c];
-        if (thisTag.tagName == 'SELECT')
-        {
-            if (thisTag.id != 'selectMonth' && thisTag.id != 'selectYear')
-            {
-                var calenderEl = document.getElementById('calenderTable');
-                var positions = [0,0];
-                var positions = getParentOffset(thisTag, positions);	// nieuw
-                var thisLeft	= positions[0];
-                var thisRight	= positions[0] + thisTag.offsetWidth;
-                var thisTop	= positions[1];
-                var thisBottom	= positions[1] + thisTag.offsetHeight;
-                var calLeft	= calenderEl.offsetLeft;
-                var calRight	= calenderEl.offsetLeft + calenderEl.offsetWidth;
-                var calTop	= calenderEl.offsetTop;
-                var calBottom	= calenderEl.offsetTop + calenderEl.offsetHeight;
+function addMonth(){
+    var pos = months[current_month][0];
+                
+    pos++;
+                
+    if(pos > 11){
+        pos = 0;
+        current_year++;
+    }
+                
+    current_month = monthNames[pos];
+                
+    createMonth(current_year + "-" + padZeros((pos + 1), 2) + 
+        "-" + padZeros(selected_date.getDate(), 2), selecteddays, initial_date, start_week_date, end_week_date);
+}
+            
+function subtractMonth(){                
+    var pos = months[current_month][0];
+                
+    pos--;
+                
+    if(pos < 0){
+        pos = 11;
+        current_year--;
+    }
+                
+    current_month = monthNames[pos];
+                
+    createMonth(current_year + "-" + padZeros((pos + 1), 2) + 
+        "-" + padZeros(selected_date.getDate(), 2), selecteddays, initial_date, start_week_date, end_week_date);
+}
+            
+function addYear(){
+    current_year++;
+    createMonth(current_year + "-" + padZeros((selected_date.getMonth() + 1), 2) + 
+        "-" + padZeros(selected_date.getDate(), 2), selecteddays, initial_date, start_week_date, end_week_date);                
+}
+            
+function subtractYear(){
+    current_year--;
+    createMonth(current_year + "-" + padZeros((selected_date.getMonth() + 1), 2) + 
+        "-" + padZeros(selected_date.getDate(), 2), selecteddays, initial_date, start_week_date, end_week_date);
+}
+            
+function createMonth(date, selected, initialdate, startweekdate, endweekdate){
+    __$("chart").innerHTML = "";
+                
+    if(typeof(initialdate) != "undefined"){                    
+        initial_date = initialdate;
+    }
+                   
+    if(typeof(startweekdate) != "undefined"){                    
+        start_week_date = startweekdate;
+    }
+                   
+    if(typeof(endweekdate) != "undefined"){                    
+        end_week_date = endweekdate;
+    }
+         
+    if(typeof(date) != "undefined" && date != "" && date != null){
+        var test_date = Date.parse(date);
 
-                if (
-                    (
-                        /* check if it overlaps horizontally */
-                        (thisLeft >= calLeft && thisLeft <= calRight)
-                        ||
-                        (thisRight <= calRight && thisRight >= calLeft)
-                        ||
-                        (thisLeft <= calLeft && thisRight >= calRight)
-                        )
-                    &&
-                    (
-                        /* check if it overlaps vertically */
-                        (thisTop >= calTop && thisTop <= calBottom)
-                        ||
-                        (thisBottom <= calBottom && thisBottom >= calTop)
-                        ||
-                        (thisTop <= calTop && thisBottom >= calBottom)
-                        )
-                    )
-                    {
-                    hideSelectTags[hideSelectTags.length] = thisTag;
-                    thisTag.style.display = 'none';
+        if(isNaN(test_date)){
+            var str = date.match(/^\d{4}\-\d{2}\-/);
+
+            date = str + "01";
+        }
+        
+        selected_date = new Date(date);
+        current_year = selected_date.getFullYear();
+        current_month = monthNames[selected_date.getMonth()];        
+    } else {
+        current_year = (new Date()).getFullYear();
+        current_month = monthNames[(new Date()).getMonth()];
+    }            
+      
+    if(typeof(selected) == "undefined"){
+        selected = {};
+    } else {
+        selecteddays = selected;
+    }
+      
+    __$("year").innerHTML = current_year;
+    __$("month").innerHTML = current_month;
+                
+    var first_day = new Date(current_year, months[current_month][0], 1);
+    var today = new Date();
+                
+    var names = ["Week", "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];    
+     
+    var carry_over_day = new Date(first_day.getFullYear(), first_day.getMonth(), first_day.getDate());    
+                
+    if(carry_over_day.getDay() > 0){
+        carry_over_day.setDate(carry_over_day.getDate() - first_day.getDay());
+    }
+      
+    var row = document.createElement("div");
+    row.className = "cRow";
+    
+    for(var day = 0; day < 8; day++){                    
+        __$("chart").appendChild(row);
+                    
+        var dayCell = document.createElement("div");
+        dayCell.className = "cCell" + (day == 1 || day == 7 ? " weekEnd" : " weekDay");
+        dayCell.innerHTML = names[day];
+        
+        if(day == 0){
+            dayCell.style.textAlign = "center";
+        }
+                    
+        row.appendChild(dayCell);
+    }
+         
+    var rowcoll = [];
+    for(var i = 0; i < 7; i++){
+        rowcoll[i] = document.createElement("div");        
+        rowcoll[i].className = "cRow";
+        
+        __$("chart").appendChild(rowcoll[i]);               
+    }
+              
+    for(var week = 0; week < 7; week++){
+        var current_day = new Date(carry_over_day.getFullYear(), carry_over_day.getMonth(), carry_over_day.getDate());
+               
+        for(var day = 0; day < 7; day++){
+            
+            if(day == 0){
+                var dayCell = document.createElement("div");
+                dayCell.id = "week" + week;
+                dayCell.className = "cCell day";
+                dayCell.style.backgroundColor = "#ddd";
+                dayCell.style.textAlign = "center";
+                dayCell.style.verticalAlign = "middle";
+                dayCell.style.fontSize = "30px";
+                dayCell.style.padding = "0px";
+            
+                rowcoll[week].appendChild(dayCell);
+                
+                var startdate;
+                var enddate;
+                
+                if(typeof(start_week_date) != "undefined" && start_week_date != null){
+                    if((start_week_date + "").match(/\d{4}\-\d{2}\-\d{2}/)){                    
+                        startdate = new Date(start_week_date);
+                    }                     
+                } else {
+                    startdate = new Date(current_day.getFullYear(), 0, 1);
+                }
+                
+                if(typeof(end_week_date) != "undefined" && end_week_date != null){
+                    if(end_week_date.match(/\d{4}\-\d{2}\-\d{2}/)){                    
+                        enddate = new Date(end_week_date);
+                    }                    
+                } else {
+                    enddate = new Date(current_day.getFullYear(), 11, 31);
+                }
+                
+                var millisecondsPerWeek = 1000 * 60 * 60 * 24 * 7;
+                
+                var period = Math.floor(((current_day.getTime() - startdate.getTime()) / millisecondsPerWeek)) + 1;
+                
+                var durationend = Math.abs(((enddate.getTime() - startdate.getTime()) / millisecondsPerWeek)) + 1;
+                    
+                dayCell.innerHTML = (period < durationend && period > 0 ? period : "&nbsp;");
+            }            
+            
+            var dayCell = document.createElement("div");
+            dayCell.id = week + "-" + day;
+            
+            rowcoll[week].appendChild(dayCell);
+            
+            var found = false;
+            if(selected_date != null){
+                if((current_day.getFullYear() == selected_date.getFullYear() && 
+                    current_day.getMonth() == selected_date.getMonth() && 
+                    current_day.getDate() == selected_date.getDate())) {
+                                
+                    active_cell = week + "-" + day; 
+                    found = true;
                 }
             }
+                        
+            var checkDay = current_day.getDay();
+                
+            if(checkDay == day){                
+                dayCell.innerHTML = current_day.getDate();
+                
+                if(current_day.getMonth() == first_day.getMonth()){
+                               
+                    if(selected[current_day.getFullYear() + "-" + 
+                        padZeros((current_day.getMonth() + 1),2) + "-" + 
+                        padZeros(current_day.getDate(),2)]){
+                                      
+                        var count = document.createElement("div");
+                        count.className = "dayCount";
+                        count.innerHTML = selected[current_day.getFullYear() + "-" + 
+                        padZeros((current_day.getMonth() + 1),2) + "-" + 
+                        padZeros(current_day.getDate(),2)];
+                        
+                        dayCell.appendChild(count);
+                    }
+                             
+                    dayCell.setAttribute("value", current_day.getDate());
+                            
+                    dayCell.setAttribute("daytype", "weekday");
+                              
+                    dayCell.setAttribute("date", current_day.getFullYear() + "-" + padZeros((current_day.getMonth()+1),2) + 
+                        "-" + padZeros(current_day.getDate(), 2));          
+                              
+                    dayCell.className = "cCell day cellActive" + 
+                    ((current_day.getFullYear() == today.getFullYear() && 
+                        current_day.getMonth() == today.getMonth() && 
+                        current_day.getDate() == today.getDate()) ? " today" : "");
+                    
+                    dayCell.onclick = function(){
+                        var celldate = current_day.getFullYear() + "-" + padZeros((current_day.getMonth()),2) + 
+                        "-" + padZeros(__$(active_cell).getAttribute("value"), 2);
+                        
+                        if(celldate == date){
+                            __$(active_cell).style.backgroundColor = initial_selected_color;
+                        } else if(active_cell != null){
+                            if(__$(active_cell).getAttribute("daytype") == "weekend"){
+                                __$(active_cell).style.backgroundColor = default_weekend_color;
+                            } else {
+                                __$(active_cell).style.backgroundColor = default_color;
+                            }
+                        }
+                        __$(active_cell).style.color = "#000";
+                        __$(active_cell).style.fontWeight = "normal";
+                                            
+                        active_cell = this.id;
+                        __$(active_cell).style.backgroundColor = selected_color;
+                        __$(active_cell).style.color = "#000";
+                        __$(active_cell).style.fontWeight = "bold";
+                                            
+                        targetControl.value = current_year + "-" + 
+                        padZeros((months[current_month][0] + 1), 2) + "-" + 
+                        padZeros(this.getAttribute("value"), 2);
+                                
+                        selected_date = new Date(current_year, months[current_month][0], this.getAttribute("value"));
+                        
+                        if(targetControl.getAttribute("ajaxCalendarUrl")){
+                            ajaxCalendarRequest(__$(this.id), targetControl.getAttribute("ajaxCalendarUrl"), 
+                                __$(this.id).getAttribute("date"));
+                        }
+                    }
+                } else {                                        
+                    dayCell.className = "cCell day cellInactive";
+                    dayCell.style.color = "#999";
+                }
+                
+                current_day.setDate(current_day.getDate() + 1); 
+                
+            }
+            if(found){
+                __$(active_cell).click();
+            }                
+        }
+        
+        carry_over_day = new Date(current_day.getFullYear(), current_day.getMonth(), current_day.getDate());
+    }
+     
+}
+                        
+function createCalendar(control, target, date, selected, startweekdate, endweekdate){
+    if(__$(control) && __$(target)){
+        
+        targetControl = __$(target);
+        
+        var main = document.createElement("div");
+        main.className = "cTable";
+        main.id = "calendar";
+    
+        __$(control).appendChild(main);
+        
+        var mainrow2 = document.createElement("div");
+        mainrow2.className = "cRow";
+        
+        main.appendChild(mainrow2);
+        
+        var bannerTable = document.createElement("div");
+        bannerTable.className = "cTable";
+        bannerTable.style.width = "95%";
+        bannerTable.style.border = "1px solid #fff";
+                
+        __$("keyboard").appendChild(bannerTable);
+        
+        var bannerrow = document.createElement("div");
+        bannerrow.className = "cRow";
+        
+        bannerTable.appendChild(bannerrow);
+        
+        var bannerrowcell1 = document.createElement("div");
+        bannerrowcell1.className = "cCell";
+        bannerrowcell1.style.border = "1px solid #fff";
+        
+        bannerrowcell1.innerHTML = "<button onclick='subtractMonth()' class='btn'>-</button>" + 
+        "<span id='month'></span><button onclick='addMonth()' class='btn'>+</button>";
+    
+        bannerrow.appendChild(bannerrowcell1);
+                
+        var bannerrowcell2 = document.createElement("div");
+        bannerrowcell2.className = "cCell";
+        bannerrowcell2.style.textAlign = "none";
+        bannerrowcell2.style.padding = "0px";
+        bannerrowcell2.style.fontSize = "2.5em";
+        bannerrowcell2.style.verticalAlign = "middle";
+        
+        bannerrowcell2.innerHTML = (targetControl.getAttribute("helpText") ? 
+            (targetControl.getAttribute("helpText").trim().length > 15 ? 
+            targetControl.getAttribute("helpText").substring(0,14) + "..." : 
+            targetControl.getAttribute("helpText")) : "");
 
+        // bannerrow.appendChild(bannerrowcell2);
+        
+        var bannerrowcell3 = document.createElement("div");
+        bannerrowcell3.className = "cCell";
+        bannerrowcell3.style.textAlign = "right";
+        bannerrowcell3.style.padding = "0px";
+        
+        bannerrowcell3.innerHTML = "<button onclick='subtractYear()' class='btn'>" +
+        "-</button><span id='year'></span><button onclick='addYear()' class='btn'>+</button>";
+
+        bannerrow.appendChild(bannerrowcell3);
+        
+        var mainrow2cell = document.createElement("div");
+        mainrow2cell.className = "cCell";
+        
+        mainrow2cell.innerHTML = "<div class='cTable' id='chart'></div>";
+        
+        mainrow2.appendChild(mainrow2cell);
+        
+        createMonth(date, selected, date, startweekdate, endweekdate);
+    }
+}
+
+function ajaxCalendarRequest(aElement, aUrl, date) {
+    var httpRequest = new XMLHttpRequest();
+    httpRequest.onreadystatechange = function() {
+        handleCalendarResult(aElement, httpRequest, date);
+    };
+    try {
+        httpRequest.open('GET', aUrl + date, true);
+        httpRequest.send(null);
+    } catch(e){
+    }
+}
+
+function handleCalendarResult(element, aXMLHttpRequest, date) {
+    if (!aXMLHttpRequest) return;
+
+    if (!element) return;
+
+    if (aXMLHttpRequest.readyState == 4 && (aXMLHttpRequest.status == 200 || aXMLHttpRequest.status == 304)) {
+        var result = JSON.parse(aXMLHttpRequest.responseText);                
+        
+        if(result[date]){
+        
+            if(element.getElementsByTagName("div").length <= 0){                    
+                var count = document.createElement("div");
+                count.className = "dayCount";
+                        
+                element.appendChild(count);
+            }
+        
+            element.getElementsByTagName("div")[0].innerHTML = result[date];
         }
-        else if(thisTag.childNodes.length > 0)
-        {
-            hideSelect(thisTag, (superTotal+1));
-        }
     }
-}
-function closeCalender()
-{
-    for (var i=0; i<hideSelectTags.length; i++)
-    {
-        hideSelectTags[i].style.display = 'block';
-    }
-    hideSelectTags.length = 0;
-    document.getElementById('calenderTable').style.display='none';
-}
-function highLiteDay(el)
-{
-    el.className = 'hlDay';
-}
-function deHighLiteDay(el)
-{
-    if (el.id == 'calenderToDay')
-        el.className = 'toDay';
-    else if (el.id == 'calenderChoosenDay')
-        el.className = 'choosenDay';
-    else
-        el.className = 'normalDay';
-}
-function pickDate(year, month, day)
-{
-    month++;
-    day	= day < 10 ? '0'+day : day;
-    month	= month < 10 ? '0'+month : month;
-    if (!targetEl)
-    {
-        alert('target for date is not set yet');
-    }
-    else
-    {
-        targetEl.value= year+'-'+month+'-'+day;
-        closeCalender();
-    }
-}
-function getParentOffset(el, positions)
-{
-    positions[0] += el.offsetLeft;
-    positions[1] += el.offsetTop;
-    if (el.offsetParent)
-        positions = getParentOffset(el.offsetParent, positions);
-    return positions;
 }
