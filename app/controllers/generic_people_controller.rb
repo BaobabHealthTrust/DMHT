@@ -1,5 +1,5 @@
 class GenericPeopleController < ApplicationController
-    
+
 	def index
 		redirect_to "/clinic"
 	end
@@ -31,7 +31,7 @@ class GenericPeopleController < ApplicationController
 		if current_user.blank?
 		  user = User.authenticate('admin', 'test')
 		  sign_in(:user, user) if !user.blank?
-      set_current_user		  
+      set_current_user
 		end rescue []
 
 		if Location.current_location.blank?
@@ -54,122 +54,118 @@ class GenericPeopleController < ApplicationController
 		result = people.empty? ? {} : PatientService.demographics(people.first)
 		render :text => result.to_json
 	end
-  
+
 	def art_information
 		national_id = params["person"]["patient"]["identifiers"]["National id"] rescue nil
 		art_info = Patient.art_info_for_remote(national_id)
 		art_info = art_info_for_remote(national_id)
 		render :text => art_info.to_json
 	end
-  
-  def search
-		found_person = nil
-		if params[:identifier]
-			local_results = PatientService.search_by_identifier(params[:identifier])
 
-			if local_results.length > 1
-				@people = PatientService.person_search(params)
-			elsif local_results.length == 1
-				found_person = local_results.first
-        
-        if create_from_remote
-          found_person_name = PersonName.find(found_person.person_id)
-					found_person_data = PatientService.find_remote_person_by_identifier(params[:identifier]) rescue nil
-          birth_day = found_person_data['person']['birth_year'].to_s + "-" + found_person_data['person']['birth_month'].to_s + "-" + found_person_data['person']['birth_day'].to_s
-          unless found_person_data.blank?
-            if found_person_data['person']['names']['given_name'].upcase == found_person_name.attributes['given_name'].upcase and
-              found_person_data['person']['names']['family_name'].upcase == found_person_name.attributes['family_name'].upcase and
-              birth_day.to_date == found_person.attributes['birthdate']
-              if found_person_data['person']['patient']['identifiers']['National id'].length == 6 and  params[:identifier].length > 6
-                patient = DDEService::Patient.new(found_person.patient)
-                current_national_id = patient.get_full_identifier("National id")
-                patient.set_identifier("Old Identification Number", current_national_id.identifier)
-                patient.set_identifier("National id", found_person_data['person']['patient']['identifiers']['National id'])
-                current_national_id.void("National ID version change")
-                print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient)) and return
-              end
-            end
+  def search
+    found_person = nil
+    if params[:identifier]
+      local_results = PatientService.search_by_identifier(params[:identifier])
+      if local_results.length > 1
+        redirect_to :action => 'duplicates' ,:search_params => params
+        return
+      elsif local_results.length == 1
+        if create_from_dde_server
+          dde_server = GlobalProperty.find_by_property("dde_server_ip").property_value rescue ""
+          dde_server_username = GlobalProperty.find_by_property("dde_server_username").property_value rescue ""
+          dde_server_password = GlobalProperty.find_by_property("dde_server_password").property_value rescue ""
+          uri = "http://#{dde_server_username}:#{dde_server_password}@#{dde_server}/people/find.json"
+          uri += "?value=#{params[:identifier]}"
+          output = RestClient.get(uri)
+          p = JSON.parse(output)
+          if p.count > 1
+            redirect_to :action => 'duplicates' ,:search_params => params
+            return
           end
-				end
-			else
-				# TODO - figure out how to write a test for this
-				# This is sloppy - creating something as the result of a GET
-				if create_from_remote
-					found_person_data = PatientService.find_remote_person_by_identifier(params[:identifier])
-					found_person = PatientService.create_from_form(found_person_data['person']) unless found_person_data.blank?
+        end
+        found_person = local_results.first
+      else
+        # TODO - figure out how to write a test for this
+        # This is sloppy - creating something as the result of a GET
+        if create_from_remote
+          found_person_data = PatientService.find_remote_person_by_identifier(params[:identifier])
+          found_person = PatientService.create_from_form(found_person_data['person']) unless found_person_data.blank?
+        end
+      end
+      if found_person
+        if params[:identifier].length != 6 and create_from_dde_server
           patient = DDEService::Patient.new(found_person.patient)
-          patient.set_identifier("Old Identification Number", params[:identifier])
-          print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient)) and return 
-				end
-			end
-			if found_person
+          national_id_replaced = patient.check_old_national_id(params[:identifier])
+          if national_id_replaced.to_s != "true" and national_id_replaced.to_s !="false"
+            redirect_to :action => 'remote_duplicates' ,:search_params => params
+            return
+          end
+        end
 
-        patient = DDEService::Patient.new(found_person.patient)
-        patient.check_old_national_id(params[:identifier])
+        if params[:relation]
+          redirect_to search_complete_url(found_person.id, params[:relation]) and return
+        elsif national_id_replaced.to_s == "true"
+          print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient)) and return
+          redirect_to :action => 'confirm', :found_person_id => found_person.id, :relation => params[:relation] and return
+        else
+          redirect_to :action => 'confirm', :found_person_id => found_person.id, :relation => params[:relation] and return
+        end
+      end
+    end
 
-				if params[:relation]
-					redirect_to search_complete_url(found_person.id, params[:relation]) and return
-				else
-					redirect_to :action => 'confirm', :found_person_id => found_person.id, :relation => params[:relation] and return
-				end
-			end
-		end
-#		records_per_page = CoreService.get_global_property_value('records_per_page') || 5
-		@relation = params[:relation]
-		@people = PatientService.person_search(params)
-		@patients = []
-=begin
-    unless @people.blank?
-			@current_page = @people.paginate(:page => params[:page], :per_page => records_per_page.to_i)
-		end
-=end
-		#(@current_page || []).each do | person |
-    @people.each do | person |
-			patient = PatientService.get_patient(person) rescue nil
-			@patients << patient
-		end
+    @relation = params[:relation]
+    @people = PatientService.person_search(params)
+    @search_results = {}
+    @patients = []
+
+    (PatientService.search_from_remote(params) || []).each do |data|
+      national_id = data["npid"]["value"] rescue nil
+      national_id = data["legacy_ids"] if national_id.blank?
+      next if national_id.blank?
+      results = PersonSearch.new(national_id)
+      results.national_id = national_id
+      results.current_residence =data["person"]["data"]["addresses"]["city_village"]
+      results.person_id = 0
+      results.home_district = data["person"]["data"]["addresses"]["state_province"]
+      results.traditional_authority =  data["person"]["data"]["addresses"]["county_district"]
+      results.name = data["person"]["data"]["names"]["given_name"] + " " + data["person"]["data"]["names"]["family_name"]
+      gender = data["person"]["data"]["gender"]
+      results.occupation = data["person"]["data"]["occupation"]
+      results.sex = (gender == 'M' ? 'Male' : 'Female')
+      results.birthdate_estimated = (data["person"]["data"]["birthdate_estimated"]).to_i
+      results.birth_date = birthdate_formatted((data["person"]["data"]["birthdate"]).to_date , results.birthdate_estimated)
+      results.birthdate = (data["person"]["data"]["birthdate"]).to_date
+      results.age = cul_age(results.birthdate.to_date , results.birthdate_estimated)
+      @search_results[results.national_id] = results
+    end if create_from_dde_server
+
+    (@people || []).each do | person |
+      patient = PatientService.get_patient(person) rescue nil
+      next if patient.blank?
+      results = PersonSearch.new(patient.national_id || patient.patient_id)
+      results.national_id = patient.national_id
+      results.birth_date = patient.birth_date
+      results.current_residence = patient.current_residence
+      results.guardian = patient.guardian
+      results.person_id = patient.person_id
+      results.home_district = patient.home_district
+      results.traditional_authority = patient.traditional_authority
+      results.mothers_surname = patient.mothers_surname
+      results.dead = patient.dead
+      results.arv_number = patient.arv_number
+      results.eid_number = patient.eid_number
+      results.pre_art_number = patient.pre_art_number
+      results.name = patient.name
+      results.sex = patient.sex
+      results.age = patient.age
+      @search_results.delete_if{|x,y| x == results.national_id}
+      @patients << results
+    end
+
+    (@search_results || {}).each do |npid , data |
+      @patients << data
+    end
 	end
-=begin  
-  def search
-		found_person = nil
-		if params[:identifier]
-			local_results = PatientService.search_by_identifier(params[:identifier])
-
-			if local_results.length > 1
-				@people = PatientService.person_search(params)
-			elsif local_results.length == 1
-				found_person = local_results.first
-			else
-				# TODO - figure out how to write a test for this
-				# This is sloppy - creating something as the result of a GET
-				if create_from_remote
-					found_person_data = PatientService.find_remote_person_by_identifier(params[:identifier])
-					found_person = PatientService.create_from_form(found_person_data['person']) unless found_person_data.nil?
-				end
-			end
-			if found_person
-
-        patient = DDEService::Patient.new(found_person.patient)
-
-        patient.check_old_national_id(params[:identifier])
-
-				if params[:relation]
-					redirect_to search_complete_url(found_person.id, params[:relation]) and return
-				else
-					redirect_to :action => 'confirm', :found_person_id => found_person.id, :relation => params[:relation] and return
-				end
-			end
-		end
-		@relation = params[:relation]
-		@people = PatientService.person_search(params)
-		@patients = []
-		@people.each do | person |
-			patient = PatientService.get_patient(person) rescue nil
-			@patients << patient
-		end
-
-	end
-=end
 
   def search_from_dde
 		found_person = PatientService.person_search_from_dde(params)
@@ -177,7 +173,7 @@ class GenericPeopleController < ApplicationController
       if params[:relation]
         redirect_to search_complete_url(found_person.id, params[:relation]) and return
       else
-        redirect_to :action => 'confirm',
+        redirect_to :action => 'patient_dashboard',:controller =>'patients',
           :found_person_id => found_person.id,
           :relation => params[:relation] and return
       end
@@ -185,25 +181,25 @@ class GenericPeopleController < ApplicationController
       redirect_to :action => 'search' and return
     end
   end
-   
+
 	def confirm
 		session_date = session[:datetime] || Date.today
 		if request.post?
 			redirect_to search_complete_url(params[:found_person_id], params[:relation]) and return
 		end
-		@found_person_id = params[:found_person_id] 
+		@found_person_id = params[:found_person_id]
 		@relation = params[:relation]
 		@person = Person.find(@found_person_id) rescue nil
     @current_hiv_program_state = PatientProgram.find(:first, :joins => :location, :conditions => ["program_id = ? AND patient_id = ? AND location.location_id = ?", Program.find_by_concept_id(Concept.find_by_name('HIV PROGRAM').id).id,@person.patient, Location.current_health_center]).patient_states.last.program_workflow_state.concept.fullname rescue ''
     @transferred_out = @current_hiv_program_state.upcase == "PATIENT TRANSFERRED OUT"? true : nil
-    defaulter = Patient.find_by_sql("SELECT current_defaulter(#{@person.patient.patient_id}, '#{session_date}') 
-                                     AS defaulter 
+    defaulter = Patient.find_by_sql("SELECT current_defaulter(#{@person.patient.patient_id}, '#{session_date}')
+                                     AS defaulter
                                      FROM patient_program LIMIT 1")[0].defaulter rescue 0
-    @defaulted = defaulter == 0 ? nil : true     
+    @defaulted = defaulter == 0 ? nil : true
     @task = main_next_task(Location.current_location, @person.patient, session_date.to_date)
 		@arv_number = PatientService.get_patient_identifier(@person, 'ARV Number')
-		@patient_bean = PatientService.get_patient(@person)                                                             
-    render :layout => false	
+		@patient_bean = PatientService.get_patient(@person)
+    render :layout => false
 	end
 
 	def tranfer_patient_in
@@ -269,34 +265,44 @@ class GenericPeopleController < ApplicationController
 
 	# This method is just to allow the select box to submit, we could probably do this better
 	def select
-    if params[:person][:id] != '0' && Person.find(params[:person][:id]).dead == 1
-			redirect_to :controller => :patients, :action => :show, :id => params[:person][:id]
-		else
-		
-			redirect_to search_complete_url(params[:person][:id], params[:relation]) and return unless params[:person][:id].blank? || params[:person][:id] == '0'
+    if !params[:identifier].blank? && !params[:given_name].blank? && !params[:family_name].blank?
+      redirect_to :action => :search, :identifier => params[:identifier]
+    elsif params[:person][:id] != '0' && Person.find(params[:person][:id]).dead == 1
+      redirect_to :controller => :patients, :action => :show, :id => params[:person][:id]
+    else
+      if params[:person][:id] != '0'
+        person = Person.find(params[:person][:id])
+        patient = DDEService::Patient.new(person.patient)
+        patient_id = PatientService.get_patient_identifier(person.patient, "National id")
+        if patient_id.length != 6
+          patient.check_old_national_id(patient_id)
+          print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person.patient)) and return
+        end
+      end
+      redirect_to search_complete_url(params[:person][:id], params[:relation]) and return unless params[:person][:id].blank? || params[:person][:id] == '0'
 
-			redirect_to :action => :new, :gender => params[:gender], :given_name => params[:given_name], :family_name => params[:family_name], :family_name2 => params[:family_name2], :address2 => params[:address2], :identifier => params[:identifier], :relation => params[:relation]
-		end
+      redirect_to :action => :new, :gender => params[:gender], :given_name => params[:given_name], :family_name => params[:family_name], :family_name2 => params[:family_name2], :address2 => params[:address2], :identifier => params[:identifier], :relation => params[:relation]
+    end
 	end
- 
+
   def create
-  
+
     hiv_session = false
     if current_program_location == "HIV program"
       hiv_session = true
     end
-    
+
     person = PatientService.create_patient_from_dde(params) if create_from_dde_server
 
     unless person.blank?
       if use_filing_number and hiv_session
-        PatientService.set_patient_filing_number(person.patient) 
+        PatientService.set_patient_filing_number(person.patient)
         archived_patient = PatientService.patient_to_be_archived(person.patient)
         message = PatientService.patient_printing_message(person.patient,archived_patient,creating_new_patient = true)
         unless message.blank?
           print_and_redirect("/patients/filing_number_and_national_id?patient_id=#{person.id}" , next_task(person.patient),message,true,person.id)
         else
-          print_and_redirect("/patients/filing_number_and_national_id?patient_id=#{person.id}", next_task(person.patient)) 
+          print_and_redirect("/patients/filing_number_and_national_id?patient_id=#{person.id}", next_task(person.patient))
         end
       else
         print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person.patient))
@@ -316,25 +322,17 @@ class GenericPeopleController < ApplicationController
 
       if !person.blank?
         success = true
+        person.patient.remote_national_id
       end
     else
       success = true
       person = PatientService.create_from_form(params[:person])
     end
-    
-    encounter = Encounter.new(params[:encounter])
-    encounter.patient_id = person.id
-    encounter.encounter_datetime = session[:datetime] unless session[:datetime].blank?
-    encounter.save
 
     if params[:person][:patient] && success
-		  	if !params[:identifier].empty?	
+		  	if !params[:identifier].empty?
 					patient_identifier = PatientIdentifier.new
-          if params[:identifier].strip.length != 6
-            patient_identifier.type = PatientIdentifierType.find_by_name("Old Identification Number")
-          else
-            patient_identifier.type = PatientIdentifierType.find_by_name("National id")
-          end
+					patient_identifier.type = PatientIdentifierType.find_by_name("National id")
 					patient_identifier.identifier = params[:identifier]
 					patient_identifier.patient = person.patient
 					patient_identifier.save!
@@ -347,13 +345,13 @@ class GenericPeopleController < ApplicationController
 
 
         if use_filing_number and hiv_session
-          PatientService.set_patient_filing_number(person.patient) 
+          PatientService.set_patient_filing_number(person.patient)
           archived_patient = PatientService.patient_to_be_archived(person.patient)
           message = PatientService.patient_printing_message(person.patient,archived_patient,creating_new_patient = true)
           unless message.blank?
             print_and_redirect("/patients/filing_number_and_national_id?patient_id=#{person.id}" , next_task(person.patient),message,true,person.id)
           else
-            print_and_redirect("/patients/filing_number_and_national_id?patient_id=#{person.id}", next_task(person.patient)) 
+            print_and_redirect("/patients/filing_number_and_national_id?patient_id=#{person.id}", next_task(person.patient))
           end
         else
           print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person.patient))
@@ -370,12 +368,12 @@ class GenericPeopleController < ApplicationController
       unless params[:set_day]== "" or params[:set_month]== "" or params[:set_year]== ""
         # set for 1 second after midnight to designate it as a retrospective date
         date_of_encounter = Time.mktime(params[:set_year].to_i,
-                                        params[:set_month].to_i,                                
-                                        params[:set_day].to_i,0,0,1) 
+                                        params[:set_month].to_i,
+                                        params[:set_day].to_i,0,0,1)
         session[:datetime] = date_of_encounter #if date_of_encounter.to_date != Date.today
       end
       unless params[:id].blank?
-        redirect_to next_task(Patient.find(params[:id])) 
+        redirect_to next_task(Patient.find(params[:id]))
       else
         redirect_to :action => "index"
       end
@@ -398,7 +396,7 @@ class GenericPeopleController < ApplicationController
         :identifier => "#{site_prefix}-ARV-#{params[:arv_number]}" and return
     end
   end
-  
+
   # List traditional authority containing the string given in params[:value]
   def traditional_authority
     district_id = District.find_by_name("#{params[:filter_value]}").id
@@ -453,7 +451,7 @@ class GenericPeopleController < ApplicationController
     end
     render :text => villages.join('') + "<li value='Other'>Other</li>" and return
   end
-  
+
   # Landmark containing the string given in params[:value]
   def landmark
     landmarks = PersonAddress.find(:all, :select => "DISTINCT address1" , :conditions => ["city_village = (?) AND address1 LIKE (?)", "#{params[:filter_value]}", "#{params[:search_string]}%"])
@@ -540,18 +538,18 @@ class GenericPeopleController < ApplicationController
 
     results = {}
     result_hash = {}
-    
+
     if PatientService.art_patient?(patient)
       clinic_encounters = ["APPOINTMENT","HIV CLINIC CONSULTATION","VITALS","HIV STAGING",'ART ADHERENCE','DISPENSING','HIV CLINIC REGISTRATION']
       clinic_encounter_ids = EncounterType.find(:all,:conditions => ["name IN (?)",clinic_encounters]).collect{| e | e.id }
-      first_encounter_date = patient.encounters.find(:first, 
+      first_encounter_date = patient.encounters.find(:first,
         :order => 'encounter_datetime',
         :conditions => ['encounter_type IN (?)',clinic_encounter_ids]).encounter_datetime.strftime("%d-%b-%Y") rescue 'Uknown'
 
-      last_encounter_date = patient.encounters.find(:first, 
+      last_encounter_date = patient.encounters.find(:first,
         :order => 'encounter_datetime DESC',
         :conditions => ['encounter_type IN (?)',clinic_encounter_ids]).encounter_datetime.strftime("%d-%b-%Y") rescue 'Uknown'
-      
+
 
       art_start_date = patient.art_start_date.strftime("%d-%b-%Y") rescue 'Uknown'
       last_given_drugs = patient.person.observations.recent(1).question("ARV REGIMENS RECEIVED ABSTRACTED CONSTRUCT").last rescue nil
@@ -563,7 +561,7 @@ class GenericPeopleController < ApplicationController
 
       date_tested_positive = patient.person.observations.recent(1).question("FIRST POSITIVE HIV TEST DATE").last rescue nil
       date_tested_positive = date_tested_positive.to_s.split(':')[1].strip.to_date.strftime("%d-%b-%Y") rescue 'Uknown'
-      
+
       cd4_info = patient.person.observations.recent(1).question("CD4 COUNT").all rescue []
       cd4_data_and_date_hash = {}
 
@@ -586,7 +584,7 @@ class GenericPeopleController < ApplicationController
     results["person"] = result_hash
     return results
   end
-  
+
   def occupations
     ['','Driver','Housewife','Messenger','Business','Farmer','Salesperson','Teacher',
      'Student','Security guard','Domestic worker', 'Police','Office worker',
@@ -623,22 +621,18 @@ class GenericPeopleController < ApplicationController
       @field_value = @person.send(@field)
     end
   end
-  
+
   def dde_search
-    # result = '[{"person":{"created_at":"2012-01-06T10:08:37Z","data":{"addresses":{"state_province":"Balaka","address2":"Hospital","city_village":"New Lines Houses","county_district":"Kalembo"},"birthdate":"1989-11-02","attributes":{"occupation":"Police","cell_phone_number":"0999925666"},"birthdate_estimated":"0","patient":{"identifiers":{"diabetes_number":""}},"gender":"M","names":{"family_name":"Banda","given_name":"Laz"}},"birthdate":"1989-11-02","creator_site_id":"1","birthdate_estimated":false,"updated_at":"2012-01-06T10:08:37Z","creator_id":"1","gender":"M","id":1,"family_name":"Banda","given_name":"Laz","remote_version_number":null,"version_number":"0","national_id":null}}]'
-    
     @dde_server = GlobalProperty.find_by_property("dde_server_ip").property_value rescue ""
-    
     @dde_server_username = GlobalProperty.find_by_property("dde_server_username").property_value rescue ""
-    
     @dde_server_password = GlobalProperty.find_by_property("dde_server_password").property_value rescue ""
-    
-    url = "http://#{@dde_server_username}:#{@dde_server_password}@#{@dde_server}" + 
-      "/people/find.json?given_name=#{params[:given_name]}" + 
+
+    url = "http://#{@dde_server_username}:#{@dde_server_password}@#{@dde_server}" +
+      "/people/find.json?given_name=#{params[:given_name]}" +
       "&family_name=#{params[:family_name]}&gender=#{params[:gender]}"
-    
+
     result = RestClient.get(url)
-    
+
     render :text => result, :layout => false
   end
 
@@ -647,9 +641,84 @@ class GenericPeopleController < ApplicationController
 		@patient_bean = PatientService.get_patient(@person)
 		render :layout => 'menu'
   end
-  
-private
-  
+
+  def duplicates
+    @duplicates = []
+    people = PatientService.person_search(params[:search_params])
+    people.each do |person|
+      @duplicates << PatientService.get_patient(person)
+    end unless people == "found duplicate identifiers"
+
+    if create_from_dde_server
+      @remote_duplicates = []
+      PatientService.search_from_dde_by_identifier(params[:search_params][:identifier]).each do |person|
+        @remote_duplicates << PatientService.get_dde_person(person)
+      end
+    end
+
+    @selected_identifier = params[:search_params][:identifier]
+    render :layout => 'menu'
+  end
+
+  def reassign_dde_national_id
+    person = DDEService.reassign_dde_identication(params[:dde_person_id],params[:local_person_id])
+    print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person.patient))
+  end
+
+  def remote_duplicates
+    if params[:patient_id]
+      @primary_patient = PatientService.get_patient(Person.find(params[:patient_id]))
+    else
+      @primary_patient = nil
+    end
+
+    @dde_duplicates = []
+    if create_from_dde_server
+      PatientService.search_from_dde_by_identifier(params[:identifier]).each do |person|
+        @dde_duplicates << PatientService.get_dde_person(person)
+      end
+    end
+
+    if @primary_patient.blank? and @dde_duplicates.blank?
+      redirect_to :action => 'search',:identifier => params[:identifier] and return
+    end
+    render :layout => 'menu'
+  end
+
+  def reassign_national_identifier
+    patient = Patient.find(params[:person_id])
+    if create_from_dde_server
+      passed_params = PatientService.demographics(patient.person)
+      new_npid = PatientService.create_from_dde_server_only(passed_params)
+      npid = PatientIdentifier.new()
+      npid.patient_id = patient.id
+      npid.identifier_type = PatientIdentifierType.find_by_name('National ID')
+      npid.identifier = new_npid
+      npid.save
+    else
+      PatientIdentifierType.find_by_name('National ID').next_identifier({:patient => patient})
+    end
+    npid = PatientIdentifier.find(:first,
+           :conditions => ["patient_id = ? AND identifier = ?
+           AND voided = 0", patient.id,params[:identifier]])
+    npid.voided = 1
+    npid.void_reason = "Given another national ID"
+    npid.date_voided = Time.now()
+    npid.voided_by = current_user.id
+    npid.save
+
+    print_and_redirect("/patients/national_id_label?patient_id=#{patient.id}", next_task(patient))
+  end
+
+  def create_person_from_dde
+    person = DDEService.get_remote_person(params[:remote_person_id])
+
+    print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person.patient))
+  end
+
+
+protected
+
 	def search_complete_url(found_person_id, primary_person_id)
 		unless (primary_person_id.blank?)
 			# Notice this swaps them!
@@ -664,11 +733,39 @@ private
 			patient = Person.find(found_person_id).patient
 			show_confirmation = CoreService.get_global_property_value('show.patient.confirmation').to_s == "true" rescue false
 			if show_confirmation
-				url_for(:controller => :people, :action => :confirm , :found_person_id =>found_person_id)
+				#url_for(:controller => :people, :action => :confirm , :found_person_id =>found_person_id)
+				url_for(:controller => :patients , :action => :patient_dashboard , :found_person_id =>found_person_id)
 			else
 				next_task(patient)
 			end
 		end
 	end
+
+  def cul_age(birthdate , birthdate_estimated , date_created = Date.today, today = Date.today)
+
+    # This code which better accounts for leap years
+    patient_age = (today.year - birthdate.year) + ((today.month - birthdate.month) + ((today.day - birthdate.day) < 0 ? -1 : 0) < 0 ? -1 : 0)
+
+    # If the birthdate was estimated this year, we round up the age, that way if
+    # it is March and the patient says they are 25, they stay 25 (not become 24)
+    birth_date = birthdate
+    estimate = birthdate_estimated == 1
+    patient_age += (estimate && birth_date.month == 7 && birth_date.day == 1  &&
+        today.month < birth_date.month && date_created.year == today.year) ? 1 : 0
+  end
+
+  def birthdate_formatted(birthdate,birthdate_estimated)
+    if birthdate_estimated == 1
+      if birthdate.day == 1 and birthdate.month == 7
+        birthdate.strftime("??/???/%Y")
+      elsif birthdate.day == 15
+        birthdate.strftime("??/%b/%Y")
+      elsif birthdate.day == 1 and birthdate.month == 1
+        birthdate.strftime("??/???/%Y")
+      end
+    else
+      birthdate.strftime("%d/%b/%Y")
+    end
+  end
 end
- 
+
