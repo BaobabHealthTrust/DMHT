@@ -40,12 +40,13 @@ class PeopleController < GenericPeopleController
     #then we create person from remote machine
     elsif create_from_remote
       person_from_remote = PatientService.create_remote_person(params)
+      params[:person].merge!({"identifiers" => {"National id" => identifier}}) unless identifier.blank?
       person = PatientService.create_from_form(person_from_remote["person"]) unless person_from_remote.blank?
 
       if !person.blank?
         success = true
-        PatientService.get_remote_national_id(person.patient)
         #person.patient.remote_national_id
+        PatientService.get_remote_national_id(person.patient)
       end
     else
       success = true
@@ -67,6 +68,7 @@ class PeopleController < GenericPeopleController
          tb_session = true
        end
 
+        #raise use_filing_number.to_yaml
         if use_filing_number and not tb_session
           PatientService.set_patient_filing_number(person.patient)
           archived_patient = PatientService.patient_to_be_archived(person.patient)
@@ -158,8 +160,10 @@ class PeopleController < GenericPeopleController
     @patients = []
 
     (PatientService.search_from_remote(params) || []).each do |data|
-      national_id = data["npid"]["value"] rescue nil
-      national_id = data["legacy_ids"] if national_id.blank?
+      national_id = data["person"]["data"]["patient"]["identifiers"]["National id"] rescue nil
+      national_id = data["person"]["value"] if national_id.blank? rescue nil
+      national_id = data["person"]["data"]["patient"]["identifiers"]["old_identification_number"] if national_id.blank? rescue nil
+      
       next if national_id.blank?
       results = PersonSearch.new(national_id)
       results.national_id = national_id
