@@ -1,7 +1,7 @@
 source 'http://rubygems.org'
 
 gem 'rails', '2.3.5'
-gem 'mysql2', '0.2.18'
+gem 'mysql2', '< 0.3'
 gem 'warden'
 gem 'devise', '1.0.11'
 gem 'will_paginate', '~> 2.0'
