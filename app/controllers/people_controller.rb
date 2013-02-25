@@ -205,9 +205,10 @@ class PeopleController < GenericPeopleController
       @patients << results
     end
 
-    (@search_results || {}).each do |npid , data |
-      @patients << data
-    end
+    # Redundant
+    #(@search_results || {}).each do |npid , data |
+    #  @patients << data
+    #end
 	end
 
 end
