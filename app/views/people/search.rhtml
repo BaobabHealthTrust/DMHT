@@ -143,8 +143,12 @@ end -%>
       try{
         pos = parseInt(pos) + 1;
         $('identifier').value = people[pos]['Patient National ID'];
-      }catch(e){
-        $('identifier').value = null;
+       }catch(e){
+        if(!pos && text.match(/New Patient/)){
+          $('identifier').value = "<%=params[:identifier]%>";
+        }else{
+          $('identifier').value = null;
+        }
       }
     }
   }
