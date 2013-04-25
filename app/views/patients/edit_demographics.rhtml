@@ -1,45 +1,123 @@
-<style type="text/css">
-  table { margin: 15px;}
-  td {
-    background: #F0F0F0;
-    font-size: 1.4em;
-    width: 250px;
-  }
-  a {text-decoration: none;}
-  a:visited{color:green;}
-  .label {
-    font-weight: bold;
-    padding: 25px;
+<style>
+  body {
+    -moz-user-select:none;
   }
 
+  table {
+    vertical-align:center;
+    width: 100%;
+    -moz-user-select:none;
+  }
+
+  .container {
+    height: 92%;
+    background-color: #FFFFDD;
+    margin: 20px 20px 20px 20px;
+    overflow: auto;
+  }
+
+  .data {
+    padding-left: 5px;
+  }
+
+  td {
+    text-align: left;
+    border-style: solid;
+    border-width: 1px;
+    text-align: left;
+    word-wrap: break-word;
+  }
+
+  th {
+    text-align: left;
+    border-style: solid;
+    border-width: 1px;
+    padding-left: 5px;
+    text-align: left;
+  }
+
+  a {
+    border-radius: 7px;
+		background-color: #4A708B;
+    border-bottom: 1px outset #EEEEEE;
+    border-style: outset;
+    border-top: 1px outset #EEEEEE;
+    color: white;
+    display: block;
+    padding: 10px 16px 10px 10px;
+    text-align: center;
+    text-decoration: none;
+  }
 </style>
+
 
 <script type="text/javascript">
   tt_cancel_destination = '<%=  "/patients/show/#{@patient.id}" %>';
   tt_cancel_show = '<%=  "/patients/show/#{@patient.id}" %>';
 </script>
-
-<div id="general_dashboard">
+<div id="general_dashboard" style="margin:10px;">
+  <div id="details" style="float:none; width:97%;">
+<div id="container">
   <center><h2><%= "Demographics for #{@patient_bean.name}"%></h2></center>
-  <h3>(You can update/change any detail by touching on the indicator and going through the update process)</h3>
-
   <table>
+    
     <tr>
-      <td><a class="label" href='/person_names/edit/<%= @patient.id%>'>Name Of Patient:</a></td><td class="label"><%= @patient_bean.name %></td>
-      <td><a class="label" href='/patient_identifiers/edit/<%= @patient.id%>?type=14'>DC Number:</a></td><td class="label"><%= @diabetes_number %></td>
+  	<th>First Name</th>
+  	<td class='data' style='border-width:1px 1px 1px'><%= @patient_bean.first_name %></td>
+    <td class='anchor_class'><a href='/person_names/edit/<%=@patient.id%>'>Edit</a></td>
+    </tr>
+
+    <tr>
+  	<th>Last Name</th>
+  	<td class='data' style='border-width:1px 1px 1px'><%= @patient_bean.last_name %></td>
+    <td class='anchor_class'><a href='/person_names/edit/<%=@patient.id%>'>Edit</a></td>
+    </tr>
+
+    <tr>
+    <th>DS Number</th>
+  	<td class='data' style='border-width:1px 1px 1px'><%= @ds_number %></td>
+    <td class='anchor_class'><a href='/patient_identifiers/edit/<%= @patient.id%>?type=16'>Edit</a></td>
+    </tr>
+
+    <tr>
+    <th>DC Number</th>
+  	<td class='data' style='border-width:1px 1px 1px'><%= @diabetes_number %></td>
+    <td class='anchor_class'><a href='/patient_identifiers/edit/<%= @patient.id%>?type=14'>Edit</a></td>
+    </tr>
+
+
+    <tr>
+  	<th>Age</th>
+  	<td class='data' style='border-width:1px 1px 1px'><%= @patient_bean.age %></td>
+    <td class='anchor_class'><a href='/people/edit/<%= @patient.id%>?field=birthdate'>Edit</a></td>
+
     </tr>
     <tr>
-      <td><a class="label" href='/person_addresses/edit/<%= @patient.id%>?field=home_district'>Home District:</a></td><td class="label"><%= "#{@address.address2}" %></td>
-      <td><a class="label" href='/people/edit/<%= @patient.id%>?field=birthdate'>Age:</a></td><td class="label"><%= @patient_bean.age %></td>
+    <th>Gender</th>
+  	<td class='data' style='border-width:1px 1px 1px'><%= @patient_bean.sex %></td>
+    <td class='anchor_class'><a href='/people/edit/<%= @patient.id%>?field=gender'>Edit</a></td>
     </tr>
+
     <tr>
-      <td><a class="label" href='/person_attributes/edit/<%= @patient.id%>?type=12'>Phone Number:</a></td><td class="label"><%= @phone %></td>
-      <td><a class="label" href='/people/edit/<%= @patient.id%>?field=gender'>Gender:</a></td><td class="label"><%= @patient_bean.sex %></td>
+    <th>Phone number</th>
+  	<td class='data' style='border-width:1px 1px 1px'><%= @phone %></td>
+    <td class='anchor_class'><a href='/person_attributes/edit/<%= @patient.id%>?type=12'>Edit</a></td>
     </tr>
+
     <tr>
-      <td><a class="label" href='/person_addresses/edit/<%= @patient.id%>?field=contact_address'>Contact Address:</a></td><td class="label" colspan="1"><%= "#{@address.city_village},#{@address.county_district},
+    <th>Home District</th>
+  	<td class='data' style='border-width:1px 1px 1px'><%= @address.address2 %></td>
+    <td class='anchor_class'><a href='/person_addresses/edit/<%= @patient.id%>?field=home_district'>Edit</a></td>
+    </tr>
+
+    <tr>
+    <th>Contact Address</th>
+  	<td class='data' style='border-width:1px 1px 1px'><%= "#{@address.city_village},#{@address.county_district},
 #{@address.state_province}" %></td>
-      <td><a class="label" href='/patient_identifiers/edit/<%= @patient.id%>?type=16'>DS Number:</a></td><td class="label"><%= @ds_number%></td>
-    </tr
+    <td class='anchor_class'><a href='/person_addresses/edit/<%= @patient.id%>?field=contact_address'>Edit</a></td>
+    </tr>
+
   </table>
+</div>
+</div>
 </div>
