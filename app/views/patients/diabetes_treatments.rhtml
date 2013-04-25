@@ -1,7 +1,14 @@
 <html>
     <head>
         <%= stylesheet_link_tag "miscellaneous" %>
+        <style type="text/css">
+          body {
+            -moz-user-select: none;
+            font-family: Arial,sans-serif;
+          }
+        </style>
     </head>
+
 <body>
     <%if !@patient_diabetes_treatements.blank? then%>
       <table cellpadding="5" width="100%" cellspacing="2">
