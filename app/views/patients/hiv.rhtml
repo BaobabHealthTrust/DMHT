@@ -42,7 +42,7 @@
       <%if status.humanize == "Advised to test"%>
         <tr> <td> <span class='title'> Date: </span> </td> <td> <%= @hiv_test_date rescue '' %><br/></td></tr>
       <%else%>
-        <tr> <td> <span class='title'> HIV test date: </span> </td> <td> <%= @hiv_test_date.humanize rescue '' %><br/></td></tr>
+        <tr> <td> <span class='title'> HIV test date: </span> </td> <td> <%= @hiv_test_date.to_s.humanize rescue '' %><br/></td></tr>
       <%end%>
 
       <%if @remote_art_info%>
