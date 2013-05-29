@@ -969,4 +969,7 @@ INSERT INTO `user_property` VALUES (1,'loginAttempts','0');
 /*!40000 ALTER TABLE `user_property` ENABLE KEYS */;
 UNLOCK TABLES;
 
+ALTER TABLE `obs` 
+ADD INDEX `obs_value_datetime_idx` (`value_datetime` ASC) ;
+
 SET FOREIGN_KEY_CHECKS = 1;
