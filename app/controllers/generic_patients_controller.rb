@@ -2478,8 +2478,18 @@ class GenericPatientsController < ApplicationController
 
     @type = EncounterType.find_by_name("APPOINTMENT").id rescue nil
     if(@type)
-      @enc = Encounter.find(:all, :conditions =>
-          ["voided = 0 AND encounter_type = ?", @type])
+      #@enc = Encounter.find(:all, :conditions =>
+       #   ["voided = 0 AND encounter_type = ?", @type])
+	
+      session_date = session[:datetime].to_date rescue Date.today               
+      start_date = session_date.strftime('%Y-%m%-d 00:00:00')                   
+      end_date = session_date.to_date.strftime('%Y-%m%-d 23:59:59')             
+                                                                                
+      @enc = Encounter.find(:all, :conditions =>                                
+          ["voided = 0 AND encounter_type = ?                                   
+          AND (encounter_datetime >=? AND encounter_datetime <=?)", @type,                  
+          start_date, end_date])	
+
 
       @counts = {}
 
