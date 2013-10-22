@@ -107,12 +107,12 @@ class GenericPeopleController < ApplicationController
           redirect_to search_complete_url(found_person.id, params[:relation]) and return
         elsif national_id_replaced.to_s == "true"
           #creating patient's footprint so that we can track them later when they visit other sites
-          DDEService.create_footprint(PatientService.get_patient(found_person).national_id, Location.find(session[:location_id]).name)
+          DDEService.create_footprint(PatientService.get_patient(found_person).national_id, "DMHT")
           print_and_redirect("/patients/national_id_label?patient_id=#{found_person.id}", next_task(found_person.patient)) and return
           redirect_to :action => 'confirm', :found_person_id => found_person.id, :relation => params[:relation] and return
         else
           #creating patient's footprint so that we can track them later when they visit other sites
-          DDEService.create_footprint(PatientService.get_patient(found_person).national_id, Location.find(session[:location_id]).name)
+          DDEService.create_footprint(PatientService.get_patient(found_person).national_id, "DMHT")
           redirect_to :action => 'confirm', :found_person_id => found_person.id, :relation => params[:relation] and return
         end
       end
@@ -289,11 +289,11 @@ class GenericPeopleController < ApplicationController
         if patient_id.length != 6 and create_from_dde_server
           patient.check_old_national_id(patient_id)
           #creating patient's footprint so that we can track them later when they visit other sites
-          DDEService.create_footprint(PatientService.get_patient(found_person).national_id, Location.find(session[:location_id]).name)
+          DDEService.create_footprint(patient_id, "DMHT")
           print_and_redirect("/patients/national_id_label?patient_id=#{person.id}", next_task(person.patient)) and return
         end
         #creating patient's footprint so that we can track them later when they visit other sites
-        DDEService.create_footprint(PatientService.get_patient(found_person).national_id, Location.find(session[:location_id]).name)
+        DDEService.create_footprint(patient_id, "DMHT")
       end
       redirect_to search_complete_url(params[:person][:id], params[:relation]) and return unless params[:person][:id].blank? || params[:person][:id] == '0'
 
