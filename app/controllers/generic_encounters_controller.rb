@@ -1116,7 +1116,7 @@ class GenericEncountersController < ApplicationController
   def given_tb_medication_before(patient)
     patient.orders.each{|order|
       drug_order = order.drug_order
-      drug_order_quantity = drug_order.quantity
+      drug_order_quantity = drug_order.quantity rescue nil
       if drug_order_quantity == nil
         drug_order_quantity = 0
       end
