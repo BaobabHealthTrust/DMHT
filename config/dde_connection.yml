@@ -3,7 +3,7 @@ default: &default
   dde_server: 127.0.0.1:3000
   dde_username: admin
   dde_password: password
-  site_code: TST
+  site_code: KCH
 
 development:
   <<: *default
