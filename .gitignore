@@ -4,6 +4,7 @@
 config/database.yml
 config/application.yml
 config/settings.yml
+.ruby-version
 notes
 doc
 *~
