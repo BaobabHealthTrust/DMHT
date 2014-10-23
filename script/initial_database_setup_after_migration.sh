@@ -34,8 +34,6 @@ mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/drug_ingredient.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/pharmacy.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/national_id.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/weight_for_heights.sql
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/data/${SITE}/${SITE}.sql
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/data/${SITE}/tasks.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/moh_regimens_only.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/user_schema_modifications.sql
 mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/missing_tables.sql
