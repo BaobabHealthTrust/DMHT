@@ -6,6 +6,7 @@ UPDATE users SET username = 'admin' ,password = '4a1750c8607d0fa237de36c6305715c
 
 DELETE FROM user_role WHERE user_id = 2;
 DELETE FROM users WHERE user_id = 2;
+DELETE FROM encounter WHERE encounter_type IS NULL;
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS location_tag_map;
 DROP TABLE IF EXISTS location;
@@ -33,7 +34,6 @@ CREATE TABLE `location` (
   `date_retired` datetime DEFAULT NULL,
   `retire_reason` varchar(255) DEFAULT NULL,
   `location_type_id` int(11) DEFAULT NULL,
-  `parent_location` int(11) DEFAULT NULL,
   `uuid` char(38) NOT NULL,
   PRIMARY KEY (`location_id`),
   UNIQUE KEY `location_uuid_index` (`uuid`),
@@ -41,21 +41,14 @@ CREATE TABLE `location` (
   KEY `name_of_location` (`name`),
   KEY `user_who_retired_location` (`retired_by`),
   KEY `retired_status` (`retired`),
-  KEY `type_of_location` (`location_type_id`),
-  KEY `parent_location` (`parent_location`),
-  CONSTRAINT `location_type` FOREIGN KEY (`location_type_id`) REFERENCES `location_type` (`location_type_id`),
-  CONSTRAINT `parent_location` FOREIGN KEY (`parent_location`) REFERENCES `location` (`location_id`),
-  CONSTRAINT `user_who_created_location` FOREIGN KEY (`creator`) REFERENCES `users` (`user_id`),
-  CONSTRAINT `user_who_retired_location` FOREIGN KEY (`retired_by`) REFERENCES `users` (`user_id`)
+  KEY `type_of_location` (`location_type_id`)   
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
-ALTER TABLE `location` DROP COLUMN `parent_location_id`; 
-ALTER TABLE `location` DROP INDEX  `parent_location_for_location` ;
-ALTER TABLE `location` DROP FOREIGN KEY `parent_location`;
-ALTER TABLE `location` DROP COLUMN `parent_location_id`, DROP INDEX `parent_location_for_location` ;
-
-SET FOREIGN_KEY_CHECKS = 1;
+ALTER TABLE `obs` DROP FOREIGN KEY `location_for_value`;
+ALTER TABLE `obs` DROP COLUMN `value_location`; 
 ALTER TABLE `hl7_in_archive` ADD COLUMN `message_state` INT(1)  AFTER `hl7_data` ;
+SET FOREIGN_KEY_CHECKS = 1;
 
-DELETE FROM encounter WHERE encounter_type IS NULL;
+
+
 
