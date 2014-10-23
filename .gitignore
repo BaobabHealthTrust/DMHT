@@ -1,0 +1,14 @@
+.DS_Store
+*.swp
+*.swo
+config/database.yml
+config/application.yml
+config/settings.yml
+.ruby-version
+notes
+doc
+*~
+mockups
+rerun.txt
+nbproject
+Gemfile.lock
