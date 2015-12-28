@@ -1,8 +1,9 @@
---- 
-cwd: /var/www/mateme/
-log_file: /var/www/mateme/log/mongrel.log
-port: 3003
-environment: development
+user: mongrel
+group: mongrel
+cwd: /var/www/dmht
+log_file: /var/www/dmht/log/mongrel.log
+port: 8000
+environment: production
 address: 127.0.0.1
-pid_file:  /var/www/mateme/tmp/pids/mongrel.pid
-servers: 1
+pid_file: /var/www/dmht/tmp/pids/mongrel.pid
+servers: 3

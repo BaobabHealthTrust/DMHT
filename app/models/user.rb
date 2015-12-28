@@ -155,7 +155,7 @@ class User < ActiveRecord::Base
     label.left_margin = 50
     label.draw_barcode(50,180,0,1,3,12,120,false,"#{barcode_hash}")
     label.draw_multi_text("#{self.name.titleize}")
-    label.draw_multi_text('QECH')
+    label.draw_multi_text('ZCH')
     label.draw_multi_text(' ')
     label.print(1)
   end

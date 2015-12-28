@@ -39,6 +39,8 @@ class PeopleController < ApplicationController
         # TODO - figure out how to write a test for this
         # This is sloppy - creating something as the result of a GET
         found_person_data = Person.find_remote_by_identifier(params[:identifier])
+#	raise found_person_data.inspect
+        found_person_data["person"]["patient"]["identifiers"]["diabetes_number"] = Patient.dc_number unless found_person_data.nil?
         found_person = Person.create_from_form(found_person_data) unless found_person_data.nil?
       end
       if found_person
@@ -60,11 +62,10 @@ class PeopleController < ApplicationController
     params[:person][:patient][:identifiers][:diabetes_number] = Patient.dc_number
 
     if !remote_parent_server.empty?
-
         found_person_data = Person.create_remote(params)
         found_person_data['person']['patient']['identifiers']['diabetes_number'] = params[:person][:patient][:identifiers][:diabetes_number] unless found_person_data.nil?
-
-        found_person = Person.create_from_form(found_person_data) unless found_person_data.nil?
+       # raise found_person_data.inspect
+        found_person = Person.create_from_form(params) if found_person_data.nil?
         
         if found_person
           found_person.patient.national_id_label
@@ -73,6 +74,7 @@ class PeopleController < ApplicationController
           redirect_to :action => "index"
         end
     else
+	raise "Empty"
       person = Person.create_from_form(params[:person])
       
       if params[:person][:patient]

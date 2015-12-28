@@ -26,6 +26,6 @@ USERNAME=`ruby -ryaml -e "puts YAML::load_file('config/database.yml')['${ENV}'][
 PASSWORD=`ruby -ryaml -e "puts YAML::load_file('config/database.yml')['${ENV}']['password']"`
 DATABASE=`ruby -ryaml -e "puts YAML::load_file('config/database.yml')['${ENV}']['database']"`
 
-mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_dc_autoincrement_index.sql
+# mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_dc_autoincrement_index.sql
 # mysql --user=$USERNAME --password=$PASSWORD $DATABASE < db/migrate/create_dc_number_prefix.sql
 

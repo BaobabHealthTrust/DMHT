@@ -183,8 +183,8 @@ form{
     top: 0px;
     left: 0px;
     z-index: 1;
-    height: 670px;
-    width: 998px;
+    height: 90%;
+    width: 100%;
     overflow: hidden;
 }
 

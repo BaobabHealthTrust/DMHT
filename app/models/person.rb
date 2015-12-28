@@ -202,7 +202,6 @@ class Person < ActiveRecord::Base
     person.save
     person.names.create(names_params)
     person.addresses.create(address_params)
-    
     # add person attributes
       person_attribute_params.each{|attribute_type_name, attribute|
         attribute_type = PersonAttributeType.find_by_name(attribute_type_name.humanize.titleize) || PersonAttributeType.find_by_name("Unknown id")
@@ -229,30 +228,38 @@ class Person < ActiveRecord::Base
   end
 
   def self.find_remote(known_demographics)
-    servers = GlobalProperty.find(:first, :conditions => {:property => "remote_servers.all"}).property_value.split(/,/) rescue nil
-    return nil if servers.blank?
-
-    wget_base_command = "wget --quiet --load-cookies=cookie.txt --quiet --cookies=on --keep-session-cookies --save-cookies=cookie.txt"
     # use ssh to establish a secure connection then query the localhost
     # use wget to login (using cookies and sessions) and set the location
     # then pull down the demographics
     # TODO fix login/pass and location with something better
 
-    login = "mikmck"
-    password = "mike"
-    location = 8
+    servers = GlobalProperty.find(:first, :conditions => {:property => "remote_servers.parent"}).property_value.split(/,/) rescue nil
+    server_address_and_port = servers.to_s.split(':')
+
+    server_address = server_address_and_port.first
+    server_port = server_address_and_port.second
+
+    return nil if servers.blank?
+
+    wget_base_command = "wget --quiet --load-cookies=cookie.txt --quiet --cookies=on --keep-session-cookies --save-cookies=cookie.txt"
+
+    login = GlobalProperty.find(:first, :conditions => {:property => "remote_bart.username"}).property_value.split(/,/) rescue "admin"
+    password = GlobalProperty.find(:first, :conditions => {:property => "remote_bart.password"}).property_value.split(/,/) rescue "admin"
+    location = GlobalProperty.find(:first, :conditions => {:property => "remote_bart.location"}).property_value.split(/,/) rescue "artclinic"
+    machine = GlobalProperty.find(:first, :conditions => {:property => "remote_machine.account_name"}).property_value.split(/,/) rescue "meduser"
 
     post_data = known_demographics
     post_data["_method"]="put"
 
     local_demographic_lookup_steps = [ 
-      "#{wget_base_command} -O /dev/null --post-data=\"login=#{login}&password=#{password}\" \"http://localhost/session\"",
-      "#{wget_base_command} -O /dev/null --post-data=\"_method=put&location=#{location}\" \"http://localhost/session\"",
-      "#{wget_base_command} -O - --post-data=\"#{post_data.to_param}\" \"http://localhost/people/demographics\""
+      "#{wget_base_command} -O /dev/null --post-data=\"login=#{login}&password=#{password}\" \"http://localhost:#{server_port}/session\"",
+      "#{wget_base_command} -O /dev/null --post-data=\"_method=put&location=#{location}\" \"http://localhost:#{server_port}/session\"",
+      "#{wget_base_command} -O - --post-data=\"#{post_data.to_param}\" \"http://localhost:#{server_port}/people/demographics\""
     ]
     results = []
     servers.each{|server|
-      command = "ssh meduser@#{server} '#{local_demographic_lookup_steps.join(";\n")}'"
+      command = "ssh #{machine}@#{server_address} '#{local_demographic_lookup_steps.join(";\n")}'"
+      
       output = `#{command}`
       results.push output if output and output.match(/person/)
     }
@@ -332,8 +339,8 @@ class Person < ActiveRecord::Base
 
     login = GlobalProperty.find(:first, :conditions => {:property => "remote_bart.username"}).property_value.split(/,/) rescue "admin"
     password = GlobalProperty.find(:first, :conditions => {:property => "remote_bart.password"}).property_value.split(/,/) rescue "test"
-    location = GlobalProperty.find(:first, :conditions => {:property => "remote_bart.location"}).property_value.split(/,/) rescue 31
-    machine = GlobalProperty.find(:first, :conditions => {:property => "remote_machine.account_name"}).property_value.split(/,/) rescue 'meduser'
+    location = GlobalProperty.find(:first, :conditions => {:property => "remote_bart.location"}).property_value.split(/,/) rescue "artclinic"
+    machine = GlobalProperty.find(:first, :conditions => {:property => "remote_machine.account_name"}).property_value.split(/,/) rescue "meduser"
 
     post_data = known_demographics
     post_data["_method"]="put"

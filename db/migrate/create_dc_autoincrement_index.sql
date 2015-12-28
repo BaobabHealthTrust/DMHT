@@ -1,7 +1,7 @@
 SET FOREIGN_KEY_CHECKS=0;
 
-SELECT @SITENAME := 'QECH';
-SELECT @SITEPREFIX := 'QECH-';
+SELECT @SITENAME := 'ZCH';
+SELECT @SITEPREFIX := 'ZCH-';
 
 DELETE FROM global_property WHERE property = 'dc.number.autoincrement';
 
@@ -14,6 +14,6 @@ INSERT INTO global_property (property, property_value, `description`) VALUES ('f
 DELETE FROM global_property WHERE property = 'dc.number.prefix';
 
 INSERT INTO global_property (property, property_value, `description`) VALUES ('dc.number.prefix', @SITEPREFIX, 'The prefix appended to Diabtes Clinic Numbers'),
-('dc.number.autoincrement', '2000', 'The autoincrement position for Diabetes Clinic Numbers');
+('dc.number.autoincrement', '1', 'The autoincrement position for Diabetes Clinic Numbers');
 
 SET FOREIGN_KEY_CHECKS=1;
