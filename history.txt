@@ -1,0 +1,1000 @@
+ 1012  script/server -p7000
+ 1013  vim config/database.yml 
+ 1014  script/server -p7000
+ 1015  vim config/database.yml 
+ 1016  script/server -p7000
+ 1017  vim config/database.yml 
+ 1018  script/server -p7000
+ 1019  vim config/database.yml 
+ 1020  script/server -p7000
+ 1021  vim config/database.yml 
+ 1022  script/initial_database_setup.sh production
+ 1023  ls config/database.yml 
+ 1024  script/server 
+ 1025  script/server -p7000
+ 1026  vim config/database.yml 
+ 1027  mysql -u root
+ 1028  script/initial_database_setup.sh production
+ 1029  vim config/database.yml 
+ 1030  mysql -u root
+ 1031  script/initial_database_setup.sh production
+ 1032  script/initial_database_setup.sh development
+ 1033  mysql -u openmrs -p openmrs_opd_qech.global_property < ~/Downloads/global_property.sql 
+ 1034  mysql -u openmrs -p openmrs_opd_qech global_property < ~/Downloads/global_property.sql 
+ 1035  mysql -u openmrs -p openmrs_opd_qech openmrs_opd_qech.global_property < ~/Downloads/global_property.sql 
+ 1036  mysql -u openmrs -p openmrs_opd_qech openmrs_opd_qech.Global_property < ~/Downloads/global_property.sql 
+ 1037  mysql -u openmrs -p openmrs_opd_qech.global_property < ~/Downloads/global_property.sql 
+ 1038  mysql -u openmrs -p openmrs_opd_qech.Global_property < ~/Downloads/global_property.sql 
+ 1039  mysql -u openmrs -p openmrs_opd_qech < ~/Downloads/global_property.sql 
+ 1040  script/server -p7000
+ 1041  cd
+ 1042  nice mysqldump -h192.168.100.200 -u openmrs -p openmrs_opd_qech sessions > opd_sessions.sql
+ 1043  ls -sh opd_sessions.sql 
+ 1044  mysql -u openmrs -p openmrs_opd_qech < opd_sessions.sql 
+ 1045  cd -
+ 1046  script/server -p7000
+ 1047  nice mysqldump -h192.168.100.200 -u openmrs -p openmrs_opd_qech users > opd_users.sql
+ 1048  mysql -u openmrs -p openmrs_opd_qech < opd_users.sql 
+ 1049  script/server -p7000
+ 1050  vim config/database.yml 
+ 1051  script/server -p7000
+ 1052  vim config/database.yml 
+ 1053  script/initial_database_setup.sh production
+ 1054  script/server -p7000
+ 1055  ssh meduser@196.216.13.206
+ 1056  gem list --local
+ 1057  ssh server100200 
+ 1058  ifconfig 
+ 1059  ln
+ 1060  ln --help
+ 1061  mkdir test
+ 1062  cd test/
+ 1063  vim one.txt
+ 1064  ls
+ 1065  vim one
+ 1066  vim two
+ 1067  ln --help
+ 1068  cd /var/www/bart
+ 1069  script/server 
+ 1070  script/server -p3004
+ 1071  vim config/database.yml 
+ 1072  script/server -p3004
+ 1073  cd
+ 1074  cd /var/www/mateme/
+ 1075  git daemon --verbose --progress --export-all
+ 1076  git daemon --verbose --export-all
+ 1077  ssh server100200 
+ 1078  ssh meduser@192.168.55.20
+ 1079  ifconfig 
+ 1080  sudo dhclient
+ 1081  sudo dhclient -v
+ 1082  sudo ifconfig eth0 169.254.41.69
+ 1083  ping 169.254.41.69
+ 1084  ping 169.254.41.68
+ 1085  ping www.github.com
+ 1086  ssh meduser@192.168.0.129
+ 1087  ping 10.137.5.120
+ 1088  cd /var/www/bart
+ 1089  git status 
+ 1090  git pull origin 
+ 1091  vim config/database.yml 
+ 1092  script/server 
+ 1093  ping 192.168.5.200
+ 1094  ping 192.168.5.201
+ 1095  ifconfig 
+ 1096  ping 192.168.5.201
+ 1097  route -n
+ 1098  sudo route add -h 192.168.5.201 gw 192.168.0.129
+ 1099  sudo route add -h192.168.5.201 gw192.168.0.129
+ 1100  sudo route add -h192.168.5.201 gw 192.168.0.129
+ 1101  sudo route add -h 192.168.5.201 gw 192.168.0.129
+ 1102  ping 192.168.5.201
+ 1103  rake -T openmrs
+ 1104  export RAILS_ENV=development
+ 1105  rake openmrs:bootstrap:load:defaults
+ 1106  script/runner -e development script/reset_views.rb 
+ 1107  script/server 
+ 1108  rake openmrs:bootstrap:load:defaults
+ 1109  script/server 
+ 1110  cd
+ 1111  rsync --delete-after -P -r -d meduser@192.168.0.129:openmrs_zch_2011_10_27.sql.gz .
+ 1112  ls openmrs_
+ 1113  ssh server5200 
+ 1114  cd /var/www/bart
+ 1115  cd 
+ 1116  cd .ssh/
+ 1117  scp -Cr id_rsa.pub meduser@192.168.5.200:
+ 1118  cap deploy
+ 1119  cd /var/www/bart
+ 1120  cap deploy
+ 1121  history 
+ 1122  rsync -P -r -d meduser@192.168.0.129:openmrs_zch_2011_10_27.sql.gz .
+ 1123  git pull origin 
+ 1124  ping www.github.com
+ 1125  git pull origin 
+ 1126  export RAILS_ENV=development
+ 1127  rake openmrs:bootstrap:load:defaults
+ 1128  script/server 
+ 1129  rake -T openmrs
+ 1130  rake openmrs:bootstrap:load:defaults
+ 1131  script/server 
+ 1132  cd /var/www/bart
+ 1133  git daemon --export-all --verbose
+ 1134  ssh meduser@192.168.5.201
+ 1135  git daemon --export-all --verbose
+ 1136  cap deploy
+ 1137  ssh 192.168.0.129
+ 1138  ssh meduser@192.168.0.129
+ 1139  ping 192.168.0.129
+ 1140  ssh meduser@192.168.0.129
+ 1141  ifconfig 
+ 1142  sudo dhclient
+ 1143  ifconfig 
+ 1144  ssh meduser@192.168.0.129
+ 1145  ping 192.168.0.129
+ 1146  ssh meduser@192.168.5.200
+ 1147  ssh meduser@192.168.0.129
+ 1148  ssh 192.168.0.129
+ 1149  ssh meduser@192.168.0.129 -p23
+ 1150  ssh meduser@192.168.0.129 -p22
+ 1151  ssh server5200 
+ 1152  cd /var/www/bart
+ 1153  git status
+ 1154  git pull origin v10.2
+ 1155  vim config/database.yml 
+ 1156  script/server 
+ 1157  cd /var/www/bart
+ 1158  vim config/database.yml 
+ 1159  script/server 
+ 1160  cd ~/Documents/sites/zch/
+ 1161  nice mysqldump -h 192.168.5.201 -u root openmrs -ppassword --routines -v | gzip > ~/openmrs_zch_`date +"%Y_%m_%d"`.sql.gz
+ 1162  exit
+ 1163  ping www.google.com
+ 1164  exit
+ 1165  ssh server5200 
+ 1166  ping 192.168.5.200
+ 1167  ssh server5200 
+ 1168  ping 192.168.5.200
+ 1169  ssh meduser@192.168.5.200
+ 1170  ifconfig 
+ 1171  ssh server5200 
+ 1172  ping 192.168.5.200
+ 1173  ssh server5200 
+ 1174  ping 192.168.5.201
+ 1175  ssh meduser@192.168.5.201
+ 1176  exit
+ 1177  sudo dd if=/dev/sdb of=DerickFlash
+ 1178  ssh meduser@192.168.55.30
+ 1179  exit
+ 1180  ifconfig 
+ 1181  ping 10.137.5.120
+ 1182  sudo dhclient
+ 1183  ifconfig 
+ 1184  ping 10.137.5.120
+ 1185  sudo dhclient
+ 1186  ifconfig 
+ 1187  sudo dhclient
+ 1188  ifconfig 
+ 1189  sudo dhclient
+ 1190  ifconfig 
+ 1191  ping 10.137.5.120
+ 1192  ifconfig 
+ 1193  ping 10.137.5.120
+ 1194  sudo dhclient
+ 1195  ifconfig 
+ 1196  ping 10.137.5.120
+ 1197  ifconfig 
+ 1198  ssh meduser@192.168.100.200
+ 1199  exit
+ 1200  ssh meduser@192.168.55.30
+ 1201  exit
+ 1202  cd Documents/sites/zch/
+ 1203  ls
+ 1204  cd
+ 1205  ls
+ 1206  ls *.gz
+ 1207  cd -
+ 1208  mv ~*.gz .
+ 1209  ls
+ 1210  cd
+ 1211  ls
+ 1212  ls *.gz
+ 1213  mv *.gz Documents/sites/zch/
+ 1214  ls *.gz
+ 1215  cd -
+ 1216  ls
+ 1217  gzip -d openmrs_zch_2011_10_28.sql.gz 
+ 1218  mysql -u root openmrs_zch < openmrs_zch_2011_10_28.sql 
+ 1219  mysql -u root openmrs_zch -v < openmrs_zch_2011_10_28.sql 
+ 1220  ssh meduser@192.168.55.30
+ 1221  exit
+ 1222  ssh meduser@192.168.55.30
+ 1223  cd .ssh/
+ 1224  ssh-keygen -t rsa
+ 1225  ls
+ 1226  ssh meduser@192.168.55.30
+ 1227  exit
+ 1228  ssh meduser@192.168.55.20
+ 1229  ssh meduser@192.168.55.10
+ 1230  ssh meduser@192.168.55.30
+ 1231  ifconfig 
+ 1232  exit
+ 1233  ssh meduser@192.168.100.200
+ 1234  sudo vim /home/eppy/.ssh/known_hosts
+ 1235  ssh meduser@192.168.100.200
+ 1236  vim config/database.yml 
+ 1237  script/server 
+ 1238  ssh meduser@192.168.55.30
+ 1239  ssh meduser@192.168.100.200
+ 1240  cd Videos/
+ 1241  ls
+ 1242  sudo scp -Cr v1.2.1  /var/www/ 
+ 1243  cd /var/www/
+ 1244  sudo su
+ 1245  firefox spine
+ 1246  firefox appserver
+ 1247  ssh meduser@192.168.100.200
+ 1248  exit
+ 1249  cd /var/www/mateme/
+ 1250  vim config/environment.rb 
+ 1251  ssh meduser@192.168.55.30
+ 1252  ssh meduser@192.168.5.200
+ 1253  ssh meduser@192.168.100.200
+ 1254  exit
+ 1255  bible 1pet
+ 1256  20
+ 1257  bible
+ 1258  ping 192.168.5.98
+ 1259  ping 196.216.13.206
+ 1260  ssh meduser@196.216.13.206
+ 1261  ping 196.216.13.206
+ 1262  lynx
+ 1263  sudo apt-get install lynx
+ 1264  sudo apt-get install lynx-cur
+ 1265  sudo apt-get install lynx-cur-wrapper
+ 1266  ssh meduser@192.168.55.30
+ 1267  ssh meduser@10.137.5.120
+ 1268  ssh meduser@10.137.5.120 -p3002
+ 1269  mysql -u root -p
+ 1270  cd Documents/sites/zch/
+ 1271  mysql -u root openmrs_zch < openmrs_zch_2011_10_28.sql 
+ 1272  mysql -u root openmrs_zch -v < openmrs_zch_2011_10_28.sql 
+ 1273  cd ../machinga/
+ 1274  ls
+ 1275  mysql -u root openmrs_machinga -v < openmrs_machinga_2011_10_17_after_data_revert.sql
+ 1276  gzip -d openmrs_machinga_2011_10_17_after_data_revert.sql.gz 
+ 1277  mysql -u root openmrs_machinga -v < openmrs_machinga_2011_10_17_after_data_revert.sql
+ 1278  cd ..
+ 1279  cd mangochi/
+ 1280  ls
+ 1281  mysql -u root openmrs_mangochi -v < openmrs_mhg_2011_10_24.sql 
+ 1282  cd /var/www/bart
+ 1283  ls
+ 1284  git status
+ 1285  git pull origin 
+ 1286  exit
+ 1287  mtr 192.168.12.146
+ 1288  exit
+ 1289  ssh meduser@192.168.100.200
+ 1290  exit
+ 1291  vim /etc/hosts
+ 1292  exit
+ 1293  ssh meduser@192.168.100.200
+ 1294  exit
+ 1295  sudo apt-get install lynx
+ 1296  lynx
+ 1297  exit
+ 1298  ssh cottonwood 
+ 1299  exit
+ 1300  du -s
+ 1301  du -sh
+ 1302  du -c
+ 1303  cd Videos/
+ 1304  du -c
+ 1305  du -ch
+ 1306  du -ch | grep total
+ 1307  du -s
+ 1308  du -sh
+ 1309  du -ah
+ 1310  du -ch
+ 1311  du -ah
+ 1312  du -ch
+ 1313  du -ch | grep total
+ 1314  du -ah | grep total
+ 1315  du -h | grep total
+ 1316  du -a | grep total
+ 1317  du -c | grep total
+ 1318  du -c
+ 1319  du -c | grep total
+ 1320  du -ch | grep total
+ 1321  grep me
+ 1322  sudo dd if=~/winboot of=/dev/sdb1
+ 1323  ls w
+ 1324  ls
+ 1325  sudo ntfs-3g winboot ~/w
+ 1326  fdisk 
+ 1327  fdisk -l
+ 1328  fdisk /media/EPIPHAN/
+ 1329  fdisk /dev/sdb
+ 1330  fdisk /dev/sdb1 
+ 1331  fdisk /dev/sdb -l
+ 1332  ls /dev/sdb
+ 1333  df -h
+ 1334  umount /media/EPIPHAN 
+ 1335  sudo fdisk /dev/sdb
+ 1336  umount /media/EPIPHAN 
+ 1337  cd /var/www/bart
+ 1338  git status
+ 1339  git pull origin 
+ 1340  vim config/database.yml 
+ 1341  rake db:migrate
+ 1342  rake -T openmrs
+ 1343  rake openmrs:bootstrap:load:defaults
+ 1344  export RAILS_ENV=development
+ 1345  rake openmrs:bootstrap:load:defaults
+ 1346  script/server 
+ 1347  script/runner script/reset_views.rb 
+ 1348  script/console production
+ 1349  script/console
+ 1350  du -ch
+ 1351  df -ch
+ 1352  df -h
+ 1353  cd /var/www/bart
+ 1354  git pull origin 
+ 1355  rake db:migrate
+ 1356  rake openmrs:bootstrap:load:defaults
+ 1357  export RAILS_ENV=development
+ 1358  rake openmrs:bootstrap:load:defaults
+ 1359  script/server 
+ 1360  script/runner script/reset_views.rb 
+ 1361  script/server 
+ 1362  df -h
+ 1363  df -h
+ 1364  locate Genuine
+ 1365  ifconfig 
+ 1366  letmein
+ 1367  scp -Cr meudser@server100200:~/openmrs_backup/openmrs_spine_qech_2011_11_07.sql.gz ---
+ 1368  cd Documents/sites/qech/
+ 1369  scp -Cr meudser@server100200:~/openmrs_backup/openmrs_spine_qech_2011_11_07.sql.gz .
+ 1370  scp -Cr meudduser@server100200:~/openmrs_backup/openmrs_spine_qech_2011_11_07.sql.gz .
+ 1371  scp -Cr meduser@server100200:~/openmrs_backup/openmrs_spine_qech_2011_11_07.sql.gz .
+ 1372  rsync --partial --progress --verbose meduser@server100200:~/openmrs_backup/openmrs_spine_qech_2011_11_07.sql.gz .
+ 1373  rsync --partial --progress --verbose meduser@192.168.55.30:openmrs_spine_qech_2011_11_07.sql.gz .
+ 1374  ls
+ 1375  ls -sh
+ 1376  ls -shl
+ 1377  scp -Cr openmrs_opd_qech_2011_11_07.sql.gz /media/JOLO/
+ 1378  scp -Cr openmrs_spine_qech_2011_11_07.sql.gz /media/JOLO/
+ 1379  cd /media/JOLO/
+ 1380  ls
+ 1381  ls -sh
+ 1382  cd -
+ 1383  rsync --partial --progress --verbose meduser@192.168.5.200:openmrs_spine_qech_2011_11_07.sql.gz .
+ 1384  rsync --partial --progress --verbose meduser@192.168.5.200:openmrs_opd_qech_2011_11_07.sql.gz .
+ 1385  cd -
+ 1386  scp -Cr openmrs_spine_qech_2011_11_07.sql.gz /media/JOLO/
+ 1387  cd -
+ 1388  ls
+ 1389  scp -Cr openmrs_opd_qech_2011_11_07.sql.gz /media/JOLO/
+ 1390  scp -Cr openmrs_spine_qech_2011_11_07.sql.gz /media/JOLO/
+ 1391  rsync --partial --progress --verbose meduser@server100200:~/openmrs_backup/openmrs_spine_opd_2011_11_07.sql.gz .
+ 1392  rsync --partial --progress --verbose meduser@server100200:~/openmrs_backup/openmrs_opd_qech_2011_11_07.sql.gz .
+ 1393  ping 192.168.55.30
+ 1394  rsync --partial --progress --verbose meduser@192.168.55.30:openmrs_opd_qech_2011_11_07.sql.gz .
+ 1395  cd /media/JOLO/
+ 1396  ls -sh
+ 1397  ls
+ 1398  gzip -d *
+ 1399  ls -sh
+ 1400  umount /media/JOLO 
+ 1401  sudo umount /media/JOLO 
+ 1402  ifconfig 
+ 1403  ssh server5200 
+ 1404  vim /home/eppy/.ssh/known_hosts
+ 1405  ssh server5200 
+ 1406  vim /home/eppy/.ssh/known_hosts
+ 1407  ssh server5200 
+ 1408  ssh server100200 
+ 1409  lynx Documents/sites/zch/zch_Q3_2011.html 
+ 1410  ex5t
+ 1411  exit
+ 1412  ssh meduser@192.168.5.200
+ 1413  ping 192.168.5.200
+ 1414  ssh meduser@192.168.5.200
+ 1415  cd /var/www/bart
+ 1416  git pull origin
+ 1417  export RAILS_ENV=development
+ 1418  rake openmrs:bootstrap:load:defaults
+ 1419  vim config/database.yml 
+ 1420  rake db:migrate
+ 1421  rake openmrs:bootstrap:load:defaults
+ 1422  script/server 
+ 1423  vim config/database.yml 
+ 1424  scp -Cr meduser@server5200:openmrs_dmht_2011_11_07.sql .
+ 1425  scp -Cr meduser@server5200:openmrs_qech_2011_10_28.sql .
+ 1426  gzip openmrs_qech_2011_10_28.sql 
+ 1427  ifconfig 
+ 1428  ping 10.137.5.120
+ 1429  ping 10.137.5.120 -p3002
+ 1430  ping 10.137.5.120 -p3003
+ 1431  ping 10.137.5.120 -p3000
+ 1432  ls
+ 1433  ls -sh
+ 1434  ls -shl
+ 1435  scp -Cr meduser@server5200:openmrs_qech_2011_11_08.sql.gz .
+ 1436  cd /var/www/bart
+ 1437  vim config/database.yml 
+ 1438  rake db:migrate
+ 1439  rake -T openmrs
+ 1440  export RAILS_ENV=development
+ 1441  rake openmrs:bootstrap:load:defaults
+ 1442  script/server 
+ 1443  script/server -p3020
+ 1444  script/server -p3010
+ 1445  script/server -p3030
+ 1446  script/runner -e development script/reset_views.rb 
+ 1447  cd /var/www/bart
+ 1448  cd ..
+ 1449  ls
+ 1450  cd bart.bak/
+ 1451  git pull 
+ 1452  vim config/database.yml 
+ 1453  vim ../bart/config/database.yml 
+ 1454  vim config/database.yml 
+ 1455  rake db:migrate
+ 1456  rake -T openmrs
+ 1457  rake openmrs:bootstrap:load:defaults
+ 1458  export RAILS_ENV=development
+ 1459  rake openmrs:bootstrap:load:defaults
+ 1460  script/runner script/reset_views.rb 
+ 1461  vim config/database.yml 
+ 1462  script/server 
+ 1463  script/server -p3010
+ 1464  script/server -p3010 | cat >> /home/eppy/Desktop/bart_queries.txt
+ 1465  exit
+ 1466  ifconfig 
+ 1467  ping 192.168.100.200
+ 1468  ssh meduser@server100200 
+ 1469  exit
+ 1470  ssh server100200 
+ 1471  exit
+ 1472  ssh meduser@192.168.5.200
+ 1473  ping 192.168.55.10
+ 1474  ssh meduser@server5200 
+ 1475  cd /var/www/mateme/
+ 1476  script/server -p 3005
+ 1477  script/server -p3005
+ 1478  script/server -p 3005 -d
+ 1479  script/server -p3004 -d
+ 1480  sudo mongrel_rails cluster::status
+ 1481  sudo mongrel_rails cluster status
+ 1482  sudo mongrel_rails cluster::stop
+ 1483  ping 196.216.13.206
+ 1484  lynx google.com
+ 1485  exit
+ 1486  cd
+ 1487  ls
+ 1488  ls openmrs_ -sh
+ 1489  ls openmrs_* -sh
+ 1490  rm openmrs_qech_22_09_2011.sql 
+ 1491  rm openmrs_qech_2011_10_11.sql 
+ 1492  ls openmrs_* -sh
+ 1493  gzip openmrs_zch_2011_09_2*
+ 1494  ls
+ 1495  rm openmrs
+ 1496  rm openmrs*
+ 1497  cd Documents/sites/zch/
+ 1498  ls
+ 1499  cd ../machinga/
+ 1500  ls
+ 1501  cd ../mangochi/
+ 1502  ls
+ 1503  cd ../machinga/
+ 1504  ls
+ 1505  exit
+ 1506  wget -h
+ 1507  wget -k www.soyapi.com
+ 1508  wget -kr www.soyapi.com
+ 1509  wget -kr www.soyapi.com/puzzle
+ 1510  cd /var/www/
+ 1511  ls
+ 1512  ls php
+ 1513  ls php1
+ 1514  mv php phptests
+ 1515  sudo mv php phptests
+ 1516  ls
+ 1517  sudo chmod 777 phptests/ -R
+ 1518  ls
+ 1519  mkdir dmcleaning
+ 1520  sudo mkdir dmcleaning 
+ 1521  sudo chmod 777 dmcleaning/ -R
+ 1522  ls
+ 1523  cd dmcleaning/
+ 1524  ls
+ 1525  script/server 
+ 1526  script/server -p6000
+ 1527  vim config/database.yml 
+ 1528  script/console 
+ 1529  script/generate Admin
+ 1530  script/runner script/generate Admin
+ 1531  exit
+ 1532  cd /var/www/bart
+ 1533  cd ../bart.bak/
+ 1534  vim config/database.yml 
+ 1535  script/server -p3030
+ 1536  vim config/database.yml 
+ 1537  script/server -p3030
+ 1538  vim config/database.yml 
+ 1539  script/server -p3030
+ 1540  scp -Cr joyce@192.168.57.11:openmrs_qech_2011_10_28.sql .
+ 1541  cd /var/www/bart
+ 1542  vim config/database.yml 
+ 1543  rake db:migrate
+ 1544  ls
+ 1545  mv bart_queries2 ~/Desktop/
+ 1546  ls
+ 1547  mv openmrs_zch_2011_10_27.sql.gz ~/Desktop/
+ 1548  ls
+ 1549  mv ~/Desktop/openmrs_zch_2011_10_27.sql.gz ~/Documents/sites/zch/
+ 1550  mysql -u root queens < ~/Documents/sites/qech/openmrs_qech_2011_10_28.sql 
+ 1551  mysql -u root queens -v < ~/Documents/sites/qech/openmrs_qech_2011_10_28.sql 
+ 1552  script/runner script/reset_views.rb 
+ 1553  sudo vim /etc/mysql/my.cnf 
+ 1554  script/runner script/reset_views.rb 
+ 1555  rake db:migrate
+ 1556  script/runner script/reset_views.rb 
+ 1557  sudo dd if=winboot of=/dev/sdb 
+ 1558  umount /media/SCRUPLT 
+ 1559  ls
+ 1560  cd Documents/sites/qech/
+ 1561  ls
+ 1562  ssh joyce@192.168.57.11
+ 1563  vim /home/eppy/.ssh/known_hosts
+ 1564  ssh joyce@192.168.57.11
+ 1565  cd Documents/sites/qech/
+ 1566  ls
+ 1567  ls -sh
+ 1568  rm openmrs_qech_2011_08_10.sql 
+ 1569  rm openmrs_qech_2011_10_28.sql 
+ 1570  ls -sh
+ 1571  rm openmrs_qech_2011_09_29.sql.gz 
+ 1572  ls -sh
+ 1573  rm openmrs_spine_2011_08_10.sql 
+ 1574  ls -sh
+ 1575  rm openmrs_qech_opd_31-May-2011.sql 
+ 1576  ls -sh
+ 1577  rm openmrs_dmht_2011_0*
+ 1578  ls -sh
+ 1579  rm openmrs_opd_qech_2011_09_23.sql 
+ 1580  ls -sh
+ 1581  ls -l
+ 1582  rm openmrs_opd_qech_2011_11_07.sql.gz 
+ 1583  ls -l
+ 1584  gzip -d *
+ 1585  ls -l
+ 1586  mysql -u root dmht < openmrs_dmht_2011_11_10.sql 
+ 1587  mysql -u root dmht -v < openmrs_dmht_2011_11_10.sql 
+ 1588  cd /var/www/bart
+ 1589  git pull origin 
+ 1590  cd ..
+ 1591  ls
+ 1592  cd dmht/
+ 1593  script/server 3020
+ 1594  script/server -p3020
+ 1595  ls
+ 1596  cd ~/dumps
+ 1597  ls
+ 1598  gzip -d *
+ 1599  mysql -u root dmht < openmrs_dmht_2011_08_23.sql 
+ 1600  ls
+ 1601  cd ~/Documents/sites/qech/
+ 1602  scp -Cr /media/E/*.sql* .
+ 1603  ls
+ 1604  ls -sh
+ 1605  ls
+ 1606  umount /media/E 
+ 1607  cd /var/www/bart
+ 1608  git status
+ 1609  cd -
+ 1610  umount /media/E 
+ 1611  ls
+ 1612  ls
+ 1613  ls -s
+ 1614  ls -s
+ 1615  ping 192.168.55.10
+ 1616  ssh meduser@server5200 
+ 1617  cd /var/www/bart
+ 1618  script/runner -e development script/reset_views.rb 
+ 1619  script/server 
+ 1620  script/server | cat >> bart_queries2
+ 1621  ls ps
+ 1622  ls -p
+ 1623  ls -ps
+ 1624  ls -ps | grep skype
+ 1625  ps
+ 1626  ps ls
+ 1627  ps ls r
+ 1628  ps ls -r
+ 1629  ps ls r
+ 1630  ps r
+ 1631  pkill ls
+ 1632  ps -s
+ 1633  ps s
+ 1634  ps r
+ 1635  ps -r
+ 1636  ps -h
+ 1637  ps -help
+ 1638  ps r
+ 1639  ps rA
+ 1640  ps A
+ 1641  ps -A
+ 1642  ps -A |grep vl
+ 1643  ps -A |grep vlc
+ 1644  ps -A |grep vlcx
+ 1645  ps -A |grep vlc
+ 1646  pkill vlc 
+ 1647  ps -A |grep vlc
+ 1648  ps -A
+ 1649  ps -A|grep vlc
+ 1650  vlc -d
+ 1651  ps -A|grep vlc
+ 1652  pkill 29052
+ 1653  ps -A|grep vlc
+ 1654  pkill vlc 
+ 1655  ps -A|grep vlc
+ 1656  vlc
+ 1657  vlc-wrapper 
+ 1658  bible 
+ 1659  find .
+ 1660  find . | ls grep doug
+ 1661  find . | grep doug
+ 1662  find . | grep doug .mp3
+ 1663  find . | grep  .mp3
+ 1664  ssh cottonwood 
+ 1665  ping 192.168.5.98
+ 1666  ssh cottonwood 
+ 1667  ping www.google.com
+ 1668  ping 196.216.13.206
+ 1669  ssh meduser@196.216.13.206
+ 1670  ping 192.168.5.98
+ 1671  ping 196.216.13.206
+ 1672  ssh meduser@196.216.13.206 -p3002
+ 1673  ssh meduser@196.216.13.206 -p3000
+ 1674  ssh meduser@196.216.13.206
+ 1675  rsync --progress --compress --partial meduser@cottonwood:/backup/sites_backup/XP-Media-Center.iso.gz .
+ 1676  rsync --progress --compress --verbose --partial meduser@cottonwood:/backup/sites_backup/XP-Media-Center.iso.gz .
+ 1677  ping cottonwood 
+ 1678  ping 196.216.13.206
+ 1679  ping www.google.com
+ 1680  ping 196.216.13.206
+ 1681  rsync --progress --compress --verbose --partial meduser@cottonwood:/backup/sites_backup/XP-Media-Center.iso.gz .
+ 1682  cd /var/www/phptests/
+ 1683  ls
+ 1684  mv plaincart/ ../
+ 1685  sudo mv plaincart/ ../
+ 1686  cd ..
+ 1687  ls
+ 1688  chmod 777 -R plaincart/
+ 1689  ls
+ 1690  cd plaincart/
+ 1691  ls
+ 1692  lynx
+ 1693  ls
+ 1694  lynx index.php
+ 1695  ls
+ 1696  ssh meduser@cottonwood
+ 1697  ls
+ 1698  cd Documents/sites/qech/
+ 1699  ls
+ 1700  LS
+ 1701  ls
+ 1702  cd
+ 1703  ls
+ 1704  ls -sh
+ 1705  ls -s
+ 1706  ls -sa
+ 1707  ls -sah
+ 1708  ls -sa
+ 1709  ls -sah
+ 1710  ls -sa
+ 1711  ls -sah
+ 1712  ls -sa
+ 1713  ls -sah
+ 1714  ls -sa
+ 1715  ls -sah
+ 1716  ls -sa
+ 1717  ls -sah
+ 1718  ls -sa
+ 1719  ls -sah
+ 1720  ls -sa
+ 1721  ls -sah
+ 1722  ls -sa
+ 1723  ls -sah
+ 1724  ls -sa
+ 1725  gzip -d XP-Media-Center.iso.gz 
+ 1726  ls -sa
+ 1727  mv XP-Media-Center.iso Documents/
+ 1728  ls Documents/
+ 1729  ls Documents/ -sh
+ 1730  ssh cottonwood 
+ 1731  ping 192.168.5.98
+ 1732  ping 196.216.13.206
+ 1733  ssh meduser@196.216.13.206
+ 1734  ssh meduser@196.216.13.206 -p3006
+ 1735  locate mysql
+ 1736  locate mysql pdf
+ 1737  ls 
+ 1738  ls .
+ 1739  find .
+ 1740  find |grep mysql .pdf
+ 1741  find |grep mysql 
+ 1742  find mysql |grep pdf
+ 1743  find .
+ 1744  find . grep mysql
+ 1745  find . |grep mysql
+ 1746  find . |grep mysql|pdf
+ 1747  find . |grep mysql|grep pdf
+ 1748  find / |grep mysql|grep pdf
+ 1749  find /home/eppy/ |grep mysql|grep pdf
+ 1750  find /home/ |grep mysql|grep pdf
+ 1751  find |grep mysql|grep pdf
+ 1752  grep mysql
+ 1753  ls grep mysql
+ 1754  ls >grep mysql
+ 1755  ls |grep mysql
+ 1756  locate |grep mysql
+ 1757  locate .|grep mysql
+ 1758  locate .|grep mysql pdf
+ 1759  locate .|grep mysql |grep pdf
+ 1760  locate .|grep MySql |grep pdf
+ 1761  locate .|grep MySql
+ 1762  locate .|grep MYSQL
+ 1763  /home/eppy/Documents/volume bkp/SORT/mELIJAH/DataBase/ALL MYSQL.doc
+ 1764  open /home/eppy/Documents/volume bkp/SORT/mELIJAH/DataBase/ALL MYSQL.doc
+ 1765  cd /home/eppy/Documents/volume bkp/SORT/mELIJAH/DataBase/
+ 1766  cd /home/eppy/Documents/volume\ bkp/SORT/mELIJAH/DataBase/
+ 1767  ls
+ 1768  less ALL\ MYSQL.doc 
+ 1769  nautilus ALL\ MYSQL.doc 
+ 1770  nautilus
+ 1771  view
+ 1772  vimtutor 
+ 1773  nautilus
+ 1774  nautilus .
+ 1775  grep /home/eppy/ mysql
+ 1776  ifconfig 
+ 1777  ifconfig eth0 192.168.57.8
+ 1778  sudo ifconfig eth0 192.168.57.8
+ 1779  ifconfig 
+ 1780  ping 192.168.57.5
+ 1781  cd /var/www/dmht/
+ 1782  ls
+ 1783  vim config/database.yml
+ 1784  script/server 
+ 1785  cd 
+ 1786  locate css
+ 1787  locate css|grep .doc
+ 1788  locate css|grep .pdf
+ 1789  locate CSS|grep .pdf
+ 1790  locate mysql | grep .pdf
+ 1791  locate MYSQL | grep .pdf
+ 1792  locate MySQL | grep .pdf
+ 1793  locate MySql | grep .pdf
+ 1794  locate Mysql | grep .pdf
+ 1795  locate anual | grep .pdf
+ 1796  df -h
+ 1797  cd /var/www/dmht/
+ 1798  ls
+ 1799  script/dbconsole 
+ 1800  git status
+ 1801  cd ..
+ 1802  ls
+ 1803  sudo scp -Cr dmht dmht-old
+ 1804  ls
+ 1805  sudo mv dmht-old/ nov16dmht
+ 1806  ls
+ 1807  cd dmht/
+ 1808  ls
+ 1809  git pull origin 
+ 1810  script/server -p5000
+ 1811  git status
+ 1812  git pull 
+ 1813  locate complete |grep pdf
+ 1814  locate comp |grep pdf
+ 1815  exit
+ 1816  lynx localhost:3000
+ 1817  wget http://downloads.mysql.com/docs/refman-archive-4.1-en.a4.pdf
+ 1818  cd /var/www/dmht/
+ 1819  git pull 
+ 1820  cd /var/www/dmht/
+ 1821  git pull 
+ 1822  script/server 
+ 1823  script/runner script/initial_database_setup.sh 
+ 1824  vim script/initial_database_setup.sh 
+ 1825  script/initial_database_setup.sh 
+ 1826  vim script/initial_database_setup.sh 
+ 1827  script/initial_database_setup.sh 
+ 1828  script/server 
+ 1829  script/initial_database_setup.sh 
+ 1830  vim config/database.yml
+ 1831  script/server 
+ 1832  vim script/initial_database_setup.sh 
+ 1833  script/initial_database_setup.sh 
+ 1834  vim script/initial_database_setup.sh 
+ 1835  script/initial_database_setup.sh 
+ 1836  vim config/database.yml
+ 1837  script/server 
+ 1838  git pull 
+ 1839  script/server 
+ 1840  git pull 
+ 1841  script/server 
+ 1842  locate ref |grep pdf
+ 1843  locate man |grep pdf
+ 1844  find | grep refman
+ 1845  find | grep ref|grep pdf
+ 1846  df -h
+ 1847  ping www.google.com
+ 1848  locate refman |grep pdf
+ 1849  locate /media/8c4623dc-1619-486b-8244-921fcd585a93/ refman |grep pdf
+ 1850  ls /media/
+ 1851  locate refman |grep pdf
+ 1852  locate /media/*refman |grep pdf
+ 1853  locate /media/*ref |grep pdf
+ 1854  find /media/*ref | grep pdf
+ 1855  find /media/western/*ref | grep pdf
+ 1856  locate /media/ ref | grep pdf
+ 1857  cd /media/western/
+ 1858  locate ref | grep pdf
+ 1859  locate ./ ref | grep pdf
+ 1860  find -iname ref
+ 1861  cd ../digital/
+ 1862  find -iname ref
+ 1863  find 
+ 1864  find world
+ 1865  find -aname world
+ 1866  find -iname world
+ 1867  find world
+ 1868  find | grep refman
+ 1869  find | grep manual
+ 1870  cd /media/8c4623dc-1619-486b-8244-921fcd585a93/
+ 1871  ls
+ 1872  mkdir romeo\ and\ juliet
+ 1873  sudo mkdir romeo\ and\ juliet
+ 1874  ls
+ 1875  cd romeo\ and\ juliet/
+ 1876  sudo scp -Cr /media/DVD/VIDEO_TS/ .
+ 1877  ls
+ 1878  cd VIDEO_TS/
+ 1879  cd ..
+ 1880  ls
+ 1881  sudo chmod -R 777 romeo\ and\ juliet/
+ 1882  ls
+ 1883  cd romeo\ and\ juliet/
+ 1884  sudo scp -Cr /media/DVD/VIDEO_TS/ .
+ 1885  ls /dev/
+ 1886  net
+ 1887  exit
+ 1888  P161400920709P161400920709P161400920709
+ 1889  P161400920709
+ 1890  sudo shutdown -h now
+ 1891  cd /var/www/dmht/
+ 1892  script/server 
+ 1893  script/server -p3001
+ 1894  cd ../bart
+ 1895  script/server 
+ 1896  cd /var/www/dmht/
+ 1897  git status
+ 1898  git pull 
+ 1899  cd 
+ 1900  cd Documents/
+ 1901  ls
+ 1902  cd ../Downloads/
+ 1903  ls
+ 1904  cat D1000000000077.lbl >> /dev/usblp0 
+ 1905  sudo cat D1000000000077.lbl >> /dev/usblp0 
+ 1906  chown eppy /dev/usblp0 
+ 1907  sudo chown eppy /dev/usblp0 
+ 1908  cat D1000000000077.lbl >> /dev/usblp0 
+ 1909  cat D1000000000077.lbl > /dev/usblp0 
+ 1910  cat D1000000000077.lbl /dev/usblp0 
+ 1911  D1000000000077.lbl cat >> /dev/usblp0 
+ 1912  cd
+ 1913  Downloads/D1000000000077.lbl cat >> lp0 
+ 1914  sudo Downloads/D1000000000077.lbl cat >> lp0 
+ 1915  chown eppy lp0 
+ 1916  sudo chown eppy lp0 
+ 1917  sudo Downloads/D1000000000077.lbl cat >> lp0 
+ 1918  vi lp0 
+ 1919  ln /dev/usb/lp0 lpo
+ 1920  ln -s /dev/usb/lp0 lpo
+ 1921  vi lp0 
+ 1922  ls l
+ 1923  mv lpo lp0
+ 1924  sudo Downloads/D1000000000077.lbl cat >> lp0 
+ 1925  ln -s /dev/usblp0 lp0
+ 1926  rm lp0 
+ 1927  ln -s /dev/usblp0 lp0
+ 1928  sudo ln -s /dev/usblp0 lp0
+ 1929  rm lp0 
+ 1930  sudo ln -s /dev/usblp0 lp0
+ 1931  sudo Downloads/D1000000000077.lbl cat >> lp0 
+ 1932  cd /dev/
+ 1933  ls
+ 1934  cd usb/
+ 1935  ls
+ 1936  cd ..
+ 1937  vim usblp0 
+ 1938  vim usb/lp0 
+ 1939  chown eppy usblp0 
+ 1940  vim test
+ 1941  sudo vim test
+ 1942  cat test >> usblp0 
+ 1943  vim usblp0 
+ 1944  chown eppy usb/lp0 
+ 1945  cat test >> usb/lp0 
+ 1946  ls
+ 1947  cd
+ 1948  cd /dev/
+ 1949  ls
+ 1950  chmod 777 usb
+ 1951  sudo chmod 777 usb
+ 1952  sudo chmod 777 -R usb
+ 1953  cat test >> usb/lp0 
+ 1954  sudo chmod 777 -R usblp0 
+ 1955  cat test >> usblp0 
+ 1956  chown eppy -R usb
+ 1957  sudo chown eppy -R usb
+ 1958  cat test >> usb/lp0 
+ 1959  cat test > usb/lp0 
+ 1960  sudo chown eppy -R usblp0 
+ 1961  cat test >> usblp0 
+ 1962  cat ~/Downloads/D1000000000077.lbl >> usblp0 
+ 1963  cat ~/Downloads/D1000000000077.lbl >> usb/lp0 
+ 1964  cat ~/Downloads/D1000000000077.lbl >> usblp0 
+ 1965  cat ~/Downloads/563799543.lbl >> usblp0 
+ 1966  cat ~/Downloads/D1000000000077.lbl >> usblp0 
+ 1967  vim /home/eppy/Downloads/D1000000000077.lbl 
+ 1968  cat ~/Downloads/D1000000000077.lbl >> usblp0 
+ 1969  ping 192.168.57.2
+ 1970  ping 192.168.57.28
+ 1971  ifconfig 
+ 1972  sudo ifconfig eth0 192.168.57.8
+ 1973  ifconfig 
+ 1974  ping 192.168.57.28
+ 1975  ifconfig 
+ 1976  cd Downloads/
+ 1977  cat 5024721.lbl >> ~/lp0 
+ 1978  sudo cat 5024721.lbl >> ~/lp0 
+ 1979  sudo cat 5024721.lbl >> /dev/usblp0 
+ 1980  sudo su
+ 1981  cd /dev/
+ 1982  ls
+ 1983  cat test >> usblp0 
+ 1984  sudo cat test >> usblp0 
+ 1985  sudo chown eppy -R 
+ 1986  sudo chown eppy -R usblp0 
+ 1987  sudo cat test >> usblp0 
+ 1988  sudo chmod 777 -R usblp0 
+ 1989  sudo cat test >> usblp0 
+ 1990  cd -
+ 1991  sudo cat 5024721.lbl >> /dev/usblp0 
+ 1992  sudo cat 5026349.lbl >> /dev/usblp0 
+ 1993  sudo cat 5028829.lbl >> /dev/usblp0 
+ 1994  cd
+ 1995  ifconfig 
+ 1996  ping www.google.com
+ 1997  ssh meduser@server100200 
+ 1998  cd ../dmht/
+ 1999  git pull origin 
+ 2000  vim script/initial_database_setup.sh 
+ 2001  script/initial_database_setup.sh 
+ 2002  vim script/initial_database_setup.sh 
+ 2003  script/initial_database_setup.sh 
+ 2004  vim script/initial_database_setup.sh 
+ 2005  script/initial_database_setup.sh 
+ 2006  git pull origin 
+ 2007  vim config/database.yml
+ 2008  script/server 
+ 2009  script/server -p3001
+ 2010  history 
+ 2011  history >> history.txt

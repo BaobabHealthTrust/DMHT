@@ -1,0 +1,66 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    actionmailer (2.3.5)
+      actionpack (= 2.3.5)
+    actionpack (2.3.5)
+      activesupport (= 2.3.5)
+      rack (~> 1.0.0)
+    activerecord (2.3.5)
+      activesupport (= 2.3.5)
+    activeresource (2.3.5)
+      activesupport (= 2.3.5)
+    activesupport (2.3.5)
+    daemon_controller (1.2.0)
+    domain_name (0.5.24)
+      unf (>= 0.0.5, < 1.0.0)
+    http-cookie (1.0.2)
+      domain_name (~> 0.5)
+    json (1.8.2)
+    mechanize (2.7.2)
+      domain_name (~> 0.5, >= 0.5.1)
+      http-cookie (~> 1.0.0)
+      mime-types (~> 1.17, >= 1.17.2)
+      net-http-digest_auth (~> 1.1, >= 1.1.1)
+      net-http-persistent (~> 2.5, >= 2.5.2)
+      nokogiri (~> 1.4)
+      ntlm-http (~> 0.1, >= 0.1.1)
+      webrobots (>= 0.0.9, < 0.2)
+    mime-types (1.25.1)
+    mysql (2.9.0)
+    net-http-digest_auth (1.4)
+    net-http-persistent (2.9.4)
+    nokogiri (1.5.9)
+    ntlm-http (0.1.1)
+    passenger (4.0.53)
+      daemon_controller (>= 1.2.0)
+      rack
+      rake (>= 0.8.1)
+    rack (1.0.1)
+    rails (2.3.5)
+      actionmailer (= 2.3.5)
+      actionpack (= 2.3.5)
+      activerecord (= 2.3.5)
+      activeresource (= 2.3.5)
+      activesupport (= 2.3.5)
+      rake (>= 0.8.3)
+    rake (10.3.2)
+    rest-client (1.6.3)
+      mime-types (>= 1.16)
+    settingslogic (2.0.9)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.1)
+    webrobots (0.1.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  json
+  mechanize
+  mysql (= 2.9.0)
+  passenger (= 4.0.53)
+  rails (= 2.3.5)
+  rest-client (= 1.6.3)
+  settingslogic (= 2.0.9)

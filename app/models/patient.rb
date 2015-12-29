@@ -77,7 +77,7 @@ class Patient < ActiveRecord::Base
     end
     user    = User.find(user_id)
     role  = user.user_roles.collect{|x|x.role}
-    label.draw_multi_text("QECH DM CLINIC")
+    label.draw_multi_text("ZCH DM CLINIC")
     label.draw_multi_text("Doctor: #{user.name}") if (role.first.downcase.include?("doctor") || role.first.downcase.include?("superuser"))
     label.draw_multi_text("Patient: #{self.person.name.titleize.delete("'")}")
     label.draw_multi_text("Visit: #{encs.first.encounter_datetime.strftime("%d/%b/%Y %H:%M")}", :font_reverse => true)
@@ -127,7 +127,7 @@ class Patient < ActiveRecord::Base
     else
       dc_number = ""
     end
-    label.draw_multi_text("QECH DM CLINIC: #{self.person.name.titleize.delete("'")} (#{self.national_id_with_dashes}#{dc_number}) ")
+    label.draw_multi_text("ZCH DM CLINIC: #{self.person.name.titleize.delete("'")} (#{self.national_id_with_dashes}#{dc_number}) ")
     label.draw_multi_text("Diabetes Tests (Printed on: #{Date.today.strftime('%d/%b/%Y')})", :font_reverse => true)
 
     recent_complications.map{|key, complication|
