@@ -20,6 +20,10 @@ body{
     overflow: hidden;
 }
 
+div {
+    -moz-user-select:none;
+}
+
 form{
     z-index:0;
 }
@@ -43,7 +47,7 @@ form{
     border-left:none;
     border-right:none;
     border-bottom: 1px solid silver;
-    width:928px;
+    width:99.5%;
     font-family:"Nimbus Sans L","Arial Narrow",sans-serif;
     font-size:2.2em;
     background:none;
@@ -52,7 +56,7 @@ form{
 
 .options{
     overflow: auto;
-    height:13em;
+    height:12em;
 }
 
 .options ul{
@@ -68,7 +72,7 @@ form{
     margin-top: 5px;
     margin-bottom: 5px;
     font-family:"Nimbus Sans L","Arial Narrow",sans-serif;
-    font-size:1.5em;
+    font-size:1.2em;
 }
 .optionsList{
     display:none;
@@ -93,7 +97,7 @@ form{
     height: 80px;
     position: absolute;
     top: 670px;
-    width:  98%;
+    width:  98.7%;
     padding-right: 20px;
     /*  z-index:10;*/
 }
@@ -154,10 +158,10 @@ form{
     bottom: 85px;
     left: 25px;
     border: 1px solid #333;
-    -moz-border-radius: 15px;
+    border-radius: 15px;
     padding: 5px;
     background-color: #fff;
-    width: 935px;
+    width: 95%;
 }
 
 .buttonLine{
@@ -183,8 +187,8 @@ form{
     top: 0px;
     left: 0px;
     z-index: 1;
-    height: 90%;
-    width: 100%;
+    height: 670px;
+    width: 99%;
     overflow: hidden;
 }
 
@@ -198,6 +202,15 @@ form{
     overflow: hidden;
 }
 
+.helper {
+  display: block;
+  float:right;
+  background-color: #EEFFEE;
+  border: 1px solid #CCCCCC;
+  border-radius: 20px 20px 20px 20px;
+}
+  
+
 .helpTextClass {
     font-size: 2em;
     padding-top: 5px;
@@ -210,8 +223,8 @@ form{
     border: 1px solid black;
     margin-left:25px;
     background: #F0F0F0;
-    width:935px;
-    -moz-border-radius: 10px;
+    width:96.5%;
+    border-radius: 10px;
     padding: 5px;
 }
 
@@ -283,7 +296,7 @@ form{
     z-index: 999;
     border: 5px outset tomato;
     display: none;
-    -moz-border-radius: 15px;
+    border-radius: 15px;
 }
 
 .confirmationBar {
@@ -313,7 +326,7 @@ form{
     display: none;
     padding: 20px;   
     border: 5px outset tomato;
-    -moz-border-radius: 15px; 
+    border-radius: 15px; 
 }
 
 .touchscreenPopup #confirmUsername {
@@ -321,7 +334,7 @@ form{
     width: 250px;
 }
 
-#SHIFT, #qwerty, #na, #showDataButton, #lessthan, #greaterthan, #equals, #unknown {
+#SHIFT, #na, #showDataButton, #lessthan, #greaterthan, #equals, #unknown {
     display: none;
 }
 
@@ -533,7 +546,21 @@ button:hover.dark span {
 .NumbersOnlyWithDecimal #slash,
 .NumbersOnlyWithDecimal #comma,
 .NumbersOnlyWithDecimal #Unknown,
+.NumbersOnlyWithDecimal #qwerty,
 .NumbersOnlyWithDecimal #percent{
+    display: none
+}
+
+.NumbersOnlyWithUnknown #star,
+.NumbersOnlyWithUnknown #abc,
+.NumbersOnlyWithUnknown #char,
+.NumbersOnlyWithUnknown #date,
+.NumbersOnlyWithUnknown #minus,
+.NumbersOnlyWithUnknown #plus,
+.NumbersOnlyWithUnknown #slash,
+.NumbersOnlyWithUnknown #comma,
+.NumbersOnlyWithUnknown #qwerty,
+.NumbersOnlyWithUnknown #percent{
     display: none
 }
 
@@ -547,6 +574,7 @@ button:hover.dark span {
 .NumbersOnly #slash,
 .NumbersOnly #comma,
 .NumbersOnly #Unknown,
+.NumbersOnly #qwerty,
 .NumbersOnly #percent{
     display: none
 }
@@ -687,7 +715,7 @@ button:hover.dark span {
     font-size:1.3em;
     margin-left:25px;
     padding-top:5px;
-    width:942px;
+    width:99%;
     border-bottom:2px dotted;
 }  
 
@@ -696,9 +724,12 @@ button:hover.dark span {
 .NumbersOnlyWithDecimal,
 .NumbersOnly,
 .DatesOnly { height: 330px !important }
-.NoKeyboard, .NoControls { height: 520px !important } 
-.NoKeyboard .inputFrameClass { height: 440px !important } 
-.NoKeyboard .options { height: 395px !important } 
+
+.NoKeyboard, .NoControls { height: 660px !important }
+
+.NoKeyboard .inputFrameClass { height: 595px !important }
+
+.NoKeyboard .options { height: 552px !important }
 
 #footer button, div.buttonsDiv button {
     margin-top: 10px;
@@ -755,6 +786,7 @@ button {
 .NumbersWithUnknown #decimal,
 .NumbersWithUnknown #slash,
 .NumbersWithUnknown #comma,
+.NumbersWithUnknown #qwerty,
 .NumbersWithUnknown #percent{
     display: none
 }
@@ -785,8 +817,13 @@ button {
 .NumbersWithUnknownAndDecimal #plus,
 .NumbersWithUnknownAndDecimal #slash,
 .NumbersWithUnknownAndDecimal #comma,
+.NumbersWithUnknownAndDecimal #qwerty,
 .NumbersWithUnknownAndDecimal #percent{
     display: none
+}
+
+.NumbersWithUnknownAndDecimal #Unknown{
+    display: block
 }
 
 .statusLabel {
@@ -799,11 +836,11 @@ button {
     top: 120px;
     margin-left: 50%;
     left: -475px;
-    -moz-border-radius: 20px;
+    border-radius: 20px;
 }
 
 .NoKeyboard #keyboard {
-    display: none;
+    display: none !important;
 }
 
 button:active.blue span {
@@ -868,7 +905,7 @@ button:active {
     background:url(../images/btn_blue.png) right repeat;
     -moz-user-select:none;
     -moz-user-focus:disabled;
-    -moz-border-radius: 12px;
+    border-radius: 12px;
 }
 
 .btn:hover {
@@ -906,67 +943,117 @@ ul li {
 .ShortSelectList #scrollDown, 
 .ShortSelectList #clearButton,
 .ShortSelectList .touchscreenTextInput {
-  display: none;
+    display: none;
 }
 
 .ShortSelectList .keyboard{
-  display: none;
+    display: none;
 }
 
 .ShortSelectList #options,
 .ShortSelectList #viewport {
-  height: auto;
- -moz-user-select:none
+    height: auto;
+    -moz-user-select:none
 }
 
 .ShortSelectList li {
-  margin-top: 20px;
-  margin-bottom: 20px;
-  padding-top: 10px;
-  padding-bottom: 10px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 .longSelectList #options,
 .longSelectList #viewport {
-  height: 580px;
- -moz-user-select:none;
+    height: 580px;
+    -moz-user-select:none;
 }
 
 .longSelectList {
- -moz-user-select:none
+    -moz-user-select:none
 }
 
 .longSelectList li {
-  margin-bottom: 1px;
-  margin-top: 1px;
-  padding-top: 1px;
-  padding-bottom: 1px;
-  font-size: 1.35em;
+    margin-bottom: 1px;
+    margin-top: 1px;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    font-size: 1.35em;
 }
 
 .longSelectList #scrollUp, 
 .longSelectList #scrollDown, 
 .longSelectList #clearButton,
 .longSelectList .touchscreenTextInput {
-  display: none;
+    display: none;
 }
 
 .Numeric #options, 
 .Numeric #viewport{
-  display: none;
+    display: none;
 }
 
 .Numeric .helpTextClass{
-  position: relative;
+    position: relative;
 }
 
 
 .Numeric .touchscreenTextInput{
-  top: auto;
-  position: relative;
-  display: block;
+    top: auto;
+    position: relative;
+    display: block;
 
-  font-size: 3em;
-  margin-top: 5px;
-  margin-bottom: 5px;
+    font-size: 3em;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+#popupBox {
+    height: 130px;
+    width: 450px;
+    position: absolute;
+    top: 150px;
+    left: 260px;
+    font-size: 2.35em;
+    float: right;
+    text-align: left;
+    z-index: 842;
+    border: thin solid black;
+    background: #40f999;
+    display: none;
+    padding: 20px;   
+    border: 5px outset #40f999;
+    border-radius: 15px; 
+}
+
+#progress_bar {
+    background-color: #40f999;
+    border: 5px outset #40f999;
+    border-radius: 15px 15px 15px 15px;
+    display: none;
+    font-size: 2em;
+    left: 250px;
+    padding: 10px;
+    position: absolute;
+    text-align: center;
+    top: 100px;
+    width: 450px;
+    z-index: 999;
+}
+
+#category {
+    border-radius: 15px;
+    border: 1px solid #999;
+}
+
+.table {
+    display: table;    
+}
+
+.row {
+    display: table-row;
+}
+
+.cell {
+    display: table-cell;
 }

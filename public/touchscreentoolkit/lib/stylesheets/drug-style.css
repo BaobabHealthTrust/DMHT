@@ -1,10 +1,14 @@
 .main-container {
     height: 545px;
     position: absolute;
-    width: 992px;
+    width: 99%;
     z-index: 20;
     top: 5px;
     left: 0px;
+}
+
+div {
+    -moz-user-select:none;
 }
 
 .diagnosis-columns{
@@ -246,7 +250,7 @@
     background:url(../images/btn_blue.png) right repeat;
     -moz-user-select:none;
     -moz-user-focus:disabled;
-    -moz-border-radius: 12px;
+    border-radius: 12px;
 }
 
 .btn:hover {

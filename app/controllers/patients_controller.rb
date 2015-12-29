@@ -581,33 +581,53 @@ class PatientsController < ApplicationController
 
   def generate_booking
     @patient = Patient.find(params[:patient_id]  || params[:id] || session[:patient_id]) rescue nil
-
     @type = EncounterType.find_by_name("APPOINTMENT").id rescue nil
+=begin    
     if(@type)
       @enc = Encounter.find(:all, :conditions =>
           ["voided = 0 AND encounter_type = ?", @type])
+=end
+    #render :layout => 'clinic' and return
+  end
 
-      @counts = {}
+  def number_of_booked_patients
+    date = params[:date].to_date
+    encounter_type = EncounterType.find_by_name('APPOINTMENT')
+    concept_id = ConceptName.find_by_name('APPOINTMENT DATE').concept_id
 
-      @enc.each{|e|
-        obs = e.observations
-        if !obs.blank?
-          obs_date = obs.first.value_datetime
-          yr = obs_date.to_date.strftime("%Y")
-          mt = obs_date.to_date.strftime("%m").to_i-1
-          dy = obs_date.to_date.strftime("%d").to_i
+    start_date = date.strftime('%Y-%m-%d 00:00:00')
+    end_date = date.strftime('%Y-%m-%d 23:59:59')
 
-          if(!@counts[(yr.to_s + "-" + mt.to_s + "-" + dy.to_s)])
-            @counts[(yr.to_s + "-" + mt.to_s + "-" + dy.to_s)] = {}
-            @counts[(yr.to_s + "-" + mt.to_s + "-" + dy.to_s)]["count"] = 0
-          end
+    appointments = Observation.find_by_sql("SELECT count(*) AS count FROM obs
+      INNER JOIN encounter e USING(encounter_id) WHERE concept_id = #{concept_id}
+      AND encounter_type = #{encounter_type.id} AND value_datetime >= '#{start_date}'
+      AND value_datetime <= '#{end_date}' AND obs.voided = 0 GROUP BY value_datetime")
+    count = appointments.first.count unless appointments.blank?
+    count = '0' if count.blank?
 
-          @counts[(yr.to_s + "-" + mt.to_s + "-" + dy.to_s)][e.patient_id] = true
-          @counts[(yr.to_s + "-" + mt.to_s + "-" + dy.to_s)]["count"] += 1
-        end
-      }
-      #raise @counts['2011-08-06'].to_yaml
-    end
+    render :text => (count.to_i >= 0 ? {params[:date] => count}.to_json : 0)
+  end
+
+  def book
+    encounter_type = EncounterType.find_by_name('APPOINTMENT')
+    concept_id = ConceptName.find_by_name('APPOINTMENT DATE').concept_id
+    enc = Encounter.new(:encounter_type => encounter_type.id,
+      :patient_id => params['observations'][0]['patient_id'],
+      :provider_id => session[:user_id],
+      :encounter_datetime => Time.now(),
+      :creator => session[:user_id],
+      :voided => 0
+    )
+    enc.save
+
+    obs = Observation.new(:concept_name => "APPOINTMENT DATE",
+      :value_datetime => params['observations'][0]['value_datetime'],
+      :encounter_id => enc.encounter_id,:obs_datetime => Time.now(),
+      :person_id => enc.patient_id
+    )
+    obs.save
+
+    redirect_to "/patients/show/#{enc.patient_id}"
   end
 
   def make_booking

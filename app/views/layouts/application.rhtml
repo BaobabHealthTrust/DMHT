@@ -5,6 +5,8 @@
     <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
     <% @title = "#{controller.controller_name.humanize} #{controller.action_name.humanize}" rescue ""  %>
 
+  <link rel="stylesheet" href="/stylesheets/background.css" type="text/css">
+
   <script language="javascript" type="text/javascript" src="/javascripts/jquery.js"></script>
   <script language="javascript" type="text/javascript" src="/javascripts/jquery.flot.js"></script>
 
@@ -22,7 +24,10 @@
 
       }
     </script>
-  <script type="text/javascript" language="javascript" src="/touchscreentoolkit/lib/javascripts/touchScreenToolkit.js" defer></script>
+  <!--script type="text/javascript" language="javascript" src="/touchscreentoolkit/lib/javascripts/touchScreenToolkit.js" defer></script-->
+  <script language="javascript" type="text/javascript" src="/touchscreentoolkit/lib/javascripts/touchScreenToolkit.js" defer="true"></script>
+  <script language="javascript" type="text/javascript" src="/touchscreentoolkit/lib/javascripts/standard.js" defer="true"></script>
+  <script language="javascript" type="text/javascript" src="/touchscreentoolkit/lib/javascripts/calendar_horizontal.js" defer="true"></script>
     <%#= stylesheet_link_tag "form" %>
     <%#= stylesheet_link_tag fancy_or_high_contrast_touch %>
     <%#= javascript_include_tag "preload" %>
