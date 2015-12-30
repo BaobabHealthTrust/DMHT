@@ -1,3 +1,4 @@
+require "rest-client"
 class PeopleController < ApplicationController
   def index
     flash[:notice] = ""
@@ -58,6 +59,7 @@ class PeopleController < ApplicationController
   end
 
   def remote_duplicates
+    redirect_to("/") if session[:remote_demographics].blank?
     @duplicates = {}
     count = 1
     session[:remote_demographics].each do |record|
@@ -96,10 +98,12 @@ class PeopleController < ApplicationController
     }
 
     demographics = JSON.parse(RestClient.post(uri,search_from_remote_params))
-    found_person_data = demographics[0]
+    found_person_data = demographics
     found_person_data["person"]["patient"]["identifiers"]["diabetes_number"] = Patient.dc_number
     found_person = Person.create_from_form(found_person_data)
+    session.delete(:remote_demographics)
     print_and_redirect("/patients/national_id_label/?patient_id=#{found_person.patient.id}", next_task(found_person.patient))
+
   end
   
   # This method is just to allow the select box to submit, we could probably do this better
