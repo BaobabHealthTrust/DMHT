@@ -56,7 +56,52 @@ class PeopleController < ApplicationController
     end
     @people = Person.search(params)
   end
- 
+
+  def remote_duplicates
+    @duplicates = {}
+    count = 1
+    session[:remote_demographics].each do |record|
+      @duplicates[count] = {}
+      @duplicates[count]['gender'] = record["person"]["gender"]
+      @duplicates[count]['given_name'] = record["person"]["names"]["given_name"]
+      @duplicates[count]['family_name'] = record["person"]["names"]["family_name"]
+      @duplicates[count]['city_village'] = record["person"]["addresses"]["city_village"]
+      @duplicates[count]['county_district'] = record["person"]["addresses"]["county_district"]
+      @duplicates[count]['address2'] = record["person"]["addresses"]["address2"]
+      @duplicates[count]['state_province'] = record["person"]["addresses"]["state_province"]
+      @duplicates[count]['occupation'] = record["person"]["attributes"]["occupation"]
+      @duplicates[count]['national_id'] = record["person"]["patient"]["identifiers"]["National id"]
+      count = count + 1
+    end
+
+  end
+
+  def reassign_remote_identifier
+    given_name = params["given_name"]
+    family_name = params["family_name"]
+    gender = params["gender"]
+    national_id = params["national_id"]
+    city_village = params["city_village"]
+    occupation = params["occupation"]
+    bart_ip_address_and_port = GlobalProperty.find_by_property("remote_bart.location").property_value rescue "localhost:3002"
+    uri = "http://#{bart_ip_address_and_port}/people/reassign_remote_identifier"
+
+    search_from_remote_params =  {
+      "national_id" => national_id,
+      "given_name" => given_name,
+      "family_name" => family_name,
+      "gender" => gender,
+      "city_village" => city_village,
+      "occupation" => occupation
+    }
+
+    demographics = JSON.parse(RestClient.post(uri,search_from_remote_params))
+    found_person_data = demographics[0]
+    found_person_data["person"]["patient"]["identifiers"]["diabetes_number"] = Patient.dc_number
+    found_person = Person.create_from_form(found_person_data)
+    print_and_redirect("/patients/national_id_label/?patient_id=#{found_person.patient.id}", next_task(found_person.patient))
+  end
+  
   # This method is just to allow the select box to submit, we could probably do this better
   def select
     redirect_to :controller => :encounters, :action => :new, :patient_id => params[:person] and return unless params[:person].blank? || params[:person] == '0'
