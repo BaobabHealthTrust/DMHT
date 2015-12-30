@@ -228,6 +228,13 @@ class Person < ActiveRecord::Base
     result = Person.find_remote(known_demographics)
   end
 
+  def self.find_remote_by_identifier_modified(identifier)
+    known_demographics = {:identifier => "#{identifier}"}
+    bart_ip_address_and_port = GlobalProperty.find_by_property("remote_bart.location").property_value rescue "localhost:3002"
+    uri = "http://#{bart_ip_address_and_port}/people/find_person_from_dmht"
+    return JSON.parse(RestClient.post(uri,known_demographics))
+  end
+
   def self.find_remote(known_demographics)
     # use ssh to establish a secure connection then query the localhost
     # use wget to login (using cookies and sessions) and set the location

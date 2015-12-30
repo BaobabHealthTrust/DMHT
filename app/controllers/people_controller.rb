@@ -38,11 +38,18 @@ class PeopleController < ApplicationController
       else
         # TODO - figure out how to write a test for this
         # This is sloppy - creating something as the result of a GET
-        found_person_data = Person.find_remote_by_identifier(params[:identifier])
-        #	raise found_person_data.inspect
-        found_person_data["person"]["patient"]["identifiers"]["diabetes_number"] = Patient.dc_number unless found_person_data.nil?
-        found_person = Person.create_from_form(found_person_data) unless found_person_data.nil?
+        #found_person_data = Person.find_remote_by_identifier(params[:identifier])
+        demographics = Person.find_remote_by_identifier_modified(params[:identifier])
+        if (demographics.length == 1)
+          found_person_data = demographics[0]
+          found_person_data["person"]["patient"]["identifiers"]["diabetes_number"] = Patient.dc_number
+          found_person = Person.create_from_form(found_person_data)
+        elsif (demographics.length > 1)
+          session[:remote_demographics] = demographics
+          redirect_to ("/people/remote_duplicates") and return
+        end
       end
+      
       if found_person
         redirect_to :controller => :encounters, :action => :new, :patient_id => found_person.id and return
       end
