@@ -418,10 +418,10 @@ function generateDashboard(){
     var gender = document.createElement("div");
     gender.id = "gendercell";
     if(__$('patient_gender')){
-        gender.innerHTML = "<div id='gender'><img src='/images/" +
-        (__$('patient_gender').innerHTML.toLowerCase().trim() == "female" ? "female" : "male") + ".gif' alt\'" + 
-        (__$('patient_gender').innerHTML.toLowerCase().trim() == "female" ? "F" : "M") +
-        "\' height='25px' width='25px' style='padding-left: 3px; padding-top: 2px;' /></div>";
+        gender.innerHTML = "<div id='gender' style='padding-left: 3px; padding-top: 2px; " + 
+            "height: 25px; width: 25px;' class='" +
+        (__$('patient_gender').innerHTML.toLowerCase().trim() == "female" ? "female" : "male") +
+        "' /></div>";
     }
 
     topicRow.appendChild(gender);
@@ -502,7 +502,16 @@ function generateDashboard(){
         ageRow.appendChild(agevalue);
     }
 
-    if(__$('project_name')){
+    if(__$('custom_banner')){
+        var application = document.createElement("div");
+        application.id = "patient-dashboard-custom";
+
+        content.appendChild(application);
+
+        application.innerHTML = "<iframe src='" + (__$('custom_banner').getAttribute("path") ? 
+            __$('custom_banner').getAttribute("path") : "") + "' id='custom_page'></iframe>";;
+
+    } else if(__$('project_name')){
         var application = document.createElement("div");
         application.id = "patient-dashboard-application";
 
@@ -605,13 +614,74 @@ function generateDashboard(){
             var page = (children[i].value.trim() != children[i].innerHTML.trim() ? children[i].value :
                 "tabpages/" + children[i].innerHTML.trim().toLowerCase().replace(/\s/gi, "_") + ".html")
 
-            heading.push([children[i].innerHTML.trim(), page]);
+            var selectedtab = (children[i].getAttribute("selectedTab") ? true : false);
+            var alerttab = (children[i].getAttribute("alertTab") ? true : false);
+            
+            heading.push([children[i].innerHTML.trim(), page, selectedtab, alerttab]);
         }
 
         generateTab(heading, __$("patient-dashboard-main"))
     }
 
     if(__$("links")){
+
+        var optgroups = __$("links").getElementsByTagName("OPTGROUP");
+
+        if(optgroups.length > 0){
+
+            var start = document.createElement("button");
+            start.id = "btnStart";
+            start.className = "menu_start_button blue";
+            start.style.position = "absolute";
+            start.style.width = "220px";
+            start.style.height = "220px";
+            start.style.margin = "10px";
+            start.style.fontSize = "32px";
+            start.style.right = "10px";
+            start.style.zIndex = 100;
+            start.innerHTML = "<img src='lib/images/emblem.gif' height='80' style='margin: 10px;' /><br />Tasks";
+
+            start.onclick = function(){
+                if(__$('menu')){
+                    collapse()
+                } else {
+                    expand(this)
+                }
+            }
+
+            links.appendChild(start);
+
+        } else {
+
+            var childlinks = __$("links").options;
+
+            if(childlinks.length <= 4){
+                __$("buttonlinks").style.height = "30%";
+                __$("patient-dashboard-main").style.width = "100%";
+            } else {
+                __$("patient-dashboard-main").style.width = "73%";
+                __$("buttonlinks").style.height = "90%";
+            }
+
+            for(var j = 0; j < childlinks.length; j++){
+                var button = document.createElement("button");
+                button.className = "blue";
+                button.style.minWidth = "255px";
+                button.style.margin = "0px";
+                button.style.marginTop = "5px";
+                button.innerHTML = "<span>" + childlinks[j].innerHTML.trim() + "</span>";
+                button.setAttribute("link", childlinks[j].value);
+                button.onclick = function(){
+                    window.location = this.getAttribute("link");
+                }
+
+                links.appendChild(button);
+            }
+
+        }
+    }
+
+    /*if(__$("links")){
         var childlinks = __$("links").options;
 
         if(childlinks.length <= 4){
@@ -637,7 +707,7 @@ function generateDashboard(){
             links.appendChild(button);
         }
 
-    }
+    }*/
 
     if(__$("navigation_links")){
         var childlinks = __$("navigation_links").options;
@@ -735,19 +805,21 @@ function generateGeneralDashboard(){
 
     nav.appendChild(finish);
 
-    var logout = document.createElement("button");
-    logout.id = "btnCancel";
-    logout.innerHTML = "<span>Cancel</span>";
-    logout.className = "red";
-    logout.style.cssFloat = "left";
-    logout.style.margin = "10px";
-    logout.onclick = function(){
-        if(tt_cancel_show){
-            window.location = tt_cancel_show;
+    if(tt_cancel_show){
+        var logout = document.createElement("button");
+        logout.id = "btnCancel";
+        logout.innerHTML = "<span>Cancel</span>";
+        logout.className = "red";
+        logout.style.cssFloat = "left";
+        logout.style.margin = "10px";
+        logout.onclick = function(){
+            if(tt_cancel_show){
+                window.location = tt_cancel_show;
+            }
         }
-    }
 
-    nav.appendChild(logout);
+        nav.appendChild(logout);
+    }
 
     main.innerHTML += page;
 
@@ -803,10 +875,26 @@ function activate(id){
 
             __$(page_id).src = page;
 
-            __$(controls[i]).className = "active-tab";
+            if(__$(controls[i]).getAttribute("selectedTab")){
+                __$(controls[i]).className = "selectedHighlightedTab";
+            } else if(__$(controls[i]).getAttribute("alertTab")){
+                __$(controls[i]).className = "selectedAlertTab";
+            } else {
+                __$(controls[i]).className = "active-tab";
+            }
+            
             __$("view_" + controls[i]).style.display = "block";
         } else {
-            __$(controls[i]).className = "inactive-tab";
+            
+            if(__$(controls[i]).getAttribute("selectedTab")){
+                __$(controls[i]).className = "deSelectedHighlightedTab";
+            } else if(__$(controls[i]).getAttribute("alertTab")){
+                __$(controls[i]).className = "deSelectedAlertTab";
+            } else {
+                __$(controls[i]).className = "inactive-tab";
+            }
+            //__$(controls[i]).className = "inactive-tab";
+            
             __$("view_" + controls[i]).style.display = "none";
         }
     }
@@ -878,6 +966,15 @@ function generateTab(headings, target, content){
         }
         tab.innerHTML = headings[i][0];
         tab.setAttribute("link", headings[i][1]);
+        
+        if(headings[i][2]){
+            tab.setAttribute("selectedTab", true);
+        }
+        
+        if(headings[i][3]){
+            tab.setAttribute("alertTab", true);
+        }
+        
         tab.onclick = function(){
             activate(this.id);
         }
@@ -964,6 +1061,12 @@ function checkForBarcode(validAction){
 
     if (!barcode_element)
         return
+
+    barcode_element.onkeydown = function(event){
+        if(event.keyCode == 13){
+            this.value += '$'
+        }
+    }
 
     // Look for anything with a dollar sign at the end
     if (barcode_element.value.match(/.+\$$/i) != null || barcode_element.value.match(/.+\$$/i) != null){
@@ -1069,6 +1172,108 @@ function confirmYesNo(message, yes, no) {
 function hideConfirmation(){
     if (confirmation != null) confirmation.setAttribute('style', 'display:none');
     if (confirmationTimeout != null) window.clearTimeout(confirmationTimeout);
+}
+
+function expand(ctrl){
+    branches = {};
+
+    // [w, h, t, l]
+    var o = checkCtrl(ctrl);
+
+    var shield = document.createElement("div");
+    shield.id = "lyrShield";
+    shield.style.position = "absolute";
+    shield.style.width = "100%";
+    shield.style.height = "100%";
+    shield.style.left = "0px";
+    shield.style.top = "0px";
+    shield.style.backgroundColor = "#333"; // "#0088CC";
+    shield.style.opacity = "0.5";
+    shield.style.zIndex = 90;
+
+    document.body.appendChild(shield);
+
+    var menu = document.createElement("div");
+    menu.id = "menu";
+    menu.style.position = "absolute";
+    menu.style.left = (o[3] - 285) + "px";
+    menu.style.top = (o[2]) + "px";
+    menu.style.width = "280px";
+    menu.style.height = "650px";
+    menu.style.zIndex = 100;
+    menu.style.overflowY = "auto";
+    menu.style.overflowX = "hidden";
+
+    document.body.appendChild(menu);
+
+    var submenu = document.createElement("div");
+    submenu.id = "submenu";
+    submenu.style.position = "absolute";
+    submenu.style.left = (o[3] - (284 * 2)) + "px";
+    submenu.style.top = (o[2]) + "px";
+    submenu.style.width = "280px";
+    submenu.style.height = "650px";
+    submenu.style.zIndex = 100;
+    submenu.style.overflowY = "auto";
+    submenu.style.overflowX = "hidden";
+
+    document.body.appendChild(submenu);
+
+    var topLevelOptions = __$("links").getElementsByTagName("optgroup");
+
+    for(var i = 0; i < topLevelOptions.length; i++){
+        var middleLevelOptions = topLevelOptions[i].getElementsByTagName("option");
+
+        if(middleLevelOptions.length > 0){
+            branches[topLevelOptions[i].getAttribute("label")] = middleLevelOptions;
+        }
+
+        var button = document.createElement("button");
+        button.className = "menu_button blue";
+        button.style.width = "99%";
+        button.setAttribute("path", topLevelOptions[i].getAttribute("value"));
+        button.innerHTML = topLevelOptions[i].getAttribute("label");
+
+        button.onclick = function(){
+            if(branches[this.innerHTML]){
+                expandSub(this.innerHTML);
+            } else {
+                collapse(this.getAttribute("path"));
+            }
+        }
+
+        menu.appendChild(button);
+    }
+
+}
+
+function expandSub(group){
+    __$("submenu").innerHTML = "";
+
+    for(var i = 0; i < branches[group].length; i++){
+
+        var button = document.createElement("button");
+        button.className = "menu_button blue";
+        button.style.width = "99%";
+        button.setAttribute("path", branches[group][i].value);
+        button.innerHTML = branches[group][i].innerHTML;
+
+        button.onclick = function(){
+            collapse(this.getAttribute("path"));
+        }
+
+        __$("submenu").appendChild(button);
+    }
+}
+
+function collapse(path){
+    if(typeof(path) != "undefined"){
+        window.location = path;
+    }
+
+    document.body.removeChild(__$("lyrShield"))
+    document.body.removeChild(__$("menu"));
+    document.body.removeChild(__$("submenu"));
 }
 
 //window.addEventListener("load", createPage, false);

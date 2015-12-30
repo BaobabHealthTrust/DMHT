@@ -1,0 +1,26 @@
+
+.inputPage {
+  background: url('../images/mw-bk.jpg') no-repeat fixed center;
+  background-size: 50%;
+  -moz-user-select: none;
+}
+
+.inputFrameClass {
+  background-color: rgba(240, 240, 240, 0.5) !important;
+}
+
+.keyboard {
+  background-color: rgba(240, 240, 240, 0.2) !important;
+}
+
+#divMenu td {
+  background-color: rgba(240, 240, 240, 0.2) !important;
+}
+
+#summaryContainer {
+  background-color: rgba(240, 240, 240, 0.2) !important;
+}
+
+.touchscreenTextAreaInput {
+  background-color: rgba(240, 240, 240, 0.5) !important;
+}

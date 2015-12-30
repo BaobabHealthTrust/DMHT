@@ -63,8 +63,18 @@ var tstMessageBoxType = {
     YesNoCancel:{}
 }
 
+var touchscreenInterfaceEnabled = 0;
+var contentContainer = null;
+
 var tstTimerHandle = null;
 var tstTimerFunctionCall = "";
+
+var tstMultipleSelected = {};
+
+var ajaxGeneralRequestResult;
+
+var tstInternalCurrentDate = (new Date().getFullYear()) + "-" + padZeros((new Date().getMonth() + 1),2) + "-" + 
+padZeros((new Date().getDate()), 2);
 
 //--------------------------------------
 // Default method in module to access element id changed to __$ to avoid
@@ -106,10 +116,6 @@ function elementSelectedValue(element){
     return null;
 }
 
-
-var touchscreenInterfaceEnabled = 0;
-var contentContainer = null;
-
 function loadTouchscreenToolkit() {
     if(document.getElementById("loadingProgressMessage")){
         document.body.removeChild(document.getElementById("loadingProgressMessage"));
@@ -120,6 +126,9 @@ function loadTouchscreenToolkit() {
     if (document.forms.length>0) {
         tstFormElements = getFormElements();
         tstFormLabels = document.forms[0].getElementsByTagName("label");
+        for(var i = 0; i < tstFormElements.length; i++){
+            tstMultipleSelected[i] = {};
+        }
     }
     if (window.location.href.search(/\/patient\/patient_search_names/) != -1) {
         tstSearchPage = true;
@@ -633,26 +642,35 @@ function getOptions() {
         }
         else {
             if(tstFormElements[i].tagName == "SELECT") {
-                var selectOptions = tstFormElements[i].getElementsByTagName("option");
 
-                if(selectOptions.length > 0){
-                    // Append an empty option first
-                    if(selectOptions[0].innerHTML.trim().length > 0){
-                        tstFormElements[i].innerHTML = "<option></option>" + tstFormElements[i].innerHTML;
-                    }
-                }
+                if(tstFormElements[i].getAttribute("nested") != null){
 
-                if(tstFormElements[i].getAttribute("dualView") != undefined &&
-                    tstFormElements[i].getAttribute("dualViewOptions") != undefined){
-                    loadSelectOptions(selectOptions, options, tstFormElements[i].getAttribute("dualViewOptions"));
+                    setTimeout("nested_select('" + tstFormElements[i].id +
+                        "', 'options'); __$('viewport').style.height='22em'; __$('keyboard').style.display='none';", 50);
+
                 } else {
-                    loadSelectOptions(selectOptions, options);
-                }
+                    var selectOptions = tstFormElements[i].getElementsByTagName("option");
+
+                    if(selectOptions.length > 0){
+                        // Append an empty option first
+                        if(selectOptions[0].innerHTML.trim().length > 0){
+                            tstFormElements[i].innerHTML = "<option></option>" + tstFormElements[i].innerHTML;
+                        }
+                    }
+
+                    if(tstFormElements[i].getAttribute("dualView") != undefined &&
+                        tstFormElements[i].getAttribute("dualViewOptions") != undefined){
+                        loadSelectOptions(selectOptions, options, tstFormElements[i].getAttribute("dualViewOptions"));
+                    } else {
+                        loadSelectOptions(selectOptions, options);
+                    }
                 
-                var val = elementSelectedValue(tstFormElements[i]);
-                if (val == null) val = "";
-                tstInputTarget.value = val;
-                if (tstFormElements[i].multiple) tstInputTarget.setAttribute("multiple", "multiple");
+                    var val = elementSelectedValue(tstFormElements[i]);
+                    if (val == null) val = "";
+                    tstInputTarget.value = val;
+                    if (tstFormElements[i].multiple) tstInputTarget.setAttribute("multiple", "multiple");
+
+                }
             }else if (tstFormElements[i].getAttribute("type") == "radio") {
                 var selectOptions = document.getElementsByName(tstFormElements[i].name);
                 for(var j=0;j<selectOptions.length;j++){
@@ -753,16 +771,21 @@ function toggleShowProgress() {
     }
 }
 
-function loadSelectOptions(selectOptions, options, dualViewOptions) {
-    
-    if(dualViewOptions != undefined) {
+function loadSelectOptions(selectOptions, options, dualViewOptions) {    
+    if(dualViewOptions != undefined || dualViewOptions != null) {
         tstDualViewOptions = eval(dualViewOptions);
         setTimeout("addSummary(" + selected + ")", 0);
     }
 
+    if(tstFormElements[tstCurrentPage].getAttribute("selectAll")){         
+        setTimeout("addSelectAllButton()", 0);     
+    }
+    
     var optionsList = "<ul id='tt_currentUnorderedListOptions'>";  // <li id='default'> </li>";
     var selectOptionCount = selectOptions.length;
     var selected = -1;
+
+    options.innerHTML = "";
 
     for(var j=0;j<selectOptionCount;j++){
         // njih
@@ -773,25 +796,34 @@ function loadSelectOptions(selectOptions, options, dualViewOptions) {
         // inherit mouse down options
         mouseDownAction = selectOptions[j].getAttribute("onmousedown")
         mouseDownAction += '; updateTouchscreenInputForSelect(' +
-        (tstFormElements[tstCurrentPage].getAttribute("multiple") ? '__$(\'optionValue\' + this.id), this' : 'this') + '); ' + 
+        (tstFormElements[tstCurrentPage].getAttribute("multiple") ? '__$(\'optionValue\' + this.id), this' : 'this') + 
+        '); ' + 
         (dualViewOptions ? 'changeSummary(this.id);' : '');
         
         optionsList += '<li id=\'' + (j-1) + '\' ';
         if (selectOptions[j].value) {
-            optionsList += " id='option"+selectOptions[j].value +"' tstValue='"+selectOptions[j].value +"'";
+            optionsList += " id=\"option"+selectOptions[j].value +"\" tstValue=\""+selectOptions[j].value +"\"";
             selected = j;
         } 
         
-        // optionsList += (j % 2 == 0 ? " class='odd' tag='odd' " : " class='even' tag='even'") + 
-        // ' onmousedown="'+ mouseDownAction +'"';
-    
+        if(selectOptions[j].selected){
+            try{
+                setTimeout("__$(" + (j-1) + ").click();", 0);
+            } catch(e){}
+        }
+        
         optionsList += (j % 2 == 0 ? " class='odd' tag='odd' " : " class='even' tag='even'") + 
-            ' onclick="' + mouseDownAction + '" ';
+        ' onmousedown="'+ (tstFormElements[tstCurrentPage].getAttribute("tt_requirenextclick") != null ? 
+            (tstFormElements[tstCurrentPage].getAttribute("tt_requirenextclick") == "false" ? "checkRequireNextClick();" : "") : "") +'"';
+
+        optionsList += (j % 2 == 0 ? " class='odd' tag='odd' " : " class='even' tag='even'") + 
+        ' onclick="' + mouseDownAction + '" ';
         
         // njih
         optionsList += ">" + (tstFormElements[tstCurrentPage].getAttribute("multiple") ? 
             "<div style='display: table; border-spacing: 0px;'><div style='display: table-row'>" + 
-            "<div style='display: table-cell;'><img id='img" + (j-1) + "' src='/touchscreentoolkit/lib/images/unticked.jpg' alt='[ ]' />" + 
+            "<div style='display: table-cell;'><img id='img" + (j-1) +
+            "' src='/touchscreentoolkit/lib/images/unticked.jpg' alt='[ ]' />" +
             "</div><div style='display: table-cell; vertical-align: middle; " + 
             "text-align: left; padding-left: 15px;' id='optionValue"  + (j-1) + "'>" : "") + 
         selectOptions[j].text + "</div></div></div></li>\n";
@@ -814,7 +846,7 @@ function addSummary(position){
     summaryContainer.style.border = "1px solid #000";
     summaryContainer.style.height = "255px";
     summaryContainer.style.margin = "25px";
-    summaryContainer.style.width = "94.5%";
+    summaryContainer.style.width = "97%";
     summaryContainer.style.backgroundColor = "#ccf";
     summaryContainer.style.fontSize = "1.5em";
     summaryContainer.style.marginBottom = "15px";
@@ -915,8 +947,7 @@ function unhighlight(element){
 }
 
 //TODO make these into 1 function
-function updateTouchscreenInputForSelect(element, parentElement){
-    
+function updateTouchscreenInputForSelect(element){ 
     var inputTarget = tstInputTarget;
     var multiple = inputTarget.getAttribute("multiple") == "multiple";
 
@@ -931,12 +962,15 @@ function updateTouchscreenInputForSelect(element, parentElement){
             val = element.value;
         
         // Check if the item is already included
-        var idx = val_arr.toString().indexOf(val);
-        if (idx == -1)
+        // var idx = val_arr.toString().indexOf(val);
+        if (!tstMultipleSelected[tstCurrentPage][val]){ //(idx == -1){
             val_arr.push(val);
-        else
+            tstMultipleSelected[tstCurrentPage][val] = true;
+        } else {
             // val_arr.splice(idx, 1);
             val_arr = removeFromArray(val_arr, val);
+            delete(tstMultipleSelected[tstCurrentPage][val]);
+        }
         inputTarget.value = val_arr.join(tstMultipleSplitChar);
         if (inputTarget.value.indexOf(tstMultipleSplitChar) == 0)
             inputTarget.value = inputTarget.value.substring(1, inputTarget.value.length);
@@ -949,11 +983,9 @@ function updateTouchscreenInputForSelect(element, parentElement){
         }
     }
 
-    highlightSelection(element.parentNode.childNodes, inputTarget, 
-        (parentElement ? parentElement.childNodes : null))
+    highlightSelection(element.parentNode.childNodes, inputTarget)
             
     tt_update(inputTarget);
-    checkRequireNextClick();
 }
 
 function updateTouchscreenInput(element){
@@ -1118,7 +1150,8 @@ function tt_update(sourceElement, navback){
         } else {
             sourceValue = sourceElement.getAttribute("tstValue");
         }                
-    } else {
+    }
+    else {
         if (condition && navback == true) {
             sourceValue = "";            
         } else {
@@ -1163,7 +1196,8 @@ function tt_update(sourceElement, navback){
                         for(i=0;i<targetElement.options.length;i++){
                             if(optionIncludedInValue(targetElement.options[i].text, val_arr)) {
                                 targetElement.options[i].selected = true;
-                            } else
+                            }
+                            else
                                 targetElement.options[i].selected = false;
 
                         }
@@ -1283,8 +1317,10 @@ function gotoPage(destPage, validate, navback){
     var currentPage = tstCurrentPage;
     var currentInput = __$("touchscreenInput"+currentPage);
 
-    var navback = (navback ? navback : false);    
+    var navback = (navback ? navback : false);       
 
+    tstMultipleSelected[tstCurrentPage] = {}; 
+    
     //	tt_BeforeUnload
     var unloadElementId = 'touchscreenInput';
     if (currentPage < destPage) {
@@ -1456,10 +1492,14 @@ function navigateToPage(destPage, validate, navback){
     }
     else{
 
+        /*
         var popupBox = __$("popupBox");
         if (popupBox) {
             popupBox.style.visibility = "visible";
         }
+    */
+   
+        showStatus();
 
         document.forms[0].submit();
     }
@@ -1508,9 +1548,9 @@ function confirmValue() {
     confirmationBar.appendChild(username);
 
     confirmationBar.innerHTML += "<div style='display: block; margin-top: 15px;'><input type='submit'" +
-        " value='OK' class='btn' style='float: left;' onclick='validateConfirmUsername()'" + 
-        " onmousedown='validateConfirmUsername()'/><input type='submit' value='Cancel' " + 
-        " class='btn' style='float: right; right: 3px;' onmousedown='cancelConfirmValue()' />";
+    " value='OK' class='btn' style='float: left;' onclick='validateConfirmUsername()'" + 
+    " onmousedown='validateConfirmUsername()'/><input type='submit' value='Cancel' " + 
+    " class='btn' style='float: right; right: 3px;' onmousedown='cancelConfirmValue()' />";
 
     confirmationBar.style.display = "block";
     tstInputTarget = __$("confirmUsername");
@@ -1558,38 +1598,58 @@ function clearInput(){
     }
     
     if(tstFormElements[tstPages[tstCurrentPage]].tagName == "SELECT"){
-        var options = __$("tt_currentUnorderedListOptions").getElementsByTagName("li");
+        if(__$("tt_currentUnorderedListOptions")){
+            var options = __$("tt_currentUnorderedListOptions").getElementsByTagName("li");
             
-        if(tstFormElements[tstPages[tstCurrentPage]].getAttribute("multiple")){
-            for(var i = 0; i < options.length; i++){
-                if(options[i].style.backgroundColor == "lightblue"){
-                    options[i].click();
-                    options[i].click();
+            if(tstFormElements[tstPages[tstCurrentPage]].getAttribute("multiple")){
+                for(var i = 0; i < options.length; i++){
+                    if(options[i].style.backgroundColor == "lightblue"){
+                        options[i].click();
+                    }
+                }
+            } else {
+                for(var i = 0; i < options.length; i++){
+                    if(options[i].style.backgroundColor == "lightblue"){
+                        options[i].style.backgroundColor = "";
+                        tstFormElements[tstPages[tstCurrentPage]].value = "";
+                        __$('touchscreenInput'+tstCurrentPage).setAttribute("tstvalue", "");
+                    }
                 }
             }
         } else {
-            for(var i = 0; i < options.length; i++){
-                if(options[i].style.backgroundColor == "lightblue"){
-                    options[i].style.backgroundColor = "";
-                    tstFormElements[tstPages[tstCurrentPage]].value = ""; 
-                    __$('touchscreenInput'+tstCurrentPage).setAttribute("tstvalue", "");
+            var controls = __$("options").getElementsByTagName("img");
+
+            for(var j = 0; j < controls.length; j++){
+                try{
+                    if(controls[j].getAttribute("src").match(/un/) == null){
+                        controls[j].click();
+                    }
+                } catch(e){
                 }
             }
         }
     }
 }
 
-function showMessage(aMessage, withCancel) {
+function showMessage(aMessage, withCancel, timed) {
+    if(typeof(tstMessageBar) == "undefined"){
+        __$("content").innerHTML += "<div id='messageBar' class='messageBar'></div>";
+        
+        tstMessageBar = __$('messageBar');
+    }
+    
     var messageBar = tstMessageBar;
     messageBar.innerHTML = aMessage +
     "<br />" + (typeof(withCancel) != "undefined" ? (withCancel == true ?
         "<button onmousedown='tstMessageBar.style.display = \"none\"; " +
         "clearTimeout(tstTimerHandle);'><span>Cancel</span></button>" : "") : "") +
     "<button style='width: 200px;' onmousedown='tstMessageBar.style.display = \"none\"; " +
-    "clearTimeout(tstTimerHandle); eval(tstTimerFunctionCall);'><span>Ok</span></button>";
+    "clearTimeout(tstTimerHandle); eval(tstTimerFunctionCall);'><span>OK</span></button>";
     if (aMessage.length > 0) {
         messageBar.style.display = 'block'
-        window.setTimeout("hideMessage()",3000)
+        if((typeof(timed) == "undefined" ? true : timed) == true){
+            window.setTimeout("hideMessage()",3000)
+        }
     }
 }
 
@@ -1655,12 +1715,16 @@ function toggleShift() {
 
 function showBestKeyboard(aPageNum) {
     var inputElement = tstFormElements[tstPages[aPageNum]];
+
+    __$("keyboard").style.display = "block";
+    
     if (isDateElement(inputElement)) {
         var thisDate = new RailsDate(inputElement);
+
         if (tstSearchPage) {
             if (thisDate.isDayOfMonthElement()) getDatePicker();
             else __$("keyboard").innerHTML = getNumericKeyboard();
-        }	else {
+        } else {
             getDatePicker();
         }
         return;
@@ -1674,7 +1738,8 @@ function showBestKeyboard(aPageNum) {
     switch (inputElement.getAttribute("field_type")) {
         case "password":
         case "full_keyboard":
-            showKeyboard(true);
+            showKeyboard(true, (typeof(tstUserKeyboardPref) != 'undefined' && 
+                tstUserKeyboardPref.toLowerCase() == "qwerty" ? true : false));
             break;
         case "alpha":
             __$("keyboard").innerHTML = getPreferredKeyboard();
@@ -1688,8 +1753,37 @@ function showBestKeyboard(aPageNum) {
         case "time":
             getTimePicker();
             break;
+        case "advancedTime":
+            getAdvancedTimePicker();
+            break;
         case "boolean":
             __$("keyboard").innerHTML = "";
+            break;
+        case "calendar":
+            __$("keyboard").innerHTML = "";
+            __$("page" + aPageNum).innerHTML = "";
+            
+            var selected = {};
+            var selecteddate = null;
+            var start_date_week = null;
+            var end_date_week = null;
+            
+            if(inputElement.getAttribute("selecteddays")){
+                selected = eval(inputElement.getAttribute("selecteddays"));
+            }
+            
+            if(inputElement.getAttribute("startweekdate")){
+                start_date_week = inputElement.getAttribute("startweekdate");
+            }
+            
+            if(inputElement.getAttribute("endweekdate")){
+                end_date_week = inputElement.getAttribute("endweekdate");
+            }
+            
+            selecteddate = inputElement.value;
+            
+            createCalendar("page" + aPageNum, inputElement.id, selecteddate, 
+                selected, start_date_week, end_date_week);                  
             break;
         default:
             __$("keyboard").innerHTML = getPreferredKeyboard();
@@ -1743,6 +1837,9 @@ function getDatePart(aElementName) {
 
 
 function gotoNextPage() {
+    if(__$("category")){
+        document.body.removeChild(__$("category"));
+    }
     gotoPage(tstCurrentPage+1, true);
 }
 
@@ -1929,13 +2026,15 @@ function getTimePicker() {
             hour: arrDate[0],
             minute: arrDate[1],
             second: arrDate[2],
-            format: "H:M:S"
+            format: "H:M:S",
+            maxNow: (tstInputTarget.getAttribute("maxNow") ? true : false)
         });
     } else {
         ds = new TimeSelector({
             element: keyboardDiv,
             target: tstInputTarget,
-            format: "H:M:S"
+            format: "H:M:S",
+            maxNow: (tstInputTarget.getAttribute("maxNow") ? true : false)
         });
     }
 
@@ -2083,6 +2182,10 @@ function press(pressedChar){
     inputTarget = tstInputTarget;
     var singleButtonMode = inputTarget.getAttribute("singleButtonMode");
     if (singleButtonMode)
+        inputTarget.value = "";
+
+    var unknownClickedEarlier = inputTarget.value.toLowerCase();
+    if (unknownClickedEarlier == "unknown" || unknownClickedEarlier == "n/a")
         inputTarget.value = "";
 
     if (pressedChar.length == 1) {
@@ -2774,7 +2877,8 @@ RailsDate.prototype = {
                     (this.element.name == str[1]+'['+str[2]+'(1i)]')) {
                     monthElement = document.getElementsByName(str[1]+'['+str[2]+'(2i)]')[0];
 
-                } else if (this.isDayOfMonthElement() &&
+                }
+                else if (this.isDayOfMonthElement() &&
                     (this.element.name == str[1]+'['+str[2]+'(3i)]')) {
                     monthElement = document.getElementsByName(str[1]+'['+str[2]+'(2i)]')[0];
                 }
@@ -2834,7 +2938,8 @@ RailsDate.prototype = {
             if (!yearElement) {
                 if (str[1].search(/month$/) != -1 ) {
                     elementName = str[1].replace(/month$/, "year")+'['+str[2]+'(1i)]';
-                } else if (str[1].search(/date$/) != -1 ) {
+                }
+                else if (str[1].search(/date$/) != -1 ) {
                     elementName = str[1].replace(/date$/, "year")+'['+str[2]+'(1i)]';
                 }
                 yearElement = document.getElementsByName(elementName)[0];
@@ -3084,6 +3189,7 @@ var DateSelector = function() {
 
 DateSelector.prototype = {
     build: function() {
+
         var node = document.createElement('div');
         // TODO: move style stuff to a css file
         node.innerHTML = ' \
@@ -3108,7 +3214,9 @@ DateSelector.prototype = {
 				<button id="dateselector_preDay" onmousedown="ds.decrementDay();"><span>-</span></button> \
 			</div> \
 			</td><td> \
-                        <button id="today" onmousedown="setToday()" style="width: 150px;"><span>Today</span></button> \
+                        <button id="today" ' + (tstCurrentDate ? (tstCurrentDate == tstInternalCurrentDate ? 
+            'class="blue" ' : 'class="red" ') : 'class="blue" ') + 
+        ' onmousedown="setToday()" style="width: 150px;"><span>Today</span></button> \
 			<!--button id="num" onmousedown="updateKeyColor(this);press(this.id);" style="width: 150px;"><span>Num</span></button--> \
 			<button id="Unknown" onmousedown="updateKeyColor(this);press(this.id);" style="width: 150px;"><span>Unknown</span></button> \
 			</tr></table> \
@@ -3321,6 +3429,12 @@ var DateUtil = {
 
 function setToday(){
     var d = new Date();
+    if (tstCurrentDate) {
+        if(tstCurrentDate.match(/\d{4}\-\d{2}\-\d{2}/)){
+            d = new Date(tstCurrentDate);
+        }
+    }
+    
     var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     document.getElementById("touchscreenInput" + tstCurrentPage).value =
@@ -3348,7 +3462,8 @@ var TimeSelector = function() {
         second: arguments[0].second || this.time[2],
         format: "H:M:S",
         element: arguments[0].element || document.body,
-        target: arguments[0].target
+        target: arguments[0].target,
+        maxNow: arguments[0].maxNow
     };
 
     if (typeof(tstCurrentTime) != "undefined" && tstCurrentTime) {
@@ -3384,14 +3499,18 @@ TimeSelector.prototype = {
 			<td valign="top"> \
 			<div style="display: inline;" > \
                                 <div style="text-align:center; width:100%; font-size:1.8em;">Hr</div>\
-				<button id="timeselector_nextHour" onmousedown="ds.incrementHour();"><span>+</span></button> \
+				<button id="timeselector_nextHour" onmousedown="ds.incrementHour();" ' + 
+        (this.options["maxNow"] == true ? 'class="blue" ' : 'class="red" ') + 
+        ' ><span>+</span></button> \
 				<input id="timeselector_hour" type="text" > \
 				<button id="timeselector_preHour" onmousedown="ds.decrementHour();"><span>-</span></button> \
 			</div> \
 			</td><td> \
 			<div style="display: inline;"> \
                                 <div style="text-align:center; width:100%; font-size:1.8em;">Min</div>\
-				<button id="timeselector_nextMinute" onmousedown="ds.incrementMinute();"><span>+</span></button> \
+				<button id="timeselector_nextMinute" onmousedown="ds.incrementMinute();"' + 
+        (this.options["maxNow"] == true ? 'class="blue" ' : 'class="red" ') + 
+        ' ><span>+</span></button> \
 				<input id="timeselector_minute" type="text"> \
 				<button id="timeselector_preMinute" onmousedown="ds.decrementMinute();"><span>-</span></button> \
 			</div> \
@@ -3417,14 +3536,20 @@ TimeSelector.prototype = {
 
 
     incrementHour: function() {
-        if(this.currentHour.value >= (new Date().getHours())){
+        if(this.options["maxNow"] == true){       
+            if(this.currentHour.value >= (new Date().getHours())){
 
+            } else if(this.currentHour.value == 23){
+                this.currentHour.value = 0;
+            } else {
+                this.currentHour.value++;
+            }
         } else if(this.currentHour.value == 23){
             this.currentHour.value = 0;
         } else {
             this.currentHour.value++;
         }
-
+        
         this.time[0] = this.currentHour.value;
         this.update(this.target);
     },
@@ -3441,12 +3566,22 @@ TimeSelector.prototype = {
     },
 
     incrementMinute: function() {
-        if(this.currentMinute.value == 59){
-            this.currentMinute.value = 0;
-        //} else if(this.currentMinute.value >= (new Date().getMinutes())){
-        //  this.currentMinute.value++;
+        if(this.options["maxNow"] == true){        
+            if(this.currentMinute.value == 59){
+                this.currentMinute.value = 0;
+                this.incrementHour();
+            } else if(this.currentMinute.value >= (new Date().getMinutes())){
+                this.currentMinute.value = 0;
+            } else  {
+                this.currentMinute.value++;
+            }
         } else  {
-            this.currentMinute.value++;
+            if(this.currentMinute.value == 59){
+                this.currentMinute.value = 0;
+                this.incrementHour();
+            } else {
+                this.currentMinute.value++;
+            }
         }
 
         this.time[1] = this.currentMinute.value;
@@ -3465,8 +3600,12 @@ TimeSelector.prototype = {
     },
 
     incrementSecond: function() {
-        if(this.currentSecond.value == 59){
-            this.currentSecond.value = 0;
+        if(this.options["maxNow"] == true){        
+            if(this.currentSecond.value == 59){
+                this.currentSecond.value = 0;
+            } else {
+                this.currentSecond.value++;
+            }
         } else {
             this.currentSecond.value++;
         }
@@ -3524,15 +3663,15 @@ function stripZero(value){
     return value;
 }
 
-function showKeyboard(full_keyboard){   
+function showKeyboard(full_keyboard, qwerty){   
     var div = document.createElement("div");
     div.id = "divMenu";
     // div.className = "keyboard";
     
-    var row1 = ["Q","W","E","R","T","Y","U","I","O","P"];
-    var row2 = ["A","S","D","F","G","H","J","K","L",":"];
-    var row3 = ["Z","X","C","V","B","N","M",",",".","?"];
-    var row4 = ["cap","space","delete"];
+    var row1 = (qwerty ? ["q","w","e","r","t","y","u","i","o","p"] : ["a","b","c","d","e","f","g","h","i","j"]);
+    var row2 = (qwerty ? ["a","s","d","f","g","h","j","k","l",":"] : ["k","l","m","n","o","p","q","r","s",":"]);
+    var row3 = (qwerty ? ["z","x","c","v","b","n","m",",",".","?"] : ["t","u","v","w","x","y","z",",",".","?"]);
+    var row4 = ["CAP","space","delete"];
     var row5 = ["1","2","3","4","5","6","7","8","9","0"];
     var row6 = ["_","-","@","(",")","+",";","=","\\","/"];
 
@@ -3553,12 +3692,13 @@ function showKeyboard(full_keyboard){
         td5.vAlign = "middle";
         td5.style.cursor = "pointer";
         td5.bgColor = "#ffffff";
-        td5.width = "30px";
+        td5.style.minWidth = "30px";
 
         tr5.appendChild(td5);
 
         var btn = document.createElement("button");
         btn.className = "blue";
+        btn.style.width = "80%";
         btn.innerHTML = "<span>" + row5[i] + "</span>";
         btn.onclick = function(){
             if(!this.innerHTML.match(/^$/)){
@@ -3582,12 +3722,13 @@ function showKeyboard(full_keyboard){
         td1.vAlign = "middle";
         td1.style.cursor = "pointer";
         td1.bgColor = "#ffffff";
-        td1.width = "30px";
+        td1.style.minWidth = "30px";
 
         tr1.appendChild(td1);
 
         var btn = document.createElement("button");
         btn.className = "blue";
+        btn.style.width = "80%";
         btn.innerHTML = "<span>" + row1[i] + "</span>";
         btn.onclick = function(){
             if(!this.innerHTML.match(/^$/)){
@@ -3609,12 +3750,13 @@ function showKeyboard(full_keyboard){
         td2.vAlign = "middle";
         td2.style.cursor = "pointer";
         td2.bgColor = "#ffffff";
-        td2.width = "30px";
+        td2.style.minWidth = "30px";
 
         tr2.appendChild(td2);
 
         var btn = document.createElement("button");
         btn.className = "blue";
+        btn.style.width = "80%";
         btn.innerHTML = "<span>" + row2[i] + "</span>";
         btn.onclick = function(){
             if(!this.innerHTML.match(/^$/)){
@@ -3636,12 +3778,13 @@ function showKeyboard(full_keyboard){
         td3.vAlign = "middle";
         td3.style.cursor = "pointer";
         td3.bgColor = "#ffffff";
-        td3.width = "30px";
+        td3.style.minWidth = "30px";
 
         tr3.appendChild(td3);
 
         var btn = document.createElement("button");
         btn.className = "blue";
+        btn.style.width = "80%";
         btn.innerHTML = "<span>" + row3[i] + "</span>";
         btn.onclick = function(){
             if(!this.innerHTML.match(/^$/)){
@@ -3663,12 +3806,13 @@ function showKeyboard(full_keyboard){
         td6.vAlign = "middle";
         td6.style.cursor = "pointer";
         td6.bgColor = "#ffffff";
-        td6.width = "30px";
+        td6.style.minWidth = "30px";
 
         tr6.appendChild(td6);
 
         var btn = document.createElement("button");
         btn.className = "blue";
+        btn.style.width = "80%";
         btn.innerHTML = "<span>" + row6[i] + "</span>";
         btn.onclick = function(){
             if(!this.innerHTML.match(/^$/)){
@@ -3713,7 +3857,7 @@ function showKeyboard(full_keyboard){
         btn.innerHTML = (row4[i].trim().length > 0 ? "<span>" + row4[i] + "</span>" : "");
         
         if(row4[i] == "space"){
-            btn.style.width = "80%";
+            btn.style.minWidth = "60%";
         }
         
         btn.onclick = function(){
@@ -3769,13 +3913,13 @@ function showKeyboard(full_keyboard){
 
                 full_keyboard = true;
 
-                showKeyboard(global_control);
+                showKeyboard(global_control, qwerty);
 
             } else if(this.innerHTML.match(/<span>(.+)<\/span>/)[1].toLowerCase() == "basic"){
 
                 full_keyboard = false;
 
-                showKeyboard(global_control);
+                showKeyboard(global_control, qwerty);
 
             } else if(!this.innerHTML.match(/<span>(.+)<\/span>/)[1].match(/^$/)){
 
@@ -3800,4 +3944,866 @@ function showKeyboard(full_keyboard){
     
     __$("keyboard").appendChild(div);
     
+}
+
+function padZeros(number, positions){
+    var zeros = parseInt(positions) - String(number).length;
+    var padded = "";
+    
+    for(var i = 0; i < zeros; i++){
+        padded += "0";
+    }
+    
+    padded += String(number);
+    
+    return padded;
+}
+
+function ajaxGeneralRequest(aUrl, method) {
+    var httpRequest = new XMLHttpRequest();
+    httpRequest.onreadystatechange = function() {
+        handleGeneralResult(httpRequest, method);
+    };
+    try {        
+        showProgress();
+        
+        httpRequest.open('GET', aUrl, true);
+        httpRequest.send(null);
+    } catch(e){
+    }
+}
+
+function handleGeneralResult(aXMLHttpRequest, method) {    
+    if (!aXMLHttpRequest) return "error";
+
+    if (aXMLHttpRequest.readyState == 4 && (aXMLHttpRequest.status == 200 || aXMLHttpRequest.status == 304)) {
+        var result = aXMLHttpRequest.responseText;
+        
+        ajaxGeneralRequestResult = result;
+        
+        __$("progress_bar").style.display = "none";        
+        
+        eval(method);
+        
+        return ajaxGeneralRequestResult;
+    }  
+    return "";
+}
+
+function showProgress(){
+    if(!__$("progress_bar")){
+        var div = document.createElement("div");
+        div.id = "progress_bar";
+        div.className = "messageBar";
+        div.innerHTML = "Fetching data. Please wait...";
+        //div.style.top = "200px";
+        //div.style.left = "280px";
+        
+        __$("page" + tstCurrentPage).appendChild(div);
+    }
+    
+    __$("progress_bar").style.display = "block";
+}
+
+function hideProgress(){
+    __$("progress_bar").style.display = "none";
+}
+
+function showStatus(){
+    if(!__$("popupBox")){
+        var  popupBox = document.createElement("div");
+        popupBox.id = "popupBox";
+        popupBox.style.display = "none";
+       
+        popupBox.innerHTML = "<p>Processing. Please Wait ...</p>"
+       
+        __$("content").appendChild(popupBox);
+    }
+    
+    __$("popupBox").style.display = "block";
+}
+
+function checkCtrl(obj){
+    var o = obj;
+    var t = o.offsetTop;
+    var l = o.offsetLeft + 1;
+    var w = o.offsetWidth;
+    var h = o.offsetHeight;
+
+    while((o ? (o.offsetParent != document.body) : false)){
+        o = o.offsetParent;
+        t += (o ? o.offsetTop : 0);
+        l += (o ? o.offsetLeft : 0);
+    }
+    return [w, h, t, l];
+}
+     
+function showCategory(category){
+    var pos = checkCtrl(__$("content"));
+    
+    if(__$("category")){
+        document.body.removeChild(__$("category"));
+    }
+    
+    var cat = document.createElement("div");
+    cat.id = "category";
+    cat.style.position = "absolute";
+    cat.style.left = (pos[3] + (pos[0] - 378)) + "px";
+    cat.style.top = (pos[2] + 5) + "px";
+    cat.style.width = "350px";
+    cat.style.minHeight = "45px";
+    cat.style.fontSize = "36px";
+    cat.style.padding = "10px";
+    cat.style.backgroundColor = "#9e9";
+    cat.style.color = "#000";
+    cat.style.opacity = "0.95";
+    cat.style.zIndex = 100;
+    cat.style.textAlign = "center";
+    cat.innerHTML = category;
+    
+    document.body.appendChild(cat);
+}  
+
+function getAdvancedTimePicker() {
+    if (typeof(AdvancedTimeSelector) == "undefined")
+        return;
+
+    var inputElement = tstFormElements[tstPages[tstCurrentPage]];
+    var keyboardDiv = __$('keyboard');
+    keyboardDiv.innerHTML = "";
+
+    var railsDate = new RailsDate(inputElement);
+    if (railsDate.isDayOfMonthElement()) {
+        getDayOfMonthPicker(railsDate.getYearElement().value, railsDate.getMonthElement().value);
+        return;
+    }
+
+    var defaultDate = joinDateValues(inputElement);
+    //defaultDate = defaultDate.replace("-", "/", "g");
+    var arrDate = defaultDate.split(':');
+    __$("touchscreenInput"+tstCurrentPage).value = defaultDate;
+
+    if (arrDate.length == 3) {
+        ds = new AdvancedTimeSelector({
+            element: keyboardDiv,
+            target: tstInputTarget,
+            hour: arrDate[0],
+            minute: arrDate[1],
+            second: arrDate[2],
+            format: "H:M:S",
+            maxNow: (tstInputTarget.getAttribute("maxNow") ? true : false)
+        });
+    } else {
+        ds = new AdvancedTimeSelector({
+            element: keyboardDiv,
+            target: tstInputTarget,
+            format: "H:M:S",
+            maxNow: (tstInputTarget.getAttribute("maxNow") ? true : false)
+        });
+    }
+
+// __$("options" + tstCurrentPage).innerHTML = "";
+}
+
+var AdvancedTimeSelector = function() {
+    this.time = [new Date().getHours(), new Date().getMinutes(), new Date().getSeconds()];
+
+    if (! arguments[0])
+        arguments[0] = {};
+
+    this.options = {
+        hour: arguments[0].hour || this.time[0],
+        minute: arguments[0].minute || this.time[1],
+        second: arguments[0].second || this.time[2],
+        format: "H:M:S",
+        element: arguments[0].element || document.body,
+        target: arguments[0].target,
+        maxNow: arguments[0].maxNow
+    };
+
+    if (typeof(tstCurrentTime) != "undefined" && tstCurrentTime) {
+        var splitTime = tstCurrentTime.split(":");
+        if (splitTime.length == 3) {
+            this.time = [splitTime[0], splitTime[1], splitTime[2]];
+        }
+    }	else {
+        this.time = [this.options.hour, this.options.minute, this.options.second];
+    }
+    this.element = this.options.element;
+    this.format = this.options.format;
+    this.target = this.options.target;
+
+    this.element.appendChild(this.build());
+
+    this.currentHour = $('timeselector_hour');
+    this.currentMinute = $('timeselector_minute');
+    //this.currentSecond = $('timeselector_second');
+
+    this.currentHour.value = this.time[0];
+    this.currentMinute.value = this.time[1];
+//this.currentSecond.value = this.time[2];
+};
+
+AdvancedTimeSelector.prototype = {
+    build: function() {
+        var hr = (new Date()).getHours();
+        var node = document.createElement('div');
+        // TODO: move style stuff to a css file
+        node.innerHTML = ' \
+			<div id="timeselector" class="dateselector" style="min-height: 477px;"> \
+                            <div class="table" style="width: 100%;"><div class="row"><div class="cell" \
+                                        style="text-align: center; font-size: 36px;">\
+                                        Hour</div><div class="cell">&nbsp;</div><div class="cell" \
+                                        style="text-align: center; font-size: 36px;">Minute</div></div>\
+                                        <div class="row"><div class="cell" \
+                                        style="text-align: center;"><object type="image/svg+xml" \
+                                        data="/touchscreentoolkit/lib/images/hour.svg" wmode="transparent" \
+                                        style="padding:5px; overflow:hidden;" \
+                                        id="hour" >\
+                                    <param id="et1" name="t1" value="" />\
+                                    <param id="et2" name="t2" value="" />\
+                                    <param id="et3" name="t3" value="" />\
+                                    <param id="et4" name="t4" value="" />\
+                                    <param id="et5" name="t5" value="" />\
+                                    <param id="et6" name="t6" value="" />\
+                                    <param id="et7" name="t7" value="" />\
+                                    <param id="et8" name="t8" value="" />\
+                                    <param id="et9" name="t9" value="" />\
+                                    <param id="et10" name="t10" value="" />\
+                                    <param id="et11" name="t11" value="" />\
+                                    <param id="et12" name="t12" value="" /></object></div><div class="cell"></div>\
+                              <div class="cell" style="text-align: center;"><object type="image/svg+xml" \
+                                data="/touchscreentoolkit/lib/images/minute.svg" \
+                                   wmode="transparent" \
+                                style="padding:5px; overflow:hidden;" id="minute" >\
+                                    <param id="etm5" name="tm5" value="" />\
+                                    <param id="etm10" name="tm10" value="" />\
+                                    <param id="etm15" name="tm15" value="" />\
+                                    <param id="etm20" name="tm20" value="" />\
+                                    <param id="etm25" name="tm25" value="" />\
+                                    <param id="etm30" name="tm30" value="" />\
+                                    <param id="etm35" name="tm35" value="" />\
+                                    <param id="etm40" name="tm40" value="" />\
+                                    <param id="etm45" name="tm45" value="" />\
+                                    <param id="etm50" name="tm50" value="" />\
+                                    <param id="etm55" name="tm55" value="" />\
+                                    <param id="etm0" name="tm0" value="" /></object> \
+                                </div></div><div class="row"><div class="cell"><div class="table" \
+                                style="margin-left: 20px;"><div class="row"><div class="cell">\
+                                <button id="timeselector_preHour" style="width: 100px;" onmousedown="ds.decrementHour();">\
+                                <span>-</span></button></div><div class="cell" style="vertical-align: middle; text-align: center;">\
+                                <input id="timeselector_hour" type="text" style="margin-left: 10px;" />\
+                                </div><div class="cell"><button id="timeselector_nextHour" onmousedown="ds.incrementHour();" ' + 
+        (this.options["maxNow"] == true ? 'class="blue" ' : 'class="red" ') + 
+        ' style="width: 100px;" ><span>+</span></button></div></div></div> </div>\
+                                <div class="cell"><button id="ampm" style="width: 150px;" \
+                                onmousedown="ds.changeScope();"><span>' + (hr >= 12 ? 'PM' : 'AM') + 
+        '</span></button></div><div class="cell"> \
+                                <div class="table" \
+                                style="margin-right: 25px; float: right;"><div class="row"><div class="cell"> \
+                                <button id="timeselector_preMinute" onmousedown="ds.decrementMinute();" style="width: 100px;"> \
+                                <span>-</span></button>\
+                                </div><div class="cell" style="vertical-align: middle; text-align: center;">\
+                                <input id="timeselector_minute" type="text" style="margin-left: 10px;"/>\
+                                </div><div class="cell"><button id="timeselector_nextMinute" style="width: 100px;"\
+                                 onmousedown="ds.incrementMinute();"' + 
+        (this.options["maxNow"] == true ? 'class="blue" ' : 'class="red" ') + 
+        ' ><span>+</span></button></div></div></div>\
+                                </div></div></div></div></div>	';
+
+        return node;
+    },
+
+    init: function() {
+        this.update(this.target);
+    },
+
+    changeScope: function(){
+        if(this.currentHour.value > 12){
+            this.currentHour.value = parseInt(this.currentHour.value) - 12;
+            __$("ampm").innerHTML = "<span>AM</span>";
+        } else if(this.currentHour.value <= 12){
+            this.currentHour.value = parseInt(this.currentHour.value) + 12;
+            __$("ampm").innerHTML = "<span>PM</span>";
+        }
+        this.time[0] = this.currentHour.value;
+        this.update(this.target);
+    },
+
+    incrementHour: function() {
+        if(this.options["maxNow"] == true){       
+            if(this.currentHour.value >= (new Date().getHours())){
+
+            } else if(this.currentHour.value == 23){
+                this.currentHour.value = 0;
+            } else {
+                this.currentHour.value++;
+            }
+        } else if(this.currentHour.value == 23){
+            this.currentHour.value = 0;
+        } else {
+            this.currentHour.value++;
+        }
+        
+        this.time[0] = this.currentHour.value;
+        this.update(this.target);
+    },
+
+    decrementHour: function() {
+        if(this.currentHour.value == 0){
+            this.currentHour.value = 0;
+        } else {
+            this.currentHour.value--;
+        }
+
+        this.time[0] = this.currentHour.value;
+        this.update(this.target);
+    },
+
+    incrementMinute: function() {
+        if(this.options["maxNow"] == true){        
+            if(this.currentMinute.value == 59){
+                this.currentMinute.value = 0;
+                this.incrementHour();
+            } else if(this.currentMinute.value >= (new Date().getMinutes())){
+                this.currentMinute.value = 0;
+            } else  {
+                this.currentMinute.value++;
+            }
+        } else  {
+            if(this.currentMinute.value == 59){
+                this.currentMinute.value = 0;
+                this.incrementHour();
+            } else {
+                this.currentMinute.value++;
+            }
+        }
+
+        this.time[1] = this.currentMinute.value;
+        this.update(this.target);
+    },
+
+    decrementMinute: function() {
+        if(this.currentMinute.value == 0){
+            this.currentMinute.value = 0;
+        } else {
+            this.currentMinute.value--;
+        }
+
+        this.time[1] = this.currentMinute.value;
+        this.update(this.target);
+    },
+
+    incrementSecond: function() {
+        if(this.options["maxNow"] == true){        
+            if(this.currentSecond.value == 59){
+                this.currentSecond.value = 0;
+            } else {
+                this.currentSecond.value++;
+            }
+        } else {
+            this.currentSecond.value++;
+        }
+
+        this.time[2] = this.currentSecond.value;
+        this.update(this.target);
+    },
+
+    decrementSecond: function() {
+        if(this.currentSecond.value == 0){
+            this.currentSecond.value = 0;
+        } else {
+            this.currentSecond.value--;
+        }
+
+        this.time[2] = this.currentSecond.value;
+        this.update(this.target);
+    },
+
+    invokeHourUpdate: function(pos){
+        var hr = pos;
+            
+        if(hr != null){
+            if(__$("ampm").innerHTML.toLowerCase() == "<span>pm</span>"){
+                if(hr == 12){
+                    this.currentHour.value = hr;
+                } else {
+                    this.currentHour.value = (hr == 12 ? 0 : (hr + 12));
+                }
+            } else {
+                if(hr == 12){
+                    this.currentHour.value = 0;
+                } else {
+                    this.currentHour.value = hr;
+                }
+            }
+        }
+        
+        this.time[0] = this.currentHour.value;
+        this.update(this.target);
+    },
+    
+    updateHourDisk: function(){
+        var params = __$("hour").getElementsByTagName("param");
+        var hr = (parseInt(this.currentHour.value) == 0 ? 12 : (parseInt(this.currentHour.value) > 12 ? 
+            (parseInt(this.currentHour.value) - 12) : this.currentHour.value));
+       
+        for(var i = 0; i < params.length; i++){
+            if(params[i]){
+                if(params[i].id == "et" + hr){
+                    params[i].value = "selected";
+                } else {
+                    params[i].value = "";
+                }
+            }
+        } 
+       
+        if(parseInt(this.currentHour.value) >= 12){
+            __$("ampm").innerHTML = "<span>PM</span>";
+        } else {
+            __$("ampm").innerHTML = "<span>AM</span>";
+        }
+    },
+
+    invokeMinuteUpdate: function(pos){
+        var min = pos;
+            
+        if(min != null){
+            this.currentMinute.value = min;
+        }
+        
+        this.time[1] = this.currentMinute.value;
+        this.update(this.target);
+    },
+    
+    updateMinuteDisk: function(){
+        var params = __$("minute").getElementsByTagName("param");
+        var time = parseInt(this.currentMinute.value);
+       
+        var range = "";
+
+        if(time >= 1 && time <= 5){
+            range = 5;
+        } else if(time >= 6 && time <= 10){
+            range = 10;
+        } else if(time >= 11 && time <= 15){
+            range = 15;
+        } else if(time >= 16 && time <= 20){
+            range = 20;
+        } else if(time >= 21 && time <= 25){
+            range = 25;
+        } else if(time >= 26 && time <= 30){
+            range = 30;
+        } else if(time >= 31 && time <= 35){
+            range = 35;
+        } else if(time >= 36 && time <= 40){
+            range = 40;
+        } else if(time >= 41 && time <= 45){
+            range = 45;
+        } else if(time >= 46 && time <= 50){
+            range = 50;
+        } else if(time >= 51 && time <= 55){
+            range = 55;
+        } else if(time >= 56 && time <= 59){
+            range = 0;
+        } 
+       
+        for(var i = 0; i < params.length; i++){
+            if(params[i]){
+                if(params[i].id == "etm" + range){
+                    params[i].value = "selected";
+                } else {
+                    params[i].value = "";
+                }
+            }
+        }        
+    },
+    
+    update: function(aDateElement) {
+        var aTargetElement = aDateElement || this.target;
+
+        if (!aTargetElement)
+            return;
+
+        aTargetElement.value = TimeUtil.zerofill((this.time[0]).toString(),2) + ":" +
+        TimeUtil.zerofill((this.time[1]).toString(),2) + ":" +
+        TimeUtil.zerofill((this.time[2]).toString(),2);
+    
+        this.updateHourDisk();
+        this.updateMinuteDisk();
+    }
+
+};
+
+function addSelectAllButton(){
+    var holder = document.createElement("div");
+    holder.id = "holder";
+    holder.style.margin = "5px";
+    holder.style.display = "table";
+    holder.style.cursor = "pointer";
+
+    __$("keyboard").appendChild(holder);
+    
+    var row = document.createElement("div");
+    row.style.display = "table-row";
+    
+    holder.appendChild(row);  
+    
+    var cell1 = document.createElement("div");
+    cell1.style.display = "table-cell";
+    cell1.style.verticalAlign = "middle";
+    
+    row.appendChild(cell1);  
+    
+    var cell2 = document.createElement("div");
+    cell2.style.display = "table-cell";
+    cell2.id = "lblSelectAll";
+    cell2.innerHTML = "Select All";
+    cell2.style.verticalAlign = "middle";
+    cell2.style.fontSize = "36px";
+    cell2.style.paddingLeft = "10px";
+    cell2.onclick = function(){
+        __$("chkSelectAll").click();
+    }
+    
+    row.appendChild(cell2);  
+    
+    var checkbox = document.createElement("img");
+    checkbox.src = "/touchscreentoolkit/lib/images/unticked.jpg";
+    checkbox.id = "chkSelectAll";
+    checkbox.setAttribute("checked", "false")
+    
+    checkbox.onclick = function(){
+        if(this.getAttribute("checked") == "false"){
+            toggleState("uncheck");
+            this.setAttribute("checked", "true");
+            this.src = "/touchscreentoolkit/lib/images/ticked.jpg";
+            __$("lblSelectAll").innerHTML = "Deselect All";
+        } else {
+            toggleState("check");
+            this.setAttribute("checked", "false");
+            this.src = "/touchscreentoolkit/lib/images/unticked.jpg";
+            __$("lblSelectAll").innerHTML = "Select All";
+        }
+    }
+    
+    cell1.appendChild(checkbox);  
+    
+}
+     
+function toggleState(state){
+    switch(state.toLowerCase()){
+        case "check":
+            checkAll();
+            break;
+        case "uncheck":
+            unCheckAll()
+            break;
+    }
+}
+    
+function checkAll(){
+    var elements = __$("tt_currentUnorderedListOptions").getElementsByTagName("li");
+    
+    for(var i = 0; i < elements.length; i++){
+        if(__$("img" + elements[i].id).src.match(/\/touchscreentoolkit\/lib\/images\/ticked.jpg/)){
+            elements[i].click();
+        }
+    }
+}
+    
+function unCheckAll(){
+    var elements = __$("tt_currentUnorderedListOptions").getElementsByTagName("li");
+    
+    for(var i = 0; i < elements.length; i++){
+        if(__$("img" + elements[i].id).src.match(/\/touchscreentoolkit\/lib\/images\/unticked.jpg/)){
+            elements[i].click();
+        }
+    }
+}
+
+/*
+ * Part of the Module containing methods to cater for nested select options.
+ * The module expects a select control with tag "<optgroup>" in which case the
+ * following happens:
+ *      1. We get a collection of each top level child
+ *      2. With the top level kids,
+ *          a.) if the kid is of type "<option>", we just
+ *                  create its node and proceed
+ *          b.) if it is of type "<optgroup>", we create the parent node which
+ *              has the following behaviours:
+ *                  i.) it has the name of the group as its label taken from its
+ *                      label attribute
+ *                  ii.) initially, all its children are colapsed
+ *                  iii.) when it is clicked,
+ *                          - all children expanded
+ *                          - all children are deselected
+ *                        These children correspond to the elements under a
+ *                        corresponding source control
+ *              The behaviours for this control would also map to standard
+ *              behaviours for cases where the source control is a
+ *              "multipe select"
+ *
+ */
+var peerGroup = "";
+
+function nested_select(id, destination){
+    __$("viewport").style.backgroundColor = "white";
+    peerGroup = "";
+    var parent = document.createElement("div");
+    parent.style.display = "table";
+    parent.style.width = "100%";
+    parent.style.backgroundColor = "white";
+    parent.style.marginTop = "20px";
+
+    __$(destination).appendChild(parent);
+
+    var row3 = document.createElement("div");
+    row3.style.display = "table-row";
+
+    parent.appendChild(row3);
+
+    var cell3 = document.createElement("div");
+    cell3.style.display = "table-cell";
+
+    row3.appendChild(cell3);
+
+    var container = document.createElement("div");
+    container.className = "selectContent";
+    container.style.overflow = "auto";
+
+    cell3.appendChild(container);
+
+    var select = document.createElement("div")
+    select.style.display = "table";
+    select.style.width = "100%";
+    select.style.borderSpacing = "5px";
+    var multiple = (__$(id).getAttribute("multiple") ? true : false);
+
+    container.appendChild(select);
+
+    var options = __$(id).children;
+
+    for(var i = 0; i < options.length; i++){
+        if(options[i].tagName.toUpperCase() == "OPTGROUP"){
+            add_opt_group(options[i], select, multiple, i);
+        } else {
+            add_options([options[i]], select, multiple, false, i);
+        }
+        if(!multiple){
+            peerGroup += "group" + i + "|";
+        }
+    }
+
+}
+
+function add_opt_group(control, parent, single, groupNumber){
+    var multiple = (typeof(single) != "undefined" ? single : false);
+
+    var row = document.createElement("div");
+    row.style.display = "table-row";
+    row.style.fontSize = "32px";
+
+    parent.appendChild(row);
+
+    var cell1_1 = document.createElement("div");
+    cell1_1.style.display = "table-cell";
+    cell1_1.style.verticalAlign = "middle";
+    cell1_1.style.padding = "5px";
+    cell1_1.style.width = "52px";
+
+    row.appendChild(cell1_1);
+
+    var img = document.createElement("img");
+    img.setAttribute("multiple", (multiple ? "true" : "false"));
+    img.setAttribute("src", "/touchscreentoolkit/lib/images/un" + (multiple ? "ticked" : "checked") + ".jpg");
+    img.setAttribute("groupNumber", groupNumber);
+    img.id = "group" + groupNumber;
+
+    img.onclick = function(){
+        var multiple = (this.getAttribute("multiple") == "true" ? true : false);
+        var colorPartner = this.parentNode.parentNode.getElementsByTagName("div");
+        var group = this.getAttribute("groupNumber");
+
+        if(!multiple){
+            deselectSection(peerGroup);
+        }
+
+        if(this.getAttribute("src").match(/un/)){
+            this.setAttribute("src", "/touchscreentoolkit/lib/images/" + (multiple ? "ticked" : "checked") + ".jpg");
+            colorPartner[1].style.backgroundColor = "lightblue";
+            __$("groupRow" + group).style.display = "table-row";
+        } else {
+            this.setAttribute("src", "/touchscreentoolkit/lib/images/un" + (multiple ? "ticked" : "checked") + ".jpg");
+            deselectSection(this.getAttribute("childrenGroup"));
+
+            colorPartner[1].style.backgroundColor = "";
+            __$("groupRow" + group).style.display = "none";
+        }
+
+    }
+
+    cell1_1.appendChild(img);
+
+    var cell1_2 = document.createElement("div");
+    cell1_2.style.display = "table-cell";
+    cell1_2.innerHTML = control.label;
+    cell1_2.style.verticalAlign = "middle";
+    cell1_2.style.padding = "5px";
+    cell1_2.style.width = "100%";
+    cell1_2.style.borderBottom = "1px solid #ccc";
+
+    cell1_2.onclick = function(){
+        var colorPartner = this.parentNode.getElementsByTagName("img");
+
+        colorPartner[0].click();
+    }
+
+    row.appendChild(cell1_2);
+
+    var row2 = document.createElement("div");
+    row2.style.display = "none";
+    row2.id = "groupRow" + groupNumber;
+
+    parent.appendChild(row2);
+
+    var cell2_1 = document.createElement("div");
+    cell2_1.style.display = "table-cell";
+    cell2_1.innerHTML = "&nbsp;";
+    cell2_1.style.width = "52px";
+
+    row2.appendChild(cell2_1);
+
+    var cell2_2 = document.createElement("div");
+    cell2_2.style.display = "table-cell";
+
+    row2.appendChild(cell2_2);
+
+    var table = document.createElement("div");
+    table.style.display = "table";
+    table.style.width = "100%";
+    table.style.borderSpacing = "5px";
+
+    cell2_2.appendChild(table);
+
+    var groupKids = control.children;
+
+    add_options(groupKids, table, single, true, groupNumber);
+
+}
+
+function add_options(groupKids, parent, single, mapToParent, groupNumber){
+    var multiple = (typeof(single) != "undefined" ? single : false);
+    var parentTag = "";
+
+    for(var i = 0; i < groupKids.length; i++){
+        if(groupKids[i].innerHTML.trim() == ""){
+            continue;
+        }
+
+        var row = document.createElement("div");
+        row.style.display = "table-row";
+
+        parent.appendChild(row);
+
+        var cell1_1 = document.createElement("div");
+        cell1_1.style.display = "table-cell";
+        cell1_1.style.verticalAlign = "middle";
+        cell1_1.style.padding = "5px";
+        cell1_1.style.width = "52px";
+
+        row.appendChild(cell1_1);
+
+        var img = document.createElement("img");
+        img.setAttribute("multiple", (multiple ? "true" : "false"));
+        img.setAttribute("src", "/touchscreentoolkit/lib/images/un" + (multiple ? "ticked" : "checked") + ".jpg");
+        img.setAttribute("groupNumber", groupNumber);
+        img.id = (mapToParent == true ? "child" + groupNumber + "_" + i : "group" + groupNumber);
+
+        if(mapToParent){
+            parentTag += img.id + "|";
+        }
+
+        if (groupKids[i].value) {
+            img.setAttribute("tstValue", groupKids[i].value);
+        }
+
+        img.onclick = function(){
+            var multiple = (this.getAttribute("multiple") == "true" ? true : false);
+            var colorPartner = this.parentNode.parentNode.getElementsByTagName("div");
+
+            if(this.getAttribute("src").match(/un/)){
+                if(!multiple){
+                    if(this.id != "group" + this.getAttribute("groupNumber")){
+                        deselectSection(__$("group" + this.getAttribute("groupNumber")).getAttribute("childrenGroup"));
+                    } else {
+                        deselectSection(peerGroup);
+                    }
+                }
+
+                this.setAttribute("src", "/touchscreentoolkit/lib/images/" + (multiple ? "ticked" : "checked") + ".jpg");
+                colorPartner[1].style.backgroundColor = "lightblue";
+
+                __$("touchscreenInput" + tstCurrentPage).setAttribute("tstValue", this.getAttribute("tstValue"));
+
+                __$("touchscreenInput" + tstCurrentPage).value =
+                (multiple ? __$("touchscreenInput" + tstCurrentPage).value : "") +
+                unescape(colorPartner[1].innerHTML) + (multiple ? ";" : "");
+
+            } else {
+                this.setAttribute("src", "/touchscreentoolkit/lib/images/un" + (multiple ? "ticked" : "checked") + ".jpg");
+                colorPartner[1].style.backgroundColor = "";
+
+                __$("touchscreenInput" + tstCurrentPage).value = subtract(colorPartner[1].innerHTML + (multiple ? ";" : ""));
+            }
+        }
+
+        cell1_1.appendChild(img);
+
+        var cell1_2 = document.createElement("div");
+        cell1_2.style.display = "table-cell";
+        cell1_2.innerHTML = groupKids[i].innerHTML;
+        cell1_2.style.verticalAlign = "middle";
+        cell1_2.style.padding = "5px";
+        cell1_2.style.borderBottom = "1px solid #ccc";
+        cell1_2.style.fontSize = "32px";
+
+        cell1_2.onclick = function(){
+            var colorPartner = this.parentNode.getElementsByTagName("img");
+
+            colorPartner[0].click();
+        }
+
+        row.appendChild(cell1_2);
+    }
+
+    if(mapToParent){
+        __$("group" + groupNumber).setAttribute("childrenGroup", parentTag);
+    }
+
+}
+
+function deselectSection(group){
+    var controls = group.split("|");
+
+    for(var i = 0; i < controls.length; i++){
+        if(controls[i].trim() != ""){
+            if(__$(controls[i])){
+                if(!__$(controls[i]).getAttribute("src").match(/un/)){
+                    __$(controls[i]).click();
+                }
+            }
+        }
+    }
+}
+
+function subtract(string){
+    var result = __$("touchscreenInput" + tstCurrentPage).value.replace(string, "");
+    return result
+}
+
+function hideCategory(){
+    if(__$("category")){
+        document.body.removeChild(__$("category"));
+    }
 }
