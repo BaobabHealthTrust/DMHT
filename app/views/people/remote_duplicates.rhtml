@@ -1,0 +1,132 @@
+<script type="text/javascript">
+  var remoteDuplicates = JSON.parse('<%= [@duplicates.to_json] %>');
+  function cancel(){
+    window.location = '/';
+  }
+
+  function reassignIdentifier(key){
+    record = remoteDuplicates[key];
+    console.log(record);
+    givenName = record["given_name"];
+    familyName = record["family_name"];
+    gender = record["gender"];
+    cityVillage = record["city_village"];
+    occupation = record["occupation"];
+    nationalID = record["national_id"];
+
+    form = document.createElement('form');
+    document.getElementsByTagName('body')[0].appendChild(form);
+    form.action ='/people/reassign_remote_identifier';
+    form.method='POST';
+    createInput(form, 'hidden', 'given_name', givenName);
+    createInput(form, 'hidden', 'family_name', familyName);
+    createInput(form, 'hidden', 'gender', gender);
+    createInput(form, 'hidden', 'city_village', cityVillage);
+    createInput(form, 'hidden', 'occupation', occupation);
+    createInput(form, 'hidden', 'national_id', nationalID);
+    form.submit();
+  }
+
+  function createInput(form, type, name, value){
+    input = document.createElement('input');
+    input.type = type
+    input.value = value
+    input.name = name
+    form.appendChild(input)
+  }
+
+</script>
+
+<style type="text/css">
+  .link {
+    border-width: 0 1px 4px;
+    font-size: 12px;
+    font-weight: bold;
+    padding: 8px 12px 7px;
+    text-transform: uppercase;
+  }
+  .btn-danger {
+    background-color: #ff4136;
+    border-color: #ff291c;
+    color: #ffffff;
+  }
+  .link {
+    -moz-user-select: none;
+    background-image: none;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 2.429;
+    margin-bottom: 0;
+    padding: 6px 12px;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+    width: 86%;
+  }
+
+  a {
+    color: #158cba;
+    text-decoration: none;
+  }
+  a {
+    background: transparent none repeat scroll 0 0;
+  }
+
+  table tbody td{
+    border-bottom-width: 2px !important;
+    border: 1px solid #dddddd;
+  }
+
+  .alert {
+    border-width: 0 1px 4px;
+  }
+  .alert-info {
+    background-color: #75caeb;
+    border-color: #40b5e3;
+    color: #ffffff;
+  }
+  .alert {
+    border: 1px solid transparent;
+    margin-bottom: 20px;
+    padding: 15px;
+    font-weight: bold;
+  }
+</style>
+<div class="alert alert-info">
+  <center><%= @duplicates.keys.count %> Remote Duplicates Found for ID <i><u><%= @duplicates[1]["national_id"] %></u></i></center>
+</div>
+<table style="padding-left: 5%; width: 96%;">
+  <thead>
+    <tr>
+      <th>First Name</th>
+      <th>Last Name</th>
+      <th>Gender</th>
+      <th>City Village</th>
+      <th>Occupation</th>
+      <th style="width: 20%;">Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @duplicates.each do |key, values| %>
+      <tr>
+        <td><%= values["given_name"] %></td>
+        <td><%= values["family_name"] %></td>
+        <td><%= values["gender"] %></td>
+        <td><%= values["city_village"] %></td>
+        <td><%= values["occupation"] %></td>
+        <td>
+          <a onclick="reassignIdentifier(<%= key %>)" href="#" class="link btn-danger">
+            Re-assign Identifier
+          </a>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
+<div id="buttons" class="buttonsDiv">
+  <button onmousedown="cancel()" class="button green navButton" id="nextButton"><span>Cancel</span></button>
+</div>

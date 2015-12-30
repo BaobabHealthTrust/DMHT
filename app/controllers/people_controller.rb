@@ -1,3 +1,4 @@
+require "rest-client"
 class PeopleController < ApplicationController
   def index
     flash[:notice] = ""
@@ -38,53 +39,98 @@ class PeopleController < ApplicationController
       else
         # TODO - figure out how to write a test for this
         # This is sloppy - creating something as the result of a GET
-        found_person_data = Person.find_remote_by_identifier(params[:identifier])
-#	raise found_person_data.inspect
-        found_person_data["person"]["patient"]["identifiers"]["diabetes_number"] = Patient.dc_number unless found_person_data.nil?
-        found_person = Person.create_from_form(found_person_data) unless found_person_data.nil?
+        #found_person_data = Person.find_remote_by_identifier(params[:identifier])
+        demographics = Person.find_remote_by_identifier_modified(params[:identifier])
+        if (demographics.length == 1)
+          found_person_data = demographics[0]
+          found_person_data["person"]["patient"]["identifiers"]["diabetes_number"] = Patient.dc_number
+          found_person = Person.create_from_form(found_person_data)
+        elsif (demographics.length > 1)
+          session[:remote_demographics] = demographics
+          redirect_to ("/people/remote_duplicates") and return
+        end
       end
+      
       if found_person
         redirect_to :controller => :encounters, :action => :new, :patient_id => found_person.id and return
       end
     end
     @people = Person.search(params)
   end
- 
+
+  def remote_duplicates
+    redirect_to("/") if session[:remote_demographics].blank?
+    @duplicates = {}
+    count = 1
+    session[:remote_demographics].each do |record|
+      @duplicates[count] = {}
+      @duplicates[count]['gender'] = record["person"]["gender"]
+      @duplicates[count]['given_name'] = record["person"]["names"]["given_name"]
+      @duplicates[count]['family_name'] = record["person"]["names"]["family_name"]
+      @duplicates[count]['city_village'] = record["person"]["addresses"]["city_village"]
+      @duplicates[count]['county_district'] = record["person"]["addresses"]["county_district"]
+      @duplicates[count]['address2'] = record["person"]["addresses"]["address2"]
+      @duplicates[count]['state_province'] = record["person"]["addresses"]["state_province"]
+      @duplicates[count]['occupation'] = record["person"]["attributes"]["occupation"]
+      @duplicates[count]['national_id'] = record["person"]["patient"]["identifiers"]["National id"]
+      count = count + 1
+    end
+
+  end
+
+  def reassign_remote_identifier
+    given_name = params["given_name"]
+    family_name = params["family_name"]
+    gender = params["gender"]
+    national_id = params["national_id"]
+    city_village = params["city_village"]
+    occupation = params["occupation"]
+    bart_ip_address_and_port = GlobalProperty.find_by_property("remote_bart.location").property_value rescue "localhost:3002"
+    uri = "http://#{bart_ip_address_and_port}/people/reassign_remote_identifier"
+
+    search_from_remote_params =  {
+      "national_id" => national_id,
+      "given_name" => given_name,
+      "family_name" => family_name,
+      "gender" => gender,
+      "city_village" => city_village,
+      "occupation" => occupation
+    }
+
+    demographics = JSON.parse(RestClient.post(uri,search_from_remote_params))
+    found_person_data = demographics
+    found_person_data["person"]["patient"]["identifiers"]["diabetes_number"] = Patient.dc_number
+    found_person = Person.create_from_form(found_person_data)
+    session.delete(:remote_demographics)
+    print_and_redirect("/patients/national_id_label/?patient_id=#{found_person.patient.id}", next_task(found_person.patient))
+
+  end
+  
   # This method is just to allow the select box to submit, we could probably do this better
   def select
     redirect_to :controller => :encounters, :action => :new, :patient_id => params[:person] and return unless params[:person].blank? || params[:person] == '0'
     redirect_to :action => :new, :gender => params[:gender], :given_name => params[:given_name], :family_name => params[:family_name],
-    :family_name2 => params[:family_name2], :address2 => params[:address2], :identifier => params[:identifier]
+      :family_name2 => params[:family_name2], :address2 => params[:address2], :identifier => params[:identifier]
   end
  
   def create
-    remote_parent_server = GlobalProperty.find(:first, :conditions => {:property => "remote_servers.parent"}).property_value rescue ''
     params[:person][:patient][:identifiers][:diabetes_number] = Patient.dc_number
-
-    if !remote_parent_server.empty?
-        found_person_data = Person.create_remote(params)
-        found_person_data['person']['patient']['identifiers']['diabetes_number'] = params[:person][:patient][:identifiers][:diabetes_number] unless found_person_data.nil?
-       # raise found_person_data.inspect
-        found_person = Person.create_from_form(params) if found_person_data.nil?
-        
-        if found_person
-          found_person.patient.national_id_label
-          print_and_redirect("/patients/national_id_label/?patient_id=#{found_person.patient.id}", next_task(found_person.patient))
-        else
-          redirect_to :action => "index"
-        end
-    else
-	raise "Empty"
-      person = Person.create_from_form(params[:person])
-      
-      if params[:person][:patient]
-        person.patient.national_id_label
-        print_and_redirect("/patients/national_id_label/?patient_id=#{person.patient.id}", next_task(person.patient))
-      else
-        redirect_to :action => "index"
-      end
-    end
+    #found_person_data = Person.create_remote(params)
+    #found_person_data['person']['patient']['identifiers']['diabetes_number'] = params[:person][:patient][:identifiers][:diabetes_number] unless found_person_data.nil?
+    #found_person = Person.create_from_form(params) if found_person_data.nil?
+    found_person = []
   
+    remote_patient_national_id = Person.create_remote_modified(params)
+    params[:person][:patient][:identifiers][:national_id] = remote_patient_national_id
+    found_person = Person.create_from_form(params)
+    
+    if (found_person)
+      found_person.patient.national_id_label
+      print_and_redirect("/patients/national_id_label/?patient_id=#{found_person.patient.id}", next_task(found_person.patient))
+    else
+      redirect_to :action => "index"
+    end
+
   end
 
   def edit
@@ -104,8 +150,8 @@ class PeopleController < ApplicationController
           @person.set_birthdate_by_age(params[:person]["age_estimate"])
         else
           @person.set_birthdate(params[:person]["birth_year"],
-                                params[:person]["birth_month"],
-                                params[:person]["birth_day"])
+            params[:person]["birth_month"],
+            params[:person]["birth_day"])
         end
         @person.birthdate_estimated = 1 if params[:person]["birthdate_estimated"] == 'true'
         @person.save
@@ -124,8 +170,8 @@ class PeopleController < ApplicationController
       unless params[:set_day]== "" or params[:set_month]== "" or params[:set_year]== ""
         # set for 1 second after midnight to designate it as a retrospective date
         date_of_encounter = Time.mktime(params[:set_year].to_i,
-                                        params[:set_month].to_i,
-                                        params[:set_day].to_i,0,0,1)
+          params[:set_month].to_i,
+          params[:set_day].to_i,0,0,1)
         session[:datetime] = date_of_encounter #if date_of_encounter.to_date != Date.today
       end
       unless params[:id].blank?

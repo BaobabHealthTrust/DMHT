@@ -1,3 +1,4 @@
+require "rest-client"
 class Person < ActiveRecord::Base
   set_table_name "person"
   set_primary_key "person_id"
@@ -37,7 +38,7 @@ class Person < ActiveRecord::Base
     birth_date=self.birthdate
     estimate=self.birthdate_estimated
     patient_age += (estimate && birth_date.month == 7 && birth_date.day == 1  && 
-      today.month < birth_date.month && self.date_changed.year == today.year) ? 1 : 0
+        today.month < birth_date.month && self.date_changed.year == today.year) ? 1 : 0
   end
 
   def age_in_months(today = Date.today)
@@ -99,21 +100,21 @@ class Person < ActiveRecord::Base
     end
 
     demographics = {"person" => {
-      "date_changed" => self.date_changed.to_s,
-      "gender" => self.gender,
-      "birth_year" => self.birthdate.year,
-      "birth_month" => birth_month,
-      "birth_day" => birth_day,
-      "names" => {
-        "given_name" => self.names[0].given_name,
-        "family_name" => self.names[0].family_name,
-        "family_name2" => ""
-      },
-      "addresses" => {
-        "county_district" => "",
-        "city_village" => self.addresses[0].city_village
-      },
-    }}
+        "date_changed" => self.date_changed.to_s,
+        "gender" => self.gender,
+        "birth_year" => self.birthdate.year,
+        "birth_month" => birth_month,
+        "birth_day" => birth_day,
+        "names" => {
+          "given_name" => self.names[0].given_name,
+          "family_name" => self.names[0].family_name,
+          "family_name2" => ""
+        },
+        "addresses" => {
+          "county_district" => "",
+          "city_village" => self.addresses[0].city_village
+        },
+      }}
  
     if not self.patient.patient_identifiers.blank? 
       demographics["person"]["patient"] = {"identifiers" => {}}
@@ -143,17 +144,17 @@ class Person < ActiveRecord::Base
 
     return people.first.id unless people.blank? || people.size > 1
     people = Person.find(:all, :include => [{:names => [:person_name_code]}, :patient], :conditions => [
-    "gender = ? AND \
+        "gender = ? AND \
      person.voided = 0 AND \
      (patient.voided = 0 OR patient.voided IS NULL) AND \
      (person_name.given_name LIKE ? OR person_name_code.given_name_code LIKE ?) AND \
      (person_name.family_name LIKE ? OR person_name_code.family_name_code LIKE ?)",
-    params[:gender],
-    params[:given_name],
-    (params[:given_name] || '').soundex,
-    params[:family_name],
-    (params[:family_name] || '').soundex
-    ]) if people.blank?
+        params[:gender],
+        params[:given_name],
+        (params[:given_name] || '').soundex,
+        params[:family_name],
+        (params[:family_name] || '').soundex
+      ]) if people.blank?
 
     return people
   end
@@ -203,12 +204,12 @@ class Person < ActiveRecord::Base
     person.names.create(names_params)
     person.addresses.create(address_params)
     # add person attributes
-      person_attribute_params.each{|attribute_type_name, attribute|
-        attribute_type = PersonAttributeType.find_by_name(attribute_type_name.humanize.titleize) || PersonAttributeType.find_by_name("Unknown id")
-        person.person_attributes.create("value" => attribute, "person_attribute_type_id" => attribute_type.person_attribute_type_id)
-      } if person_attribute_params
+    person_attribute_params.each{|attribute_type_name, attribute|
+      attribute_type = PersonAttributeType.find_by_name(attribute_type_name.humanize.titleize) || PersonAttributeType.find_by_name("Unknown id")
+      person.person_attributes.create("value" => attribute, "person_attribute_type_id" => attribute_type.person_attribute_type_id)
+    } if person_attribute_params
  
-# TODO handle the birthplace attribute
+    # TODO handle the birthplace attribute
  
     if (!patient_params.nil?)
       patient = person.create_patient
@@ -225,6 +226,13 @@ class Person < ActiveRecord::Base
   def self.find_remote_by_identifier(identifier)
     known_demographics = {:person => {:patient => { :identifiers => {"National id" => identifier }}}}
     result = Person.find_remote(known_demographics)
+  end
+
+  def self.find_remote_by_identifier_modified(identifier)
+    known_demographics = {:identifier => "#{identifier}"}
+    bart_ip_address_and_port = GlobalProperty.find_by_property("remote_bart.location").property_value rescue "localhost:3002"
+    uri = "http://#{bart_ip_address_and_port}/people/find_person_from_dmht"
+    return JSON.parse(RestClient.post(uri,known_demographics))
   end
 
   def self.find_remote(known_demographics)
@@ -276,8 +284,8 @@ class Person < ActiveRecord::Base
   def formatted_gender
 
     if self.gender == "F" then "Female"
-      elsif self.gender == "M" then "Male"
-        else "Unknown"
+    elsif self.gender == "M" then "Male"
+    else "Unknown"
     end
     
   end
@@ -286,44 +294,44 @@ class Person < ActiveRecord::Base
     #raise known_demographics.to_yaml
 
     #Format params for BART
-     new_params = received_params[:person]
-     known_demographics = Hash.new()
-     new_params['gender'] == 'F' ? new_params['gender'] = "Female" : new_params['gender'] = "Male"
+    new_params = received_params[:person]
+    known_demographics = Hash.new()
+    new_params['gender'] == 'F' ? new_params['gender'] = "Female" : new_params['gender'] = "Male"
 
-       known_demographics = {
-                  "occupation"=>"#{new_params[:attributes][:occupation]}",
-                   "patient_year"=>"#{new_params[:birth_year]}",
-                   "patient"=>{
-                    "gender"=>"#{new_params[:gender]}",
-                    "birthplace"=>"#{new_params[:addresses][:address2]}",
-                    "creator" => 1,
-                    "changed_by" => 1
-                    },
-                   "p_address"=>{
-                    "identifier"=>"#{new_params[:addresses][:state_province]}"},
-                   "home_phone"=>{
-                    "identifier"=>"#{new_params[:attributes][:home_phone_number]}"},
-                   "cell_phone"=>{
-                    "identifier"=>"#{new_params[:attributes][:cell_phone_number]}"},
-                   "office_phone"=>{
-                    "identifier"=>"#{new_params[:attributes][:office_phone_number]}"},
-                   "patient_id"=>"",
-                   "patient_day"=>"#{new_params[:birth_day]}",
-                   "patientaddress"=>{"city_village"=>"#{new_params[:addresses][:city_village]}"},
-                   "patient_name"=>{
-                    "family_name"=>"#{new_params[:names][:family_name]}",
-                    "given_name"=>"#{new_params[:names][:given_name]}", "creator" => 1
-                    },
-                   "patient_month"=>"#{new_params[:birth_month]}",
-                   "patient_age"=>{
-                    "age_estimate"=>"#{new_params[:age_estimate]}"
-                    },
-                   "age"=>{
-                    "identifier"=>""
-                    },
-                   "current_ta"=>{
-                    "identifier"=>"#{new_params[:addresses][:county_district]}"}
-                  }
+    known_demographics = {
+      "occupation"=>"#{new_params[:attributes][:occupation]}",
+      "patient_year"=>"#{new_params[:birth_year]}",
+      "patient"=>{
+        "gender"=>"#{new_params[:gender]}",
+        "birthplace"=>"#{new_params[:addresses][:address2]}",
+        "creator" => 1,
+        "changed_by" => 1
+      },
+      "p_address"=>{
+        "identifier"=>"#{new_params[:addresses][:state_province]}"},
+      "home_phone"=>{
+        "identifier"=>"#{new_params[:attributes][:home_phone_number]}"},
+      "cell_phone"=>{
+        "identifier"=>"#{new_params[:attributes][:cell_phone_number]}"},
+      "office_phone"=>{
+        "identifier"=>"#{new_params[:attributes][:office_phone_number]}"},
+      "patient_id"=>"",
+      "patient_day"=>"#{new_params[:birth_day]}",
+      "patientaddress"=>{"city_village"=>"#{new_params[:addresses][:city_village]}"},
+      "patient_name"=>{
+        "family_name"=>"#{new_params[:names][:family_name]}",
+        "given_name"=>"#{new_params[:names][:given_name]}", "creator" => 1
+      },
+      "patient_month"=>"#{new_params[:birth_month]}",
+      "patient_age"=>{
+        "age_estimate"=>"#{new_params[:age_estimate]}"
+      },
+      "age"=>{
+        "identifier"=>""
+      },
+      "current_ta"=>{
+        "identifier"=>"#{new_params[:addresses][:county_district]}"}
+    }
 
 
     servers = GlobalProperty.find(:first, :conditions => {:property => "remote_servers.parent"}).property_value.split(/,/) rescue nil
@@ -370,6 +378,51 @@ class Person < ActiveRecord::Base
     person
   end
 
+  def self.create_remote_modified(received_params)
+
+    new_params = received_params[:person]
+    new_params['gender'] == 'F' ? new_params['gender'] = "Female" : new_params['gender'] = "Male"
+    birth_year = new_params[:birth_year]
+
+    #birth_year = (Date.today.year - new_params[:age_estimate].to_i) if new_params[:birth_year] == "Unknown"
+    #new_params[:birth_month] = 7 if new_params[:birth_year] == "Unknown"
+    #new_params[:birth_month] = 1 if new_params[:birth_year] == "Unknown"
+
+    demographics = {
+      "person" => {
+        "birth_day" => "#{new_params[:birth_day]}",
+        "birth_month" => "#{new_params[:birth_month]}",
+        "birth_year" => "#{birth_year}",
+        "gender" => "#{new_params[:gender]}",
+        "age_estimate" => "#{new_params[:age_estimate].to_i}",
+        "names" => {
+          "given_name" => "#{new_params[:names][:given_name]}",
+          "family_name" => "#{new_params[:names][:family_name]}",
+          "family_name2" => "#{new_params[:names][:family_name2]}"
+        },
+
+        "addresses" => {
+          "address1" => "#{new_params[:addresses][:address1]}",
+          "address2" => "#{new_params[:addresses][:address2]}",
+          "city_village" => "#{new_params[:addresses][:city_village]}",
+          "county_district" => "#{new_params[:addresses][:county_district]}"
+        },
+        
+        "occupation" => "#{new_params[:attributes][:occupation]}",
+        "cell_phone_number" => "#{new_params[:attributes][:cell_phone_number]}",
+        "office_phone_number" => "#{new_params[:attributes][:office_phone_number]}",
+        "home_phone_number" => "#{new_params[:attributes][:home_phone_number]}",
+        "patient" => ""
+      }
+    }
+
+    bart_ip_address_and_port = GlobalProperty.find_by_property("remote_bart.location").property_value rescue "localhost:3002"
+
+    uri = "http://#{bart_ip_address_and_port}/people/create_person_from_dmht"
+    return RestClient.post(uri,demographics)
+
+  end
+
   def phone_numbers
     phone_numbers = {}
     ["Cell Phone Number","Home Phone Number","Office Phone Number"].each{|attribute_type_name|
@@ -377,7 +430,7 @@ class Person < ActiveRecord::Base
       phone_numbers[attribute_type_name] = number 
     }
     phone_numbers
-   phone_numbers.delete_if {|key, value| value == "" } 
+    phone_numbers.delete_if {|key, value| value == "" }
   end
 
   def sex
