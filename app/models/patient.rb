@@ -145,19 +145,19 @@ class Patient < ActiveRecord::Base
   end
   
   def min_weight
-    WeightHeight.min_weight(person.gender, person.age_in_months).to_f
+    WeightHeight.min_weight(person.gender.first, person.age_in_months).to_f
   end
   
   def max_weight
-    WeightHeight.max_weight(person.gender, person.age_in_months).to_f
+    WeightHeight.max_weight(person.gender.first, person.age_in_months).to_f
   end
   
   def min_height
-    WeightHeight.min_height(person.gender, person.age_in_months).to_f
+    WeightHeight.min_height(person.gender.first, person.age_in_months).to_f
   end
   
   def max_height
-    WeightHeight.max_height(person.gender, person.age_in_months).to_f
+    WeightHeight.max_height(person.gender.first, person.age_in_months).to_f
   end
   
   def arv_number
