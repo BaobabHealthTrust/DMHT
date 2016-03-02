@@ -33,10 +33,10 @@ font-size:0.7em;
                 %>
                  <div id = "content"></div>
                   <%if (encounter.name == encounter_name) && ((encounter.encounter_datetime.strftime("%b-%Y") == encounter_datetime))%>
-                    <li class="data" <%= ((encounter.complete)?((encounter.complete.state==false)?"style='color: #FF0000' ":""):"") %> >
+                    <li class="data" >
                       
                       <%if header == 'true' %><div style="float:left">
-                        <b><%=h ((encounter.name.humanize.length>0)?(encounter.name.humanize):"Not Applicable") %> </b>(<%=h(encounter_datetime)%>)  <i><%= ((encounter.complete)?((encounter.complete.state==false)?"(Not Complete)":""):"") %></i></div>
+                        <b><%=h ((encounter.name.humanize.length>0)?(encounter.name.humanize):"Not Applicable") %> </b>(<%=h(encounter_datetime)%>)</div>
                       
                       <%end; header = 'false'%>
                       <span class="voidButton" style="padding-right:15px;">
@@ -59,7 +59,7 @@ font-size:0.7em;
                              {:encounter_id => encounter.encounter_id} %>
                       </span>
 
-                      <div style="clear:left <%= ((encounter.complete)?((encounter.complete.state==false)?"; color: #FF0000":""):"") %>" class="summary">
+                      <div style="clear:left" class="summary">
                         <span>
                           <%= ((encounter.to_s.humanize.length>0)?(encounter.to_s.lstrip.gsub(/\n/, '<br/>').titleize):"Not Applicable")  -%>
                         </span>

@@ -145,9 +145,9 @@ $('infoBar'+tstCurrentPage).innerHTML = 'Urea (' + $('urea_unit').value + ')';
   <!--  AUTO GENERATED CODE STARTS FROM HERE  -->
 
   <input disabled
-         type='text' name='Urine_Protein_Control' tt_onLoad='createQuestionare("Urine_Protein")'
+         type='text' name='Urine_Protein_Control' tt_onLoad='createQuestionare("Urine_Protein"); __$("keyboard").style.display = "none"'
          condition = "$('diabetes_test_type').value.toLowerCase() == 'urine protein'"
-         tt_onUnLoad='removeQuestionaire()' tt_pageStyleClass='NoControls'
+         tt_onUnLoad='removeQuestionaire(); __$("keyboard").style.display = "";' tt_pageStyleClass='NoControls'
          optional />
 
   <input disabled type='hidden' id='Urine_Protein_root_0_parent_0_concept_name' name='observations[][concept_name]' value='URINE PROTEIN' field_value='URINE PROTEIN'/>
@@ -182,9 +182,9 @@ $('infoBar'+tstCurrentPage).innerHTML = 'Urea (' + $('urea_unit').value + ')';
 
 
   <input
-    type='text' name='Visual_Acuity_Control' tt_onLoad='createQuestionare("Visual_Acuity")'
+    type='text' name='Visual_Acuity_Control' tt_onLoad='createQuestionare("Visual_Acuity");  __$("keyboard").style.display = "none"'
     condition = "$('diabetes_test_type').value.toLowerCase() == 'visual acuity'"
-    tt_onUnLoad='removeQuestionaire()' tt_pageStyleClass='NoControls'
+    tt_onUnLoad='removeQuestionaire();  __$("keyboard").style.display = ""' tt_pageStyleClass='NoControls'
     optional />
 
   <input disabled type='hidden' id='Visual_Acuity_root_0_parent_0' name='encounter' value='Left Eye' field_value='Left Eye'/>
@@ -361,9 +361,9 @@ $('infoBar'+tstCurrentPage).innerHTML = 'Urea (' + $('urea_unit').value + ')';
 
 
   <input disabled
-         type='text' name='Fundoscopy_Control' tt_onLoad='createQuestionare("Fundoscopy")'
+         type='text' name='Fundoscopy_Control' tt_onLoad='createQuestionare("Fundoscopy");  __$("keyboard").style.display = "none"'
          condition = "$('diabetes_test_type').value.toLowerCase() == 'fundoscopy'"
-         tt_onUnLoad='removeQuestionaire()' tt_pageStyleClass='NoControls'
+         tt_onUnLoad='removeQuestionaire();  __$("keyboard").style.display = ""' tt_pageStyleClass='NoControls'
          optional />
 
   <input disabled type='hidden' id='Fundoscopy_root_0_parent_0' name='encounter' value='Left Eye' field_value='Left Eye'/>
@@ -528,9 +528,9 @@ $('infoBar'+tstCurrentPage).innerHTML = 'Urea (' + $('urea_unit').value + ')';
 
 
   <input disabled
-         type='text' name='Footcheck_Control' tt_onLoad='createQuestionare("Footcheck")'
+         type='text' name='Footcheck_Control' tt_onLoad='createQuestionare("Footcheck");  __$("keyboard").style.display = "none"'
          condition = "$('diabetes_test_type').value.toLowerCase() == 'foot check'"
-         tt_onUnLoad='removeQuestionaire()' tt_pageStyleClass='NoControls'
+         tt_onUnLoad='removeQuestionaire();  __$("keyboard").style.display = ""' tt_pageStyleClass='NoControls'
          optional />
 
   <input disabled type='hidden' id='Footcheck_root_0_parent_0' name='encounter' value='Left foot/leg' field_value='Left foot/leg'/>
