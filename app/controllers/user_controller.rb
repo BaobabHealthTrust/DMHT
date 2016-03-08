@@ -125,6 +125,7 @@ class UserController < ApplicationController
     @user.date_created = Time.now()
     @user.creator = session[:user_id]
     if @user.save
+      @user.update_attributes(params[:user])
       # if params[:user_role_admin][:role] == "Yes"
       #  @roles = Array.new.push params[:user_role][:role_id] 
       # @roles << "superuser"
