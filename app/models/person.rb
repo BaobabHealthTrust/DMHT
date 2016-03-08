@@ -141,15 +141,18 @@ class Person < ActiveRecord::Base
 
   def self.search(params)
     people = Person.search_by_identifier(params[:identifier])
-
+    gender_hash = {'M' => 'Male', 'F' => 'Female'}
+    gender_value = params[:gender].upcase rescue params[:gender]
+    gender = [params[:gender], gender_hash[gender_value]]
+    
     return people.first.id unless people.blank? || people.size > 1
     people = Person.find(:all, :include => [{:names => [:person_name_code]}, :patient], :conditions => [
-        "gender = ? AND \
+        "gender IN (?) AND \
      person.voided = 0 AND \
      (patient.voided = 0 OR patient.voided IS NULL) AND \
      (person_name.given_name LIKE ? OR person_name_code.given_name_code LIKE ?) AND \
      (person_name.family_name LIKE ? OR person_name_code.family_name_code LIKE ?)",
-        params[:gender],
+        gender,
         params[:given_name],
         (params[:given_name] || '').soundex,
         params[:family_name],
