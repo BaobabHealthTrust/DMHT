@@ -3,12 +3,12 @@
   tt_cancel_show = "/people?active_tab=tab3";
 </script>
 <style type="text/css">
-      #menu {
-        float:right;
-        position:relative;
-        height:478px;
-        width:257px;;
-      }
+  #menu {
+    float:right;
+    position:relative;
+    height:478px;
+    width:257px;;
+  }
 </style>
 
 <div style="margin:10px;">
@@ -17,7 +17,7 @@
   </div>
   <div id="menu">
     <button button class="button green" style="width:100%"
-            onclick="window.location = '/user/barcode_label?id=<%= @user.id -%>'"
+            onclick="window.location = '/user/barcode_label?id=<%= @user.id -%>'">
       <span>Print Barcode</span>
     </button><br />
     <button class="button green" style="width:100%"
@@ -25,8 +25,11 @@
       <span>Change Password</span>
     </button><br />
     <button class="button green" style="width:100%"
-        onClick= "window.location = '/user/edit?id=<%= @user.id -%>'">
+            onClick= "window.location = '/user/edit?id=<%= @user.id -%>'">
       <span>Edit Names</span>
-     </button>
+    </button>
   </div>
+</div>
+<div id="buttons" class="buttonsDiv">
+  <button onmousedown="window.location = '/'" class="button blue navButton" id="nextButton"><span>Finish</span></button>
 </div>

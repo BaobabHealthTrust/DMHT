@@ -87,7 +87,7 @@ class UserController < ApplicationController
     else
      @user = User.find(:first, :order => 'date_created DESC')
     end  
-    render :layout => 'menu'
+    render :layout => 'application'
   end
 
   def new
