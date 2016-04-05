@@ -107,8 +107,14 @@ class PrescriptionsController < ApplicationController
           render :new
           return
         end
-        start_date = Time.now
-        auto_expire_date = Time.now + prescription[:duration].to_i.days
+
+#        start_date = Time.now
+#        auto_expire_date = Time.now + prescription[:duration].to_i.days
+
+	start_date = session_date = (session[:datetime] ? session[:datetime].to_date : Time.now)
+	auto_expire_date = session_date = (session[:datetime] ? session[:datetime].to_date : Time.now) + prescription[:duration].to_i.days
+
+
         prn = prescription[:prn]
         if prescription[:type_of_prescription] == "variable"
           DrugOrder.write_order(@encounter, @patient, @diagnosis, @drug, start_date, auto_expire_date, prescription[:morning_dose], 'MORNING', prn) unless prescription[:morning_dose] == "Unknown" || prescription[:morning_dose].to_f == 0

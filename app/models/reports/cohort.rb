@@ -1261,22 +1261,33 @@ class Reports::Cohort
 
   # Outcome: Defaulters
   def defaulters_ever
+=begin
     @orders = Order.find_by_sql("SELECT orders.patient_id FROM orders \
                                   LEFT OUTER JOIN patient ON patient.patient_id = orders.patient_id \
                                   WHERE DATEDIFF('#{@end_date}', auto_expire_date)/30 > 6 \
                                     AND patient.voided = 0 AND \
                                         DATE_FORMAT(patient.date_created, '%Y-%m-%d') <= '" + @end_date + "'  \
                                     GROUP BY patient_id").length
+=end
+
+
+#New Query
+@orders = Order.find_by_sql(" SELECT DISTINCT o1.patient_id FROM (SELECT * FROM orders WHERE DATE(auto_expire_date) <= DATE('#{@end_date}')) o1 LEFT JOIN orders  o2 ON (o1.patient_id = o2.patient_id AND DATE(o2.auto_expire_date) <= DATE('#{@end_date}') AND DATE(o1.auto_expire_date) < DATE(o2.auto_expire_date)) WHERE o2.order_id IS NULL AND DATEDIFF('#{@end_date}', o1.auto_expire_date)/30 > 6").length
+
+
   end
 
   def defaulters
+=begin
     @orders = Order.find_by_sql("SELECT orders.patient_id FROM orders LEFT OUTER JOIN patient ON \
                                         patient.patient_id = orders.patient_id WHERE DATEDIFF('#{@end_date}', auto_expire_date)/30 > 6 \
                                         AND DATE_FORMAT(patient.date_created, '%Y-%m-%d') >= '" +
         @start_date + "' AND DATE_FORMAT(patient.date_created, '%Y-%m-%d') <= '" + @end_date + "' \
                                     AND patient.voided = 0 \
                                           GROUP BY patient_id").length
-  end
+=end
+  "N/A" 
+ end
 
   # Maculopathy
   def maculopathy_ever
